@@ -9,9 +9,9 @@ node_modules/
 vendor/
 test/
 output/
-dev/
 templates/*.min.js
 templates/*.min.css
 composer.lock
 cache/*
 config/targets
+tmp/
