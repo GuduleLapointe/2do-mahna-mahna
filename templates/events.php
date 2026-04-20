@@ -61,7 +61,7 @@
  * Requires: PHP 8.2+, GD extension with FreeType support.
  */
 
-define('BOARD_VER',    '1.5.5');
+define('BOARD_VER',    '1.6.0');
 define('EVENTS_JSON',  __DIR__ . '/events.json');
 define('SLT_TIMEZONE', 'America/Los_Angeles');
 

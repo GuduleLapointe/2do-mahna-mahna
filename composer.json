@@ -1,5 +1,6 @@
 {
 	"name": "magicoli/2do-aggregator",
+	"version": "0.3.0",
 	"description": "PHP port of 2do-server, collects calendars from several sources and make them available under different formats ffor 2do-events, ics, json...",
 	"type": "project",
 	"license": "AGPL-3.0-or-later",

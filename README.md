@@ -1,8 +1,8 @@
 # 2DO Aggregator
 
-![Version 0.2.0](https://badgen.net/badge/Version/0.2.0/FFaa00)
-![Stable 0.2.0](https://badgen.net/badge/0.1.6/None/00aa00)
-![Requires PHP 7.3](https://badgen.net/badge/PHP/7.3/7884bf)
+![Version 0.3.0](https://badgen.net/badge/Version/0.3.0/FFaa00)
+![Stable 0.3.0](https://badgen.net/badge/0.3.0/Stable/00aa00)
+![Requires PHP 8.2](https://badgen.net/badge/PHP/8.2/7884bf)
 ![License AGPLv3](https://badgen.net/badge/License/AGPLv3/552b55)
 
 The PHP port of python [2do-server](https://github.com/GuduleLapointe/2do-server).

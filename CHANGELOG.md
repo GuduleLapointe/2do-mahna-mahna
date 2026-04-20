@@ -1,5 +1,24 @@
 ## Changelog
 
+0.3.0
+* events.php: dynamic LSL output filtered server-side to stay within the LSL
+  HTTP_BODY_MAXLENGTH limit (4096 bytes), fixing the blank-board bug caused by
+  the static events.lsl2 growing beyond that limit
+* events.php: PNG board image renderer (format=png) for osSetDynamicTextureURL,
+  modern mobile calendar look (white background, Google-Calendar-style palette)
+* events.php: clickmap format for LSL touch-to-teleport with exact Y coordinates
+* events.php: ratio parameter for aspect-ratio correction on non-square board
+  faces — internal canvas composed at natural ratio, resampled to output size
+* events.php: URL parameters aligned with LSL Configuration notecard names:
+  textureWidth, textureHeight, bannerHeight, lineHeight, cellPadding,
+  mainFontName, mainFontSize, hourFontName, hourFontSize
+* events.php: anticipates 2do-board 1.6.0 (BOARD_VER updated)
+* Font detection: Roboto, SF (macOS), Arial (Windows/macOS), DejaVu (Linux)
+* Widow fix: day headers never appear without at least one event below them
+* dev/start-server.sh: Symfony CLI dev server with fswatch auto-sync
+* templates/examples.php: aspect-ratio preview page (4 ratios × 2 themes)
+* Requires PHP 8.2+ (was 7.3)
+
 0.2.0
 * new cron script to schedule the calendar synchronization
 

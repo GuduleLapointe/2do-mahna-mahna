@@ -1,30 +1,30 @@
 {
-  "name": "2do-aggregator",
-  "version": "0.2.0",
-  "description": "PHP port of 2do-server, collects calendars from several sources and make them available under different formats ffor 2do-events, ics, json...",
-  "main": "src/index.js",
-  "scripts": {
-    "test": "echo \\\"Error: no test specified\\\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/GuduleLapointe/2do-aggregator.git"
-  },
-  "keywords": [
-    "OpenSimulator",
-    "2do",
-    "events",
-    "calendar",
-    "hypevents"
-  ],
-  "author": "Gudule Lapointe",
-  "license": "AGPL-3.0-or-later",
-  "bugs": {
-    "url": "https://github.com/GuduleLapointe/2do-aggregator/issues"
-  },
-  "homepage": "https://github.com/GuduleLapointe/2do-aggregator#readme",
-  "dependencies": {
-    "moment": "^2.30.1",
-    "moment-timezone": "^0.5.45"
-  }
+	"name": "2do-aggregator",
+	"version": "0.3.0",
+	"description": "PHP port of 2do-server, collects calendars from several sources and make them available under different formats ffor 2do-events, ics, json...",
+	"main": "src/index.js",
+	"scripts": {
+		"test": "echo \\\"Error: no test specified\\\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/GuduleLapointe/2do-aggregator.git"
+	},
+	"keywords": [
+		"OpenSimulator",
+		"2do",
+		"events",
+		"calendar",
+		"hypevents"
+	],
+	"author": "Gudule Lapointe",
+	"license": "AGPL-3.0-or-later",
+	"bugs": {
+		"url": "https://github.com/GuduleLapointe/2do-aggregator/issues"
+	},
+	"homepage": "https://github.com/GuduleLapointe/2do-aggregator#readme",
+	"dependencies": {
+		"moment": "^2.30.1",
+		"moment-timezone": "^0.5.45"
+	}
 }
