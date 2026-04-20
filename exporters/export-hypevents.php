@@ -25,8 +25,9 @@ class HYPEvents_Exporter {
         $today = date('l F j');
 
         foreach ($this->events as $event) {
-            // copy templates/events.lsl to output_dir
+            // copy web templates to output_dir
             copy(APP_DIR . '/templates/events.lsl', $this->output_dir . '/events.lsl');
+            copy(APP_DIR . '/templates/events.php', $this->output_dir . '/events.php');
 
             $name = $event->name;
             // make sure name is converted to utf8 if not already

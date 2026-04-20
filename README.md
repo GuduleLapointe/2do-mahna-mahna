@@ -127,6 +127,42 @@ Assuming `/var/www/html` is your website root directory, and `http://www.yourgri
   - [w4os Web interface for OpenSimulator](https://w4os.org) (wordpress plugin + parsers)
   - [Flexible Helper Scripts](https://github.com/GuduleLapointe/flexible_helper_scripts) (standalone parsers)
 
+### Dynamic LSL output (events.php)
+
+The aggregator also deploys `events.php` to the output directory. This script reads
+`events.json` at request time and returns only current and upcoming events, filtered
+server-side. It is the recommended URL for 2do Board because:
+
+- The static `events.lsl2` grows without bound. The LSL board script has a hard
+  `HTTP_BODY_MAXLENGTH` of 4096 bytes; once the file exceeds that, the script
+  silently receives a truncated response containing only old events, causing the
+  board to appear empty.
+- If the cron job hasn't run recently, the static file may be stale. `events.php`
+  always reflects what is current.
+
+Configure Apache to serve `events.php` when the board requests `events.lsl2`:
+
+```apache
+RewriteEngine On
+# Serve the dynamic version whenever events.lsl2 is requested
+RewriteRule ^events/events\.lsl2$ /events/events.php [L,QSA]
+```
+
+Or, if `events/` is its own `DocumentRoot` or `Alias` target:
+
+```apache
+RewriteEngine On
+RewriteRule ^events\.lsl2$ events.php [L,QSA]
+```
+
+URL parameters accepted by `events.php` (all optional):
+
+| Parameter    | Default | Description |
+|---|---|---|
+| `format`     | `lsl2`  | Output format (only `lsl2` currently supported) |
+| `limit`      | `20`    | Maximum number of events returned (0 = unlimited) |
+| `not_before` | `7200`  | Seconds before now still included (matches LSL board's 2-hour window) |
+
 ## Related projects
 
 Events parsers for in-world search:
