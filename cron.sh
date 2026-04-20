@@ -44,6 +44,17 @@ end() {
     exit $1
 }
 
+# sudo -nv 2>/dev/null || SUDO_GID="no_sudo"
+who=$(whoami)
+user=$(stat -c %U $0)
+if [ "$user" != "$who" ]
+then
+    log "relaunching as $user"
+    sudo -u $user $0
+    exit $?
+fi
+log running as $who
+
 touch $TMP.processing
 varg=
 [ "$DEBUG" = "yes" -o "$DEBUG" = "true" -o "$DEBUG" = "1" ] && DEBUG=1 || DEBUG=
