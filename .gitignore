@@ -16,3 +16,4 @@ cache/*
 config/targets
 tmp/
 logs/
+.env

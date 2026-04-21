@@ -8,15 +8,18 @@ BASEDIR=$(cd "$(dirname "$0")/.." && pwd)
 WEBROOT="$BASEDIR/output"
 
 cd "$BASEDIR"
+[ -f .env ] && source .env
+
+[ -n "$MAGICK_FONT_PATH" ] && export MAGICK_FONT_PATH
 
 echo "Starting 2do-aggregator dev server..."
-echo "  Project : $BASEDIR"
-echo "  Webroot : $WEBROOT"
-echo ""
+echo "  Project: $BASEDIR"
+echo "  Webroot: $WEBROOT"
+echo "  Magick font path: ${MAGICK_FONT_PATH:-}"
 
 # Initial sync of templates to output/
-cp templates/events.php "$WEBROOT/events.php"
-echo "Synced templates/ → output/"
+rsync -av templates/events.php "$WEBROOT/events.php" \
+&& echo "Synced templates/ → output/"
 
 # Get local IP
 if [[ "$OSTYPE" == "darwin"* ]]; then

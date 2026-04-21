@@ -16,7 +16,8 @@ use Kigkonsult\Icalcreator\Vevent;
  * @property string $dateUTC        // Event start date and time in UTC
  * @property int $duration          // Event duration in minutes
  * @property int $category          // Event category code number
- * @property int $categories        // Array of category names
+ * @property array $tags             // Array of category names
+ * @property int $categories        // Array of category codes
  * @property string $owneruuid      // Not implemented
  * @property string $creatoruuid    // Not implemented
  * @property int $covercharge       // Not implemented
@@ -48,6 +49,7 @@ class Event
 	public $hash;
 	public $source;
 	public $teleport;
+	public $tags;
 
 	/**
 	 * Event constructor.
