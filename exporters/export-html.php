@@ -54,7 +54,7 @@ class HTML_Exporter {
         
         $dom = new DOMDocument();
         libxml_use_internal_errors(true);
-        $dom->loadHTML(mb_convert_encoding($page, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        $dom->loadHTML('<?xml encoding="UTF-8">' . $page, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
         
         foreach ($md_files as $md_file) {
             $sectionId = strtolower(basename($md_file, '.md'));
@@ -66,7 +66,7 @@ class HTML_Exporter {
             $html = $Parsedown->text($text);
             // Créer un nouveau DOMDocument pour le contenu du README
             $domForContent = new DOMDocument();
-            $domForContent->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+            $domForContent->loadHTML('<?xml encoding="UTF-8">' . $html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
 
             // Obtenir tous les éléments de niveau supérieur du contenu du README
             $body = $domForContent->getElementsByTagName('body')->item(0);
@@ -112,7 +112,7 @@ class HTML_Exporter {
             $boardsHtml = file_get_contents(APP_DIR . '/templates/boards.html');
             $boardsDom  = new DOMDocument();
             libxml_use_internal_errors(true);
-            $boardsDom->loadHTML(mb_convert_encoding($boardsHtml, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+            $boardsDom->loadHTML('<?xml encoding="UTF-8">' . $boardsHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
 
             // Move any <style> blocks from boards.html <head> into the main <head>
             $mainHead   = $dom->getElementsByTagName('head')->item(0);
