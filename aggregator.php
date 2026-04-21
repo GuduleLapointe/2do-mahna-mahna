@@ -306,7 +306,7 @@ class Aggregator
 			"\x{2600}-\x{26FF}" . // Miscellaneous Symbols
 			"\x{2700}-\x{27BF}"; // Dingbats
 
-		return preg_replace("/[" . $symbols . "]+/u", "", $string);
+		return preg_replace("/[" . $symbols . "]+/u", "", (string) $string);
 	}
 
 	public static function admin_notice($message, $error_code = 0, $die = false)

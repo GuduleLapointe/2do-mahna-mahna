@@ -57,22 +57,9 @@ Jump directly to "Calendar conventions" below for the events format.
 
 ## Installation
 
-_Installation of this server is only relevant if you want to provide a custom-curated list calendar. If you really need to manage your own calendars collection, follow these instructions._
+_Installation is only relevant if you want to provide a custom-curated calendar. In most cases you don't need it — use [2do.directory](https://2do.directory) instead._
 
-Clone this repository and put it in a convenient place like /opt/2do-aggregator (not inside the website root folder).
-
-Install libraries.
-  ```bash
-  cd /opt/2do-aggregator
-  composer install --no-dev
-  ```
-
-_Why outside the website directory? This is a script intended to be run from terminal or via a cron job, there is no point allowing random users or bots to run it from outside and risk overloading the server._
-
-Copy config/ical.gfg.example and add your calendar sources.
-  ```bash
-  cp config/sources.csv.example config/sources.csv
-  ```
+See **[INSTALLATION.md](INSTALLATION.md)** for full instructions (dependencies, web server config, cron setup).
 
 ## Calendar conventions
 
@@ -108,60 +95,6 @@ They might also include
 
 To get the url of your calendar in iCal format, move your mouse above the calendar you want to share, a three dots icon appears, select "Settings and Sharing" and scroll the page down to find Public iCal format adress. This is the value you need to copy as calendar ics url.
 
-## Running
-
-Run the script manually
-  ```bash
-  /opt/2do-aggregator/aggregator.php /var/www/html/events/
-  ```
-
-Create a cronjob to run automatically (below example would run it every 4 hours)
-  ```
-  0 */4 * * * /opt/2do-aggregator/aggregator.php /var/www/html/events/
-  ```
-
-Assuming `/var/www/html` is your website root directory, and `http://www.yourgrid.org/`, this would create:
-- `http://www.yourgrid.org/events/` a basic web calendar page
-- `http://www.yourgrid.org/events/events.lsl2` the source url for 2do Board
-- `http://www.yourgrid.org/events/events.json` the source url for events parsers
-  - [w4os Web interface for OpenSimulator](https://w4os.org) (wordpress plugin + parsers)
-  - [Flexible Helper Scripts](https://github.com/GuduleLapointe/flexible_helper_scripts) (standalone parsers)
-
-### Dynamic LSL output (events.php)
-
-The aggregator also deploys `events.php` to the output directory. This script reads
-`events.json` at request time and returns only current and upcoming events, filtered
-server-side. It is the recommended URL for 2do Board because:
-
-- The static `events.lsl2` grows without bound. The LSL board script has a hard
-  `HTTP_BODY_MAXLENGTH` of 4096 bytes; once the file exceeds that, the script
-  silently receives a truncated response containing only old events, causing the
-  board to appear empty.
-- If the cron job hasn't run recently, the static file may be stale. `events.php`
-  always reflects what is current.
-
-Configure Apache to serve `events.php` when the board requests `events.lsl2`:
-
-```apache
-RewriteEngine On
-# Serve the dynamic version whenever events.lsl2 is requested
-RewriteRule ^events/events\.lsl2$ /events/events.php [L,QSA]
-```
-
-Or, if `events/` is its own `DocumentRoot` or `Alias` target:
-
-```apache
-RewriteEngine On
-RewriteRule ^events\.lsl2$ events.php [L,QSA]
-```
-
-URL parameters accepted by `events.php` (all optional):
-
-| Parameter    | Default | Description |
-|---|---|---|
-| `format`     | `lsl2`  | Output format (only `lsl2` currently supported) |
-| `limit`      | `20`    | Maximum number of events returned (0 = unlimited) |
-| `not_before` | `7200`  | Seconds before now still included (matches LSL board's 2-hour window) |
 
 ## Related projects
 

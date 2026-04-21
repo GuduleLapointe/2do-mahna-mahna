@@ -3,7 +3,7 @@
 # Cron script for 2do-aggregator.
 #
 # Executes the aggregator and syncs the output to the targets specified in config/targets.
-# Use crontab to execute this script periodically (hourly or daily), 
+# Use crontab to execute this script periodically (hourly or daily),
 # or ln -s it to /etc/cron.hourly/ or /etc/cron.daily/
 #
 # e.g.: sudo ln -s /path/to/2do-aggregator/cron.sh /etc/cron.hourly/2do-aggregator-cron
@@ -11,14 +11,23 @@
 # Aggregator execution time can be long, depending on the number of configured sources and
 # the number of events in each source, so it is recommended to run this task max once per hour.
 
+set -euo pipefail
+
 BASEDIR=$(realpath $(dirname $0))
-PGM=2do-aggregator-cron
+PGM=$(basename $0)
 TMP=/tmp/$PGM.$$
-LOG=/tmp/$PGM.log
+LOG=$BASEDIR/logs/$PGM.log
+OS=$(uname | tr [:upper:] [:lower:])
+DEBUG=${DEBUG:-}
+TRACE=${TRACE:-}
+
 builddir=$BASEDIR/output/
+
+mkdir -p $BASEDIR/logs
 
 log() {
     echo "$@" >> $TMP.processing
+    error=
     echo "$1" | cut -d " " -f 1 | grep -E -q '^[0-9]+$' && error=$1 && shift
     [ "$error" = "0" ] && error=
     [ -z "$error" -a -z "$DEBUG" ] && return
@@ -46,7 +55,8 @@ end() {
 
 # sudo -nv 2>/dev/null || SUDO_GID="no_sudo"
 who=$(whoami)
-user=$(stat -c %U $0)
+# [ "$os" = "darwin" ] && user=
+user=$(stat -c %U $0 2>/dev/null || stat -f %Su $0)
 if [ "$user" != "$who" ]
 then
     log "relaunching as $user"
@@ -59,7 +69,7 @@ touch $TMP.processing
 varg=
 [ "$DEBUG" = "yes" -o "$DEBUG" = "true" -o "$DEBUG" = "1" ] && DEBUG=1 || DEBUG=
 if [ "$DEBUG" ]; then
-    varg="-v" 
+    varg="-v"
     tail -f $TMP.processing &
     tailpid=$!
 fi
@@ -76,7 +86,7 @@ $BASEDIR/aggregator.php $varg $builddir/ >> $TMP.processing 2>&1 || fail $? erro
 errors=0
 [ -f $BASEDIR/config/targets ] && grep . $BASEDIR/config/targets | egrep -v "#|^\s*$" | while read target; do
     log updating $target/
-    rsync -Waz $builddir/ $target/ && continue 
+    rsync -Waz $builddir/ $target/ && continue
     log $? rsync to target $target failed
     errors=$((errors+1))
 done

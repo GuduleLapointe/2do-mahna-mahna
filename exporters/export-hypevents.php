@@ -1,79 +1,97 @@
 <?php
 /**
  * HYPEvents Exporter
- * 
+ *
  * Export events to HYPEvents legacy format
  */
-if( ! IS_AGGR ) {
-    die('No direct calls, run main script aggregator.php instead.' . PHP_EOL);
+if (!IS_AGGR) {
+	die("No direct calls, run main script aggregator.php instead." . PHP_EOL);
 }
 
-class HYPEvents_Exporter {
-    private $events = array();
-    private $output_dir;
+class HYPEvents_Exporter
+{
+	private $events = [];
+	private $output_dir;
 
-    public function __construct($events, $output_dir) {
-        $this->events = $events;
-        $this->output_dir = $output_dir;
-        $this->export();
-    }
+	public function __construct($events, $output_dir)
+	{
+		$this->events = $events;
+		$this->output_dir = $output_dir;
+		$this->export();
+	}
 
-    public function export() {
-        $output = BOARD_VER . "\n";
+	public function export()
+	{
+		$output = BOARD_VER . "\n";
 
-        $prev_day = '';
-        $today = date('l F j');
+		$prev_day = "";
+		$today = date("l F j");
 
-        foreach ($this->events as $event) {
-            // copy web templates to output_dir
-            copy(APP_DIR . '/templates/events.lsl', $this->output_dir . '/events.lsl');
-            copy(APP_DIR . '/templates/events.php', $this->output_dir . '/events.php');
+		foreach ($this->events as $event) {
+			// copy web templates to output_dir
+			copy(
+				APP_DIR . "/templates/events.lsl",
+				$this->output_dir . "/events.lsl",
+			);
+			copy(
+				APP_DIR . "/templates/events.php",
+				$this->output_dir . "/events.php",
+			);
 
-            $name = $event->name;
-            // make sure name is converted to utf8 if not already
-            if (!mb_detect_encoding($name, 'UTF-8', true)) {
-                $name = utf8_encode($name);
-            }
-            // Transliterating name to ASCII
-            $name = Aggregator::remove_emoji($name);
-            $name = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name);
-            if( empty($name) ) {
-                continue;
-            }
+			$name = $event->name;
+			// make sure name is converted to utf8 if not already
+			if (!mb_detect_encoding((string) $name, "UTF-8", true)) {
+				$name = utf8_encode($name);
+			}
+			// Transliterating name to ASCII
+			$name = Aggregator::remove_emoji($name);
+			$name = iconv("UTF-8", "ASCII//TRANSLIT//IGNORE", $name);
+			if (empty($name)) {
+				continue;
+			}
 
-            // calculate end datetime
-            $end_stamp = strtotime($event->dateUTC) + $event->duration * 60;
-            if ( $end_stamp < time() ) {
-                continue;
-            }
+			// calculate end datetime
+			$end_stamp = strtotime($event->dateUTC) + $event->duration * 60;
+			if ($end_stamp < time()) {
+				continue;
+			}
 
-            $begin = new DateTime($event->dateUTC, new DateTimeZone('UTC'));
-            $begin->setTimezone(new DateTimeZone('America/Los_Angeles'));
-            
-            $end = new DateTime();
-            $end->setTimestamp($end_stamp);
-            $end->setTimezone(new DateTimeZone('America/Los_Angeles'));
+			$begin = new DateTime($event->dateUTC, new DateTimeZone("UTC"));
+			$begin->setTimezone(new DateTimeZone("America/Los_Angeles"));
 
-            $time_parts = array(
-                $begin->format('h:iA'),
-                $begin->format('Y-m-d'),
-                $begin->getTimestamp(),
-                $end->format('h:iA'),
-                $end->format('Y-m-d'),
-                $end->getTimestamp(),
-            );
+			$end = new DateTime();
+			$end->setTimestamp($end_stamp);
+			$end->setTimezone(new DateTimeZone("America/Los_Angeles"));
 
-            $hgurl = $event->simname;
-            
-            $output .= "$name\n" . implode('~', $time_parts) . "\n$hgurl\n";
-        }
-        // echo "\n$output\n\n";
+			$time_parts = [
+				$begin->format("h:iA"),
+				$begin->format("Y-m-d"),
+				$begin->getTimestamp(),
+				$end->format("h:iA"),
+				$end->format("Y-m-d"),
+				$end->getTimestamp(),
+			];
 
-        $result = file_put_contents($this->output_dir . '/events.lsl2', $output);
-        if( $result != false ) {
-            Aggregator::notice("exported " . $this->output_dir . '/events.lsl2');
-        } else {
-            Aggregator::admin_notice("Error writing " . $this->output_dir . '/events.lsl2', 1, true);
-        }
-    }
+			$hgurl = $event->simname;
+
+			$output .= "$name\n" . implode("~", $time_parts) . "\n$hgurl\n";
+		}
+		// echo "\n$output\n\n";
+
+		$result = file_put_contents(
+			$this->output_dir . "/events.lsl2",
+			$output,
+		);
+		if ($result != false) {
+			Aggregator::notice(
+				"exported " . $this->output_dir . "/events.lsl2",
+			);
+		} else {
+			Aggregator::admin_notice(
+				"Error writing " . $this->output_dir . "/events.lsl2",
+				1,
+				true,
+			);
+		}
+	}
 }

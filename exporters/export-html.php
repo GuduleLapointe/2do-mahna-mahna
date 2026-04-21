@@ -106,6 +106,45 @@ class HTML_Exporter {
         }
         }
 
+        // Inject boards.html into the boards section
+        $boardsSection = $dom->getElementById('boards');
+        if ($boardsSection) {
+            $boardsHtml = file_get_contents(APP_DIR . '/templates/boards.html');
+            $boardsDom  = new DOMDocument();
+            libxml_use_internal_errors(true);
+            $boardsDom->loadHTML(mb_convert_encoding($boardsHtml, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+
+            // Move any <style> blocks from boards.html <head> into the main <head>
+            $mainHead   = $dom->getElementsByTagName('head')->item(0);
+            $boardsHead = $boardsDom->getElementsByTagName('head')->item(0);
+            if ($boardsHead && $mainHead) {
+                foreach (iterator_to_array($boardsHead->childNodes) as $child) {
+                    if ($child->nodeName === 'style') {
+                        $mainHead->appendChild($dom->importNode($child, true));
+                    }
+                }
+            }
+
+            // Inject body content wrapped the same way as markdown sections
+            $boardsBody = $boardsDom->getElementsByTagName('body')->item(0);
+            if ($boardsBody) {
+                $wrapper = $dom->createElement('div');
+                $wrapper->setAttribute('class', 'wrapper');
+                $content = $dom->createElement('div');
+                $content->setAttribute('class', 'content');
+                while ($boardsBody->hasChildNodes()) {
+                    $child = $boardsBody->firstChild;
+                    $content->appendChild($dom->importNode($child, true));
+                    $boardsBody->removeChild($child);
+                }
+                $wrapper->appendChild($content);
+                $boardsSection->appendChild($wrapper);
+            }
+            Aggregator::notice("section boards updated with boards.html");
+        } else {
+            Aggregator::admin_notice("section boards not found", 1);
+        }
+
         $page = $dom->saveHTML();
         
         // Ajouter la classe list-check aux éléments li qui contiennent [x] et remplacer [x] par une case à cocher cochée

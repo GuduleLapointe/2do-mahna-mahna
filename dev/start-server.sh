@@ -15,8 +15,7 @@ echo "  Webroot : $WEBROOT"
 echo ""
 
 # Initial sync of templates to output/
-cp templates/events.php   "$WEBROOT/events.php"
-cp templates/examples.php "$WEBROOT/examples.php"
+cp templates/events.php "$WEBROOT/events.php"
 echo "Synced templates/ → output/"
 
 # Get local IP
@@ -40,9 +39,8 @@ echo ""
 # Auto-sync events.php on change (requires fswatch: brew install fswatch)
 if command -v fswatch >/dev/null 2>&1; then
     echo "Watching templates/ for changes (fswatch)..."
-    fswatch -o "$BASEDIR/templates/events.php" "$BASEDIR/templates/examples.php" | while read; do
-        cp "$BASEDIR/templates/events.php"    "$WEBROOT/events.php"
-        cp "$BASEDIR/templates/examples.php" "$WEBROOT/examples.php"
+    fswatch -o "$BASEDIR/templates/events.php" | while read; do
+        cp "$BASEDIR/templates/events.php" "$WEBROOT/events.php"
         echo "  [sync] templates/ → output/"
     done &
     FSWATCH_PID=$!

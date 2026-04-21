@@ -5,9 +5,9 @@ use Kigkonsult\Icalcreator\Vevent;
 
 /**
  * Event class
- * 
+ *
  * Represents an event of the calendar
- * 
+ *
  * @property string $uid            // Unique identifier, collected from source if possible
  * @property string $name           // Event name
  * @property string $description    // Event description
@@ -23,201 +23,234 @@ use Kigkonsult\Icalcreator\Vevent;
  * @property int $coveramount       // Not implemented
  * @property string $parcelUUID     // Not implemented
  * @property string $globalPos      // Not implemented
- * @property int $eventflags        
+ * @property int $eventflags
  * @property string $gatekeeperURL  // Region grid target URL
  * @property string $hash           // Not implemented
  */
-class Event {
-    public $uid;
-    public $name;
-    public $description;
-    public $simname;            
-    public $dateUTC;
-    public $duration;
-    public $category;
-    public $categories;
-    public $owneruuid;
-    public $creatoruuid;
-    public $covercharge;
-    public $coveramount;
-    public $parcelUUID;
-    public $globalPos;
-    public $eventflags;
-    public $gatekeeperURL;
-    public $hash;
-    public $source;
-    public $teleport;
+class Event
+{
+	public $uid;
+	public $name;
+	public $description;
+	public $simname;
+	public $dateUTC;
+	public $duration;
+	public $category;
+	public $categories;
+	public $owneruuid;
+	public $creatoruuid;
+	public $covercharge;
+	public $coveramount;
+	public $parcelUUID;
+	public $globalPos;
+	public $eventflags;
+	public $gatekeeperURL;
+	public $hash;
+	public $source;
+	public $teleport;
 
-    /**
-     * Event constructor.
-     * 
-     * @param array $data
-     */
-    public function __construct($data, $calendar = array() ) {
-        $original_data = $data;
-        // Make sure all required indices are present
-        $data = array_merge( EVENT_STRUCTURE, $data);
+	/**
+	 * Event constructor.
+	 *
+	 * @param array $data
+	 */
+	public function __construct($data, $calendar = [])
+	{
+		$original_data = $data;
+		// Make sure all required indices are present
+		$data = array_merge(EVENT_STRUCTURE, $data);
 
-        if(Fetcher::isExcluded($calendar['slug'], $data['name'])) {
-            Aggregator::admin_notice("[" . $calendar['slug'] . "] " . $data['name'] . " is in exclusion list");
-            return false;
-        }
+		if (Fetcher::isExcluded($calendar["slug"], $data["name"])) {
+			Aggregator::admin_notice(
+				"[" .
+					$calendar["slug"] .
+					"] " .
+					$data["name"] .
+					" is in exclusion list",
+			);
+			return false;
+		}
 
-        $data['category'] = $this->sanitize_category($data['category']);
+		$data["category"] = $this->sanitize_category($data["category"]);
 
-        if (empty($data['simname'])) {
-            $description = preg_replace('/%20/', ' ', $data['description']);
-            $reg_protocol = "((https?|hop:|secondlife:)\/\/)?";
-            $reg_host = "([\w-]+(\.[\w-]+)+)";
-            $reg_port = "(:\d+)";
-            $reg_region = "([:\/ \+]([\w _\+-](%20)?)+)?";
-            $reg_xyz = "((\/\d+){3})?";
-            $pattern = "/$reg_protocol$reg_host$reg_port$reg_region$reg_xyz/";
-            preg_match($pattern, $description, $matches);
-            if (!empty($matches)) {
-                $data['simname'] = $matches[0];
-            }
-        }
+		if (empty($data["simname"])) {
+			$description = preg_replace("/%20/", " ", $data["description"]);
+			$reg_protocol = "((https?|hop:|secondlife:)\/\/)?";
+			$reg_host = "([\w-]+(\.[\w-]+)+)";
+			$reg_port = "(:\d+)";
+			$reg_region = "([:\/ \+]([\w _\+-](%20)?)+)?";
+			$reg_xyz = "((\/\d+){3})?";
+			$pattern = "/$reg_protocol$reg_host$reg_port$reg_region$reg_xyz/";
+			preg_match($pattern, $description, $matches);
+			if (!empty($matches)) {
+				$data["simname"] = $matches[0];
+			}
+		}
 
-        $sanitized_url = $this->sanitize_hgurl($data['simname'], $calendar['grid_url'] );
-        if($sanitized_url === false) {
-            Aggregator::admin_notice( sprintf(
-                "%s event %s error checking location %s",
-                $calendar['slug'],
-                $data['uid'],
-                empty($data['simname']) ? $calendar['grid_url'] : $data['simname'],
-            ) );
-            return false;
-        }
-        if(empty($sanitized_url)) {
-            Aggregator::admin_notice( sprintf(
-                "%s event %s has no location %s",
-                $calendar['slug'],
-                $data['uid'],
-                empty($data['simname']) ? $calendar['grid_url'] : $data['simname'],
-            ) );
-            return false;
-        }
-        $data['simname'] = $sanitized_url;
+		$sanitized_url = $this->sanitize_hgurl(
+			$data["simname"],
+			$calendar["grid_url"],
+		);
+		if ($sanitized_url === false) {
+			Aggregator::admin_notice(
+				sprintf(
+					"%s event %s error checking sanitize_hgurl(%s, %s)",
+					$calendar["slug"],
+					$data["uid"],
+					$data["simname"] ?? "",
+					$calendar["grid_url"],
+				),
+			);
+			return false;
+		}
+		if (empty($sanitized_url)) {
+			Aggregator::admin_notice(
+				sprintf(
+					"%s event %s has no location %s",
+					$calendar["slug"],
+					$data["uid"],
+					empty($data["simname"])
+						? $calendar["grid_url"]
+						: $data["simname"],
+				),
+			);
+			return false;
+		}
+		$data["simname"] = $sanitized_url;
 
-        $tags = $data['tags'];
-        if(empty($tags)) {
-            $tags = array();
-        } else if(!is_array($tags)) {
-            $tags = array($tags);
-        }
-        // $tags = array_unique( array_merge ( $tags, array( $calendar['slug'] ) ) );
-        $tags = array_filter($tags);
-        $tags = array_unique( $tags );
+		$tags = $data["tags"];
+		if (empty($tags)) {
+			$tags = [];
+		} elseif (!is_array($tags)) {
+			$tags = [$tags];
+		}
+		// $tags = array_unique( array_merge ( $tags, array( $calendar['slug'] ) ) );
+		$tags = array_filter($tags);
+		$tags = array_unique($tags);
 
-        // Sanitize $data['description'], replace "\n" with actual new lines, trim trailing spaces and new lines
-        $data['description'] = trim( str_replace( "\\n", PHP_EOL, $data['description'] ) );
+		// Sanitize $data['description'], replace "\n" with actual new lines, trim trailing spaces and new lines
+		$data["description"] = trim(
+			str_replace("\\n", PHP_EOL, $data["description"]),
+		);
 
-        // TODO: generate uid if not present (for other sources than iCal)
-        $this->uid = $data['uid'];
-        $this->owneruuid = $data['owneruuid'];
-        $this->name = $data['name'];
-        $this->creatoruuid = $data['creatoruuid'];
-        $this->category = $data['category'];            // OpenSim/SL category code
-        $this->tags = $tags;                // Array of category names
-        $this->description = $data['description'];
-        $this->dateUTC = $data['dateUTC'];
-        $this->duration = $data['duration'];
-        $this->covercharge = $data['covercharge'];
-        $this->coveramount = $data['coveramount'];
-        $this->simname = $data['simname'];
-        $this->parcelUUID = $data['parcelUUID'];
-        $this->globalPos = $data['globalPos'];
-        $this->eventflags = $data['eventflags'];
-        $this->gatekeeperURL = $data['gatekeeperURL'];
-        // eventlist.py:        new_hash = hashlib.md5( str(event_start) + hgurl ).hexdigest()
-        $this->hash = md5( $this->dateUTC . $this->simname );
-        $this->source = $calendar['slug'];
-        $this->teleport = array(
-            'HOP' => opensim_format_tp($this->simname, TPLINK_HOP),
-            'HG' => opensim_format_tp($this->simname, TPLINK_HG),
-            'V3HG' => opensim_format_tp($this->simname, TPLINK_V3HG),
-        );
-    }
+		// TODO: generate uid if not present (for other sources than iCal)
+		$this->uid = $data["uid"];
+		$this->owneruuid = $data["owneruuid"];
+		$this->name = $data["name"];
+		$this->creatoruuid = $data["creatoruuid"];
+		$this->category = $data["category"]; // OpenSim/SL category code
+		$this->tags = $tags; // Array of category names
+		$this->description = $data["description"];
+		$this->dateUTC = $data["dateUTC"];
+		$this->duration = $data["duration"];
+		$this->covercharge = $data["covercharge"];
+		$this->coveramount = $data["coveramount"];
+		$this->simname = $data["simname"];
+		$this->parcelUUID = $data["parcelUUID"];
+		$this->globalPos = $data["globalPos"];
+		$this->eventflags = $data["eventflags"];
+		$this->gatekeeperURL = $data["gatekeeperURL"];
+		// eventlist.py:        new_hash = hashlib.md5( str(event_start) + hgurl ).hexdigest()
+		$this->hash = md5($this->dateUTC . $this->simname);
+		$this->source = $calendar["slug"];
+		$this->teleport = [
+			"HOP" => opensim_format_tp($this->simname, TPLINK_HOP),
+			"HG" => opensim_format_tp($this->simname, TPLINK_HG),
+			"V3HG" => opensim_format_tp($this->simname, TPLINK_V3HG),
+		];
+	}
 
-    /**
-     * Sanitize a hypergrid URL
-     * 
-     * @param string $url           // URL to sanitize
-     * @param string $grid_url      // Grid URL to use if $url is empty or missin host
-     * @return string|bool          // Sanitized URL or false if the region is offline or invalid
-     */
-    public function sanitize_hgurl($url, $grid_url = null) {
-        static $sanitize_hgurl_cache = [];
+	/**
+	 * Sanitize a hypergrid URL
+	 *
+	 * @param string $url           // URL to sanitize
+	 * @param string $grid_url      // Grid URL to use if $url is empty or missin host
+	 * @return string|bool          // Sanitized URL or false if the region is offline or invalid
+	 */
+	public function sanitize_hgurl($url, $grid_url = null)
+	{
+		static $sanitize_hgurl_cache = [];
 
-        if ( empty( $url ) ) {
-            $url = $grid_url;
-        }
+		if (empty($url)) {
+			$url = $grid_url;
+		}
 
-        // Return cached value if available
-        if (isset($sanitize_hgurl_cache[$url])) {
-            switch ($sanitize_hgurl_cache[$url]) {
-                case 'empty':
-                    return;
-                case 'offline':
-                    return false;
-                case 'invalid':
-                    return false;
-            }
-            return $sanitize_hgurl_cache[$url];
-        }
+		// Return cached value if available
+		if (isset($sanitize_hgurl_cache[$url])) {
+			switch ($sanitize_hgurl_cache[$url]) {
+				case "empty":
+					return;
+				case "offline":
+					Aggregator::admin_notice("cached region $url is offline");
+					return false;
+				case "invalid":
+					Aggregator::admin_notice("cached region $url is invalid");
+					return false;
+			}
+			return $sanitize_hgurl_cache[$url];
+		}
 
-        $region = opensim_sanitize_uri( $url, $grid_url, true );
+		$region = opensim_sanitize_uri($url, $grid_url, true);
 
-        $tmpurl = opensim_sanitize_uri( $url, $grid_url );
-        
-        $region_data = opensim_get_region( $tmpurl );
-        
-        if(empty($region_data)) {
-            Aggregator::admin_notice("region $tmpurl data could not be fetched" );
+		$tmpurl = opensim_sanitize_uri($url, $grid_url);
 
-            $sanitize_hgurl_cache[$url] = "invalid";
-            return false;
-        }
-        $region['region'] = (empty($region['region']) &! empty($region_data['region_name'])) ? $region_data['region_name'] : $region['region'];
-        if(!opensim_region_is_online($region)) {
-            Aggregator::admin_notice("region $tmpurl is offline" );
+		$region_data = opensim_get_region($tmpurl);
 
-            $sanitize_hgurl_cache[$url] = "offline";
-            return false;
-        }
-        $tmpurl = $region['gatekeeper'] . ':' . $region['region'] . ( empty($region['pos']) ? '' : '/' . $region['pos'] );
-        $url = opensim_format_tp( $tmpurl, TPLINK_TXT );
+		if (empty($region_data)) {
+			Aggregator::admin_notice(
+				"region $tmpurl data could not be fetched (empty)",
+			);
 
-        $sanitize_hgurl_cache[$url] = $url;
-        return $url;
-    }
+			$sanitize_hgurl_cache[$url] = "invalid";
+			return false;
+		}
+		$region["region"] =
+			empty($region["region"]) & !empty($region_data["region_name"])
+				? $region_data["region_name"]
+				: $region["region"];
+		if (!opensim_region_is_online($region)) {
+			Aggregator::admin_notice("region $tmpurl is offline");
 
-    /**
-     * Sanitize category code. 
-     * 
-     * Return category code number if $value is a valid number, otherwise the best guess 
-     * based on the given string(s). First match wins.
-     * 
-     * @param integer|string|array $values  // Category name or array of category names
-     * @return int                          // Valid category code number
-     */
-    public function sanitize_category($values) {
-        if ( empty( $values ) ) {
-            return 0; // Undefined
-        }
-        if ( ! is_array( $values ) ) {
-            $values = array( $values );
-        }
-        foreach ( $values as $value ) {
-            if ( is_int( $value ) ) {
-                return $value;
-            }
-            $key = strtolower( $value );
-            if ( isset( $this->categories[ $key ] ) ) {
-                return $this->categories[ $key ];
-            }
-        }
-        return 29; // Not undefined, but unknown, so we return Miscellaneous
-    }
+			$sanitize_hgurl_cache[$url] = "offline";
+			return false;
+		}
+		$tmpurl =
+			$region["gatekeeper"] .
+			":" .
+			$region["region"] .
+			(empty($region["pos"]) ? "" : "/" . $region["pos"]);
+		$url = opensim_format_tp($tmpurl, TPLINK_TXT);
+
+		$sanitize_hgurl_cache[$url] = $url;
+		return $url;
+	}
+
+	/**
+	 * Sanitize category code.
+	 *
+	 * Return category code number if $value is a valid number, otherwise the best guess
+	 * based on the given string(s). First match wins.
+	 *
+	 * @param integer|string|array $values  // Category name or array of category names
+	 * @return int                          // Valid category code number
+	 */
+	public function sanitize_category($values)
+	{
+		if (empty($values)) {
+			return 0; // Undefined
+		}
+		if (!is_array($values)) {
+			$values = [$values];
+		}
+		foreach ($values as $value) {
+			if (is_int($value)) {
+				return $value;
+			}
+			$key = strtolower($value);
+			if (isset($this->categories[$key])) {
+				return $this->categories[$key];
+			}
+		}
+		return 29; // Not undefined, but unknown, so we return Miscellaneous
+	}
 }

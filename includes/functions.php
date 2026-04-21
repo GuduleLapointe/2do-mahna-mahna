@@ -10,6 +10,10 @@
  * @license     AGPLv3
  */
 
+if (!function_exists("xmlrpc_server_create")) {
+	require_once __DIR__ . "/library-xmlrpc.php";
+}
+
 /**
  * Verify if given string is an UUID.
  * In theory, we would check want v4-compliant uuids
@@ -21,18 +25,25 @@
  * @param  boolean $strict               apply strict UUID v4 implentation (default false)
  * @return boolean
  */
-function opensim_isuuid( $uuid, $nullok = false, $strict = false ) {
-	if ( $uuid == null ) {
+function opensim_isuuid($uuid, $nullok = false, $strict = false)
+{
+	if ($uuid == null) {
 		return $nullok;
 	}
-	if ( defined( 'NULL_KEY' ) && $uuid == NULL_KEY ) {
+	if (defined("NULL_KEY") && $uuid == NULL_KEY) {
 		return $nullok;
 	}
 
-	if ( $strict ) {
-		return ( preg_match( '/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i', $uuid ) );
+	if ($strict) {
+		return preg_match(
+			'/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i',
+			$uuid,
+		);
 	} else {
-		return ( preg_match( '/^[0-9A-F]{8,8}-[0-9A-F]{4,4}-[0-9A-F]{4,4}-[0-9A-F]{4,4}-[0-9A-F]{12,12}$/i', $uuid ) );
+		return preg_match(
+			'/^[0-9A-F]{8,8}-[0-9A-F]{4,4}-[0-9A-F]{4,4}-[0-9A-F]{4,4}-[0-9A-F]{12,12}$/i',
+			$uuid,
+		);
 	}
 }
 
@@ -45,90 +56,104 @@ function opensim_isuuid( $uuid, $nullok = false, $strict = false ) {
  * @return string       (default)                   $host:$port $region/$pos
  *           or array                                           array($host, $port, $region, $pos)
  */
-function opensim_sanitize_uri( $url, $gatekeeperURL = null, $array_outout = false ) {
+function opensim_sanitize_uri(
+	$url,
+	$gatekeeperURL = null,
+	$array_outout = false,
+) {
 	// $normalized = opensim_format_tp($uri, TPLINK_TXT);
-	$host   = null;
-	$port   = null;
+	$host = null;
+	$port = null;
 	$region = null;
-	$pos    = null;
-	$uri    = urldecode( trim( $url ) );
-	$uri    = preg_replace( '#^(.*://)?(([A-Za-z0-9_-]+\.[A-Za-z0-9\._-]+)([:/ ]+)?)?(([0-9]+)([ /:]))?([^/]+)(/|$)(.*)#', '$3:$6:$8/$10', "$uri" );
-	$uri    = preg_replace( '/^([^:]+)::([0-9]+)/', '$1:$2', $uri );
-	$uri    = preg_replace( '+[:/]*$+', '', $uri );
-	$split  = explode( '/', $uri );
-	$uri    = array_shift( $split );
-	if ( count( $split ) == 2 || count( $split ) == 3 ) {
-		$pos = implode( '/', $split );
+	$pos = null;
+	$uri = urldecode(trim($url));
+	$uri = preg_replace(
+		'#^(.*://)?(([A-Za-z0-9_-]+\.[A-Za-z0-9\._-]+)([:/ ]+)?)?(([0-9]+)([ /:]))?([^/]+)(/|$)(.*)#',
+		'$3:$6:$8/$10',
+		"$uri",
+	);
+	$uri = preg_replace("/^([^:]+)::([0-9]+)/", '$1:$2', $uri);
+	$uri = preg_replace('+[:/]*$+', "", $uri);
+	$split = explode("/", $uri);
+	$uri = array_shift($split);
+	if (count($split) == 2 || count($split) == 3) {
+		$pos = implode("/", $split);
 	} else {
-		$pos = '';
+		$pos = "";
 	}
 	// $pos = preg_replace('+[^0-9/]+e', '', $pos);
-	$split = explode( ':', $uri );
+	$split = explode(":", $uri);
 
-	if ( count( $split ) == 1 ) {
+	if (count($split) == 1) {
 		$region = $split[0];
-	} elseif ( count( $split ) == 2 && preg_match( '/ /', $split[1] ) ) {
+	} elseif (count($split) == 2 && preg_match("/ /", $split[1])) {
 		// could probably improve the preg_replace to avoid this
-		$host   = $split[0];
-		$split  = explode( ' ', $split[1] );
-		$port   = $split[0];
+		$host = $split[0];
+		$split = explode(" ", $split[1]);
+		$port = $split[0];
 		$region = $split[1];
 	} else {
-		if ( preg_match( '/[a-z].*\.[a-z]/', $split[0] ) ) {
-			$host = array_shift( $split );
-			if ( preg_match( '/^[0-9]+$/', $split[0] ) ) {
-				$port = array_shift( $split );
+		if (preg_match("/[a-z].*\.[a-z]/", $split[0])) {
+			$host = array_shift($split);
+			if (preg_match('/^[0-9]+$/', $split[0])) {
+				$port = array_shift($split);
 			} else {
 				$port = 8002;
 			}
-			$region = preg_replace( ':^/*:', '', @$split[0] );
-		} else if(function_exists('w4os_grid_login_uri')) {
-			$host = parse_url( w4os_grid_login_uri(), PHP_URL_HOST );
-			$port = parse_url( w4os_grid_login_uri(), PHP_URL_HOST );
-			if ( preg_match( '/^[0-9]+$/', $split[0] ) ) {
-				array_shift( $split );
+			$region = preg_replace(":^/*:", "", @$split[0] ?? "");
+		} elseif (function_exists("w4os_grid_login_uri")) {
+			$host = parse_url(w4os_grid_login_uri(), PHP_URL_HOST);
+			$port = parse_url(w4os_grid_login_uri(), PHP_URL_HOST);
+			if (preg_match('/^[0-9]+$/', $split[0])) {
+				array_shift($split);
 			}
-			$region = preg_replace( ':^/*:', '', @$split[0] );
+			$region = preg_replace(":^/*:", "", @$split[0]);
 		} else {
-			if( empty($gatekeeperURL)) {
+			if (empty($gatekeeperURL)) {
 				return false;
 			}
 			$region = $split[2];
-			$split = explode( ':', preg_replace( '#.*://([^/]+)/?.*#', '$1', $gatekeeperURL ) );
+			$split = explode(
+				":",
+				preg_replace("#.*://([^/]+)/?.*#", '$1', $gatekeeperURL),
+			);
 			$host = $split[0];
 			$port = $split[1];
 		}
 	}
-	if ( empty( $host ) & ! empty( $gatekeeperURL ) ) {
-		$split = explode( ':', preg_replace( '#.*://([^/]+)/?.*#', '$1', $gatekeeperURL ) );
-		$host  = $split[0];
-		$port  = $split[1];
+	if (empty($host) & !empty($gatekeeperURL)) {
+		$split = explode(
+			":",
+			preg_replace("#.*://([^/]+)/?.*#", '$1', $gatekeeperURL),
+		);
+		$host = $split[0];
+		$port = $split[1];
 	}
-	if ( empty( $port ) & ! empty( $host ) ) {
+	if (empty($port) & !empty($host)) {
 		$port = 80;
 	}
-	$host   = strtolower( trim( $host ) );
-	$region = trim(str_replace("_", " ", $region ));
-	if ( is_numeric( $region ) ) {
-		$pos    = "$region/$pos";
-		$region = '';
+	$host = strtolower(trim($host));
+	$region = trim(str_replace("_", " ", $region));
+	if (is_numeric($region)) {
+		$pos = "$region/$pos";
+		$region = "";
 	}
-	if ( $array_outout ) {
-		return array(
-			'host'       => $host,
-			'port'       => $port,
-			'region'     => $region,
-			'pos'        => $pos,
-			'gatekeeper' => "http://$host:$port",
-			'key'        => strtolower( "$host:$port/$region" ),
-		);
+	if ($array_outout) {
+		return [
+			"host" => $host,
+			"port" => $port,
+			"region" => $region,
+			"pos" => $pos,
+			"gatekeeper" => "http://$host:$port",
+			"key" => strtolower("$host:$port/$region"),
+		];
 	} else {
 		return trim(
-			$host
-			. ( empty( $port ) ? '' : ":$port" )
-			. ( empty( $region ) ? '' : " $region" )
-			. ( empty( $pos ) ? '' : "/$pos" ),
-			":/ \n\r\t\v\x00"
+			$host .
+				(empty($port) ? "" : ":$port") .
+				(empty($region) ? "" : " $region") .
+				(empty($pos) ? "" : "/$pos"),
+			":/ \n\r\t\v\x00",
 		);
 	}
 
@@ -153,11 +178,12 @@ function opensim_sanitize_uri( $url, $gatekeeperURL = null, $array_outout = fals
  * @param  string  $sep      Separator for multiple formats, default new line
  * @return string
  */
-function opensim_format_tp( $uri, $format = TPLINK, $sep = "\n" ) {
-	if ( empty( $uri ) ) {
+function opensim_format_tp($uri, $format = TPLINK, $sep = "\n")
+{
+	if (empty($uri)) {
 		return;
 	}
-	$parts = parse_url( $uri );
+	$parts = parse_url($uri);
 
 	// $uri = preg_replace('#!#', '', $uri);
 	// $uri = preg_replace('#.*://+#', '', $uri);
@@ -178,34 +204,36 @@ function opensim_format_tp( $uri, $format = TPLINK, $sep = "\n" ) {
 	// $pos = join('/', $posparts);
 	// $pos_sl = ($parts[0]>=256 || $parts[0]>=256) ? "" : $pos;
 	// }
-	$uri_parts = opensim_sanitize_uri( $uri, '', true );
-	extract( $uri_parts );
+	$uri_parts = opensim_sanitize_uri($uri, "", true);
+	extract($uri_parts);
 
-	$regionencoded = urlencode( $region );
-	$pos_mandatory = ( empty( $pos ) ) ? '128/128/25' : $pos;
-	$links         = array();
-	if ( $format & TPLINK_TXT ) {
-		$links[ TPLINK_TXT ] = "$host:$port $region/$pos";
+	$regionencoded = urlencode($region);
+	$pos_mandatory = empty($pos) ? "128/128/25" : $pos;
+	$links = [];
+	if ($format & TPLINK_TXT) {
+		$links[TPLINK_TXT] = "$host:$port $region/$pos";
 	}
-	if ( $format & TPLINK_LOCAL || ( $format & TPLINK_HG && empty( $host ) ) ) {
-															$links[ TPLINK_LOCAL ] = "secondlife://$region/$pos";
+	if ($format & TPLINK_LOCAL || ($format & TPLINK_HG && empty($host))) {
+		$links[TPLINK_LOCAL] = "secondlife://$region/$pos";
 	}
-	if ( $format & TPLINK_HG ) {
-		$links[ TPLINK_HG ] = "secondlife://$host:$port $region/$pos";
+	if ($format & TPLINK_HG) {
+		$links[TPLINK_HG] = "secondlife://$host:$port $region/$pos";
 	}
-	if ( $format & TPLINK_V3HG ) {
-		$links[ TPLINK_V3HG ] = "secondlife://http|!!$host|$port+$region";
+	if ($format & TPLINK_V3HG) {
+		$links[TPLINK_V3HG] = "secondlife://http|!!$host|$port+$region";
 	}
-	if ( $format & TPLINK_HOP ) {
-		$links[ TPLINK_HOP ] = "hop://$host:$port/$regionencoded/$pos_mandatory";
+	if ($format & TPLINK_HOP) {
+		$links[TPLINK_HOP] = "hop://$host:$port/$regionencoded/$pos_mandatory";
 	}
-	if ( $format & TPLINK_APPTP ) {
-		$links[ TPLINK_APPTP ] = "secondlife:///app/teleport/$host:$port+$regionencoded/" . ( ( ! empty( $pos_sl ) ) ? "$pos_sl/" : '' );
+	if ($format & TPLINK_APPTP) {
+		$links[TPLINK_APPTP] =
+			"secondlife:///app/teleport/$host:$port+$regionencoded/" .
+			(!empty($pos_sl) ? "$pos_sl/" : "");
 	}
 	// if ($format & TPLINK_MAP)		$links[TPLINK_MAP]		= "secondlife:///app/map/$host:$port+$regionencoded/$pos";
-	$links = preg_replace( '#^[^[:alnum:]]*|[^[:alnum:]]+$#', '', $links );
+	$links = preg_replace('#^[^[:alnum:]]*|[^[:alnum:]]+$#', "", $links);
 
-	return join( $sep, $links );
+	return join($sep, $links);
 }
 
 /**
@@ -215,35 +243,38 @@ function opensim_format_tp( $uri, $format = TPLINK, $sep = "\n" ) {
  * @param  string $var      output a single variable value
  * @return array (or string if var specified)
  */
-function opensim_link_region( $args, $var = null ) {
-	if ( empty( $args ) ) {
-		return array();
+function opensim_link_region($args, $var = null)
+{
+	if (empty($args)) {
+		return [];
 	}
 	global $OSSEARCH_CACHE;
 
-	if ( is_array( $args ) ) {
+	if (is_array($args)) {
 		$region_array = $args;
 	} else {
-		$region_array = opensim_sanitize_uri( $args, '', true );
+		$region_array = opensim_sanitize_uri($args, "", true);
 	}
-	extract( $region_array ); // $host, $port, $region, $pos, $gatekeeper, $key
+	extract($region_array); // $host, $port, $region, $pos, $gatekeeper, $key
 
-	if ( isset( $OSSEARCH_CACHE['link_region'][ $key ] ) ) {
-		$link_region = $OSSEARCH_CACHE['link_region'][ $key ];
+	if (isset($OSSEARCH_CACHE["link_region"][$key])) {
+		$link_region = $OSSEARCH_CACHE["link_region"][$key];
 	} else {
-		$link_region                           = oxXmlRequest( $gatekeeper, 'link_region', array( 'region_name' => "$region" ) );
-		$OSSEARCH_CACHE['link_region'][ $key ] = $link_region;
+		$link_region = oxXmlRequest($gatekeeper, "link_region", [
+			"region_name" => "$region",
+		]);
+		$OSSEARCH_CACHE["link_region"][$key] = $link_region;
 	}
 
-	if ( $link_region ) {
-		if ( $var ) {
-			return $link_region[ $var ];
+	if ($link_region) {
+		if ($var) {
+			return $link_region[$var];
 		} else {
 			return $link_region;
 		}
 	}
-	
-	return array();
+
+	return [];
 }
 
 /**
@@ -252,47 +283,53 @@ function opensim_link_region( $args, $var = null ) {
  * @param  array $region sanitized region array
  * @return string
  */
-function opensim_region_url($region) {
-    if(!is_array($region)) {
-        return false;
-    }
-    return $region['gatekeeper'] . ( empty($region['region']) ? '' : ':' . $region['region'])  . ( empty($region['pos']) ? '' : '/' . $region['pos'] );
+function opensim_region_url($region)
+{
+	if (!is_array($region)) {
+		return false;
+	}
+	return $region["gatekeeper"] .
+		(empty($region["region"]) ? "" : ":" . $region["region"]) .
+		(empty($region["pos"]) ? "" : "/" . $region["pos"]);
 }
 
-function opensim_get_region( $region_uri, $var = null ) {
-	if ( empty( $region_uri ) ) {
-		return array();
+function opensim_get_region($region_uri, $var = null)
+{
+	if (empty($region_uri)) {
+		return [];
 	}
 	global $OSSEARCH_CACHE;
-	$region     = opensim_sanitize_uri( $region_uri, '', true );
+	$region = opensim_sanitize_uri($region_uri, "", true);
 
-	$gatekeeper = $region['gatekeeper'];
+	$gatekeeper = $region["gatekeeper"];
 
-	$link_region = opensim_link_region( $region );
+	$link_region = opensim_link_region($region);
 
-	$uuid        = @$link_region['uuid'];
-	if ( ! opensim_isuuid( $uuid ) ) {
+	$uuid = @$link_region["uuid"];
+	if (!opensim_isuuid($uuid)) {
 		// error_log( "opensim_get_region $region_uri invalid uuid $uuid" );
-		return array();
+		return [];
 	}
 
-	if ( isset( $OSSEARCH_CACHE['get_region'][ $uuid ] ) ) {
-		$get_region = $OSSEARCH_CACHE['get_region'][ $uuid ];
+	if (isset($OSSEARCH_CACHE["get_region"][$uuid])) {
+		$get_region = $OSSEARCH_CACHE["get_region"][$uuid];
 	} else {
-		$get_region = oxXmlRequest( $gatekeeper, 'get_region', array( 'region_uuid' => "$uuid" ) );
+		$get_region = oxXmlRequest($gatekeeper, "get_region", [
+			"region_uuid" => "$uuid",
+		]);
 		// $get_region = oxXmlRequest('http://dev.w4os.org:8402/grid', 'get_region_by_name', ['scopeid' => NULL_KEY,'name'=>"$region"]);
-		$OSSEARCH_CACHE['get_region'][ $uuid ] = $get_region;
+		$OSSEARCH_CACHE["get_region"][$uuid] = $get_region;
 	}
-	$get_region['link_region'] = $link_region;
+	$get_region["link_region"] = $link_region;
 
-	if ( $get_region ) {
-		if ( $var ) {
-			return $get_region[ $var ];
+	if ($get_region) {
+		if ($var) {
+			return $get_region[$var];
 		} else {
 			return $get_region;
 		}
 	}
-	return array();
+	return [];
 }
 
 /**
@@ -301,41 +338,45 @@ function opensim_get_region( $region_uri, $var = null ) {
  * @param  mixed $region   region uri or sanitized region array
  * @return boolean                  true if online
  */
-function opensim_region_is_online( $region ) {
-	$data = opensim_link_region( $region );
-	return ( $data && $data['result'] == 'True' );
+function opensim_region_is_online($region)
+{
+	$data = opensim_link_region($region);
+	return $data && $data["result"] == "True";
 }
 
-function opensim_user_alert( $agentID, $message, $secureID = null ) {
-	$agentServer = opensim_get_server_info( $agentID );
-	if ( ! $agentServer ) {
+function opensim_user_alert($agentID, $message, $secureID = null)
+{
+	$agentServer = opensim_get_server_info($agentID);
+	if (!$agentServer) {
 		return false;
 	}
-	$serverip  = $agentServer['serverIP'];
-	$httpport  = $agentServer['serverHttpPort'];
-	$serveruri = $agentServer['serverURI'];
+	$serverip = $agentServer["serverIP"];
+	$httpport = $agentServer["serverHttpPort"];
+	$serveruri = $agentServer["serverURI"];
 
-	$avatarSession = opensim_get_avatar_session( $agentID );
-	if ( ! $avatarSession ) {
+	$avatarSession = opensim_get_avatar_session($agentID);
+	if (!$avatarSession) {
 		return false;
 	}
-	$sessionID = $avatarSession['sessionID'];
-	if ( $secureID == null ) {
-		$secureID = $avatarSession['secureID'];
+	$sessionID = $avatarSession["sessionID"];
+	if ($secureID == null) {
+		$secureID = $avatarSession["secureID"];
 	}
 
-	$request  = xmlrpc_encode_request(
-		'UserAlert',
-		array(
-			array(
-				'clientUUID'            => $agentID,
-				'clientSessionID'       => $sessionID,
-				'clientSecureSessionID' => $secureID,
-				'Description'           => $message,
-			),
-		)
+	$request = xmlrpc_encode_request("UserAlert", [
+		[
+			"clientUUID" => $agentID,
+			"clientSessionID" => $sessionID,
+			"clientSecureSessionID" => $secureID,
+			"Description" => $message,
+		],
+	]);
+	$response = currency_xmlrpc_call(
+		$serverip,
+		$httpport,
+		$serveruti,
+		$request,
 	);
-	$response = currency_xmlrpc_call( $serverip, $httpport, $serveruti, $request );
 
 	return $response;
 }
@@ -348,61 +389,96 @@ function opensim_user_alert( $agentID, $message, $secureID = null ) {
  * @param  array  $request                  [description]
  * @return array             received xml response
  */
-function oxXmlRequest( $gatekeeper, $method, $request ) {
-	$xml_request = xmlrpc_encode_request( $method, array( $request ) );
+function oxXmlRequest($gatekeeper, $method, $request)
+{
+	$xml_request = xmlrpc_encode_request($method, [$request]);
 
-	$context = stream_context_create(
-		array(
-			'http' => array(
-				'method'  => 'POST',
-				'header'  => 'Content-Type: text/xml' . "\r\n",
-				'timeout' => 3, // most of the time below 1 sec, but leave some time for slow ones
-				'content' => $xml_request,
-			),
-		)
-	);
+	$context = stream_context_create([
+		"http" => [
+			"method" => "POST",
+			"header" => "Content-Type: text/xml" . "\r\n",
+			"timeout" => 3, // most of the time below 1 sec, but leave some time for slow ones
+			"content" => $xml_request,
+		],
+	]);
 
-	$response = @file_get_contents( $gatekeeper, false, $context );
-	if ( $response === false ) {
+	$response = @file_get_contents($gatekeeper, false, $context);
+	if ($response === false) {
+		return false;
+	} elseif (empty($response)) {
+		Aggregator::admin_notice(
+			"DEBUG oxXmlRequest file_get_contents failed for $gatekeeper (empty)",
+		);
 		return false;
 	}
 
-	$xml_array = xmlrpc_decode( $response );
-	if ( empty( $xml_array ) ) {
-		return;
+	// xmlrpc_decode() from library-xmlrpc.php does not handle raw XML strings
+	// (new Response($xml) does not parse XML — it is a phpxmlrpc limitation).
+	// Use Encoder::decodeXml() directly, which correctly parses any XML-RPC envelope.
+	// decodeXml() returns a PhpXmlRpc\Response object; extract the PHP array from it.
+	try {
+		$encoder = new \PhpXmlRpc\Encoder();
+		$decoded = $encoder->decodeXml($response);
+	} catch (\Throwable $e) {
+		error_log(
+			"oxXmlRequest decode error ($gatekeeper $method): " .
+				$e->getMessage(),
+		);
+		return false;
 	}
-	if ( is_array( $xml_array ) & ! xmlrpc_is_fault( $xml_array ) ) {
-		return $xml_array;
+	if (empty($decoded)) {
+		return false;
 	}
-
-	return false;
+	if ($decoded instanceof \PhpXmlRpc\Response) {
+		if ($decoded->faultCode()) {
+			error_log(
+				"oxXmlRequest fault ($gatekeeper $method): " .
+					$decoded->faultCode() .
+					" " .
+					$decoded->faultString(),
+			);
+			return false;
+		}
+		$xml_array = $encoder->decode($decoded->value());
+	} else {
+		$xml_array = $decoded;
+	}
+	if (empty($xml_array) || !is_array($xml_array)) {
+		return false;
+	}
+	if (xmlrpc_is_fault($xml_array)) {
+		return false;
+	}
+	return $xml_array;
 }
 
-function osXmlResponse( $success = true, $errorMessage = false, $data = false ) {
-	if ( is_array( $data ) ) {
-		$array = array(
-			'success'      => $success,
-			'errorMessage' => $errorMessage,
-		);
-		if ( ! empty( $data ) ) {
-			$array['data'] = $data;
+function osXmlResponse($success = true, $errorMessage = false, $data = false)
+{
+	if (is_array($data)) {
+		$array = [
+			"success" => $success,
+			"errorMessage" => $errorMessage,
+		];
+		if (!empty($data)) {
+			$array["data"] = $data;
 		}
-		array_filter( $array );
-		$response_xml = xmlrpc_encode( $array );
+		array_filter($array);
+		$response_xml = xmlrpc_encode($array);
 		echo $response_xml;
 		return;
 	}
-	if ( $success ) {
-		$answer = new SimpleXMLElement( '<boolean>true</boolean>' );
+	if ($success) {
+		$answer = new SimpleXMLElement("<boolean>true</boolean>");
 	} else {
-		$answer = new SimpleXMLElement( "<error>$errorMessage</error>" );
+		$answer = new SimpleXMLElement("<error>$errorMessage</error>");
 	}
 	echo $answer->asXML();
 }
 
-function osXmlDie( $message = '' ) {
-	osXmlResponse( false, $message, array() );
-	die;
+function osXmlDie($message = "")
+{
+	osXmlResponse(false, $message, []);
+	die();
 }
 
 /**
@@ -410,40 +486,45 @@ function osXmlDie( $message = '' ) {
  *
  * @return void
  */
-function dontWait() {
+function dontWait()
+{
 	$size = ob_get_length();
 
-	header( "Content-Length:$size" );
-	header( 'Connection:close' );
-	header( 'Content-Encoding: none' );
-	header( 'Content-Type: text/html; charset=utf-8' );
+	header("Content-Length:$size");
+	header("Connection:close");
+	header("Content-Encoding: none");
+	header("Content-Type: text/html; charset=utf-8");
 
 	ob_flush();
 	ob_end_flush();
 	flush();
 }
 
-if ( ! function_exists( 'osdebug' ) ) {
-	function osdebug( $message = '' ) {
-		if ( empty( $message ) ) {
+if (!function_exists("osdebug")) {
+	function osdebug($message = "")
+	{
+		if (empty($message)) {
 			return;
 		}
-		if ( ! is_string( $message ) ) {
-			$message = print_r( $message, true );
+		if (!is_string($message)) {
+			$message = print_r($message, true);
 		}
-		error_log( 'osdebug ' . $message );
+		error_log("osdebug " . $message);
 		echo $message . "\n";
 	}
 }
 
-function set_helpers_locale( $locale = null, $domain = 'messages' ) {
-	mb_internal_encoding( 'UTF-8' );
+function set_helpers_locale($locale = null, $domain = "messages")
+{
+	mb_internal_encoding("UTF-8");
 	$encoding = mb_internal_encoding();
 
-	if ( isset( $_GET['l'] ) ) {
-		$locale = $_GET['l'];
+	if (isset($_GET["l"])) {
+		$locale = $_GET["l"];
 	}
-	$languages = array_filter( array_merge( array( $locale ), explode( ',', $_SERVER['HTTP_ACCEPT_LANGUAGE'] ) ) );
+	$languages = array_filter(
+		array_merge([$locale], explode(",", $_SERVER["HTTP_ACCEPT_LANGUAGE"])),
+	);
 
 	// $results = putenv("LC_ALL=$locale");
 	// if (!$results) {
@@ -451,50 +532,54 @@ function set_helpers_locale( $locale = null, $domain = 'messages' ) {
 	// }
 
 	// $currentLocale = setlocale(LC_ALL, 0);
-	$user_locales = array_unique( array( $locale, $locale . ".$encoding", $locale . '.UTF-8', $locale . '.utf8', $locale, 0 ) );
+	$user_locales = array_unique([
+		$locale,
+		$locale . ".$encoding",
+		$locale . ".UTF-8",
+		$locale . ".utf8",
+		$locale,
+		0,
+	]);
 
-	$user_locales = array_map(
-		function ( $code ) {
-			return preg_replace(
-				array( '/;.*/', '/-/' ),
-				array( '', '_' ),
-				$code
-			);
-		},
-		$languages
-	);
+	$user_locales = array_map(function ($code) {
+		return preg_replace(["/;.*/", "/-/"], ["", "_"], $code);
+	}, $languages);
 
 	// Generate variants with different encodings appended
-	$variants = array();
-	foreach ( $user_locales as $lang ) {
+	$variants = [];
+	foreach ($user_locales as $lang) {
 		$variants[] = $lang;
 		$variants[] = "$lang.$encoding";
 		// $variants[] = "$lang.UTF-8";
 	}
 
-	$variants = array_unique( $variants );
-	if ( ! setlocale( LC_ALL, $variants ) ) {
-		error_log( "setlocale() failed: none of  '" . join( ', ', $variants ) . "' does exist in this environment or setlocale() is not available on this platform" );
-		setlocale( LC_ALL, 0 );
+	$variants = array_unique($variants);
+	if (!setlocale(LC_ALL, $variants)) {
+		error_log(
+			"setlocale() failed: none of  '" .
+				join(", ", $variants) .
+				"' does exist in this environment or setlocale() is not available on this platform",
+		);
+		setlocale(LC_ALL, 0);
 		return 0;
 	}
 
-	bindtextdomain( $domain, './locales' );
-	textdomain( $domain );
+	bindtextdomain($domain, "./locales");
+	textdomain($domain);
 }
 
-define( 'NULL_KEY', '00000000-0000-0000-0000-000000000000' );
-define( 'TPLINK_LOCAL', 1 ); // seconlife://Region/x/y/z
-define( 'TPLINK_HG', 2 ); // seconlife://yourgrid.org:8002 Region/x/y/z
-define( 'TPLINK_V3HG', 4 ); // the overcomplicated stuff!
-define( 'TPLINK_HOP', 8 ); // hop://yourgrid.org:8002:Region/x/y/z
-define( 'TPLINK_TXT', 16 ); // yourgrid.org:8002:Region/x/y/z
-define( 'TPLINK_APPTP', 32 ); // secondlife:///app/teleport/yourgrid.org:8002:Region/x/y/z
-define( 'TPLINK_MAP', 64 ); // secondlife:///app/map/yourgrid.org:8002:Region/x/y/z
-define( 'TPLINK', pow( 2, 8 ) - 1 ); // all formats
-define( 'TPLINK_DEFAULT', TPLINK_HOP ); // default
+define("NULL_KEY", "00000000-0000-0000-0000-000000000000");
+define("TPLINK_LOCAL", 1); // seconlife://Region/x/y/z
+define("TPLINK_HG", 2); // seconlife://yourgrid.org:8002 Region/x/y/z
+define("TPLINK_V3HG", 4); // the overcomplicated stuff!
+define("TPLINK_HOP", 8); // hop://yourgrid.org:8002:Region/x/y/z
+define("TPLINK_TXT", 16); // yourgrid.org:8002:Region/x/y/z
+define("TPLINK_APPTP", 32); // secondlife:///app/teleport/yourgrid.org:8002:Region/x/y/z
+define("TPLINK_MAP", 64); // secondlife:///app/map/yourgrid.org:8002:Region/x/y/z
+define("TPLINK", pow(2, 8) - 1); // all formats
+define("TPLINK_DEFAULT", TPLINK_HOP); // default
 
-define( 'HELPERS_LOCALE_DIR', dirname( __DIR__ ) . '/languages' );
+define("HELPERS_LOCALE_DIR", dirname(__DIR__) . "/languages");
 
 /**
  * OpenSim source to help further attempts to allow Hypergrid search results.
