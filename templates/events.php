@@ -44,13 +44,13 @@
  *   hourFontName   Font for the time column (default: mainFontName)
  *   hourFontSize   Time font size in points  (default: 9)
  *
- * PNG / clickmap — colours (AARRGGBB hex, matching LSL colour variables):
- *   backgroundColor  (future — use theme= for now)
- *   fontColor        (future)
- *   colorStarted     Live/ongoing events  (future)
- *   colorToday       Today's events       (future)
- *   colorLater       Future events        (future)
- *   colorHour        Time column          (future)
+ * PNG / clickmap — colours (RRGGBB web hex, no '#' — same convention as LSL):
+ *   Colors override the theme defaults. Theme still sets all unspecified values.
+ *   backgroundColorStarted   Background for events currently in progress
+ *   backgroundColorSoon      Background for events starting within ~1 h
+ *   colorSection             Section header text (default: brand/logo colour)
+ *   backgroundColor          Default row background  (future)
+ *   fontColor                Default text colour     (future)
  *
  * PNG / clickmap — convenience shortcut (not in LSL):
  *   theme          'light' (default) or 'dark' — sets the full colour palette
@@ -58,7 +58,7 @@
  * Apache alias to serve this script at /events/events.lsl2:
  *   Alias /events/events.lsl2 /path/to/output/events.php
  *
- * Requires: PHP 8.2+, GD extension with FreeType support.
+ * Requires: PHP 8.2+, Imagick extension (fonts resolved by name via fontconfig).
  */
 
 define('BOARD_VER',    '1.6.0');
@@ -93,10 +93,14 @@ $mainFontSize  = isset($get['mainFontSize']) ? max(6, (int)$get['mainFontSize'])
 $hourFontName  = $get['hourFontName'] ?? null;   // defaults to mainFontName when null
 $hourFontSize  = isset($get['hourFontSize']) ? max(6, (int)$get['hourFontSize']) : 9;
 
-// Colour — full support coming; theme= is the current shortcut
-$theme         = in_array($get['theme'] ?? '', ['dark', 'light']) ? $get['theme'] : 'light';
-// Accepted for future use (LSL-compatible AARRGGBB hex):
-// backgroundColor, fontColor, colorStarted, colorToday, colorLater, colorHour
+// Theme — sets default palette; individual colour params below override it
+$theme = in_array($get['theme'] ?? '', ['dark', 'light']) ? $get['theme'] : 'light';
+
+// Colours (RRGGBB web hex, no '#' prefix — same convention as LSL)
+// These override the theme defaults when provided.
+$backgroundColorStarted = $get['backgroundColorStarted'] ?? null;  // bg for ongoing events
+$backgroundColorSoon    = $get['backgroundColorSoon']    ?? null;  // bg for events starting within 1 h
+$colorSection           = $get['colorSection']           ?? null;  // section header text
 
 // ── Load and filter events ────────────────────────────────────────────────────
 
@@ -108,10 +112,15 @@ $events    = array_values(array_filter($raw, fn($e) => strtotime($e['start']) >=
 header('Cache-Control: no-cache, must-revalidate');
 
 if ($format === 'png') {
+    $color_overrides = array_filter([
+        'backgroundColorStarted' => $backgroundColorStarted,
+        'backgroundColorSoon'    => $backgroundColorSoon,
+        'colorSection'           => $colorSection,
+    ]);
     output_board_image($events, $limit, $textureWidth, $textureHeight,
                        $ratio, $theme,
                        $mainFontName, $mainFontSize, $hourFontName, $hourFontSize,
-                       $bannerHeight, $lineHeight, $cellPadding);
+                       $bannerHeight, $lineHeight, $cellPadding, $color_overrides);
 } elseif ($format === 'clickmap') {
     output_click_map($events, $limit, $textureWidth, $textureHeight,
                      $ratio, $get,
@@ -177,75 +186,104 @@ function output_board_image(array $events, int $limit, int $texW, int $texH,
                             float $ratio, string $theme,
                             ?string $mainFontName, int $mainFontSize,
                             ?string $hourFontName, int $hourFontSize,
-                            int $bannerHeight, int $lineHeight, int $cellPadding): void {
+                            int $bannerHeight, int $lineHeight, int $cellPadding,
+                            array $color_overrides = []): void {
     [$cw, $ch] = natural_canvas($texW, $texH, $ratio);
     $rows   = plan_board_rows($events, $limit, $cw, $ch, $bannerHeight, $lineHeight, $cellPadding);
-    $canvas = imagecreatetruecolor($cw, $ch);
-    $font   = find_font(false, $mainFontName);
-    $hfont  = find_font(false, $hourFontName ?? $mainFontName);
+    $canvas = new Imagick();
+    $canvas->newImage($cw, $ch, new ImagickPixel('white'));
+    $canvas->setImageFormat('png');
+
     render_board_image($rows, $canvas, $cw, $ch, $theme,
-                       $font, $mainFontSize, $hfont, $hourFontSize);
+                       $mainFontName, $mainFontSize,
+                       $hourFontName ?? $mainFontName, $hourFontSize,
+                       $color_overrides);
 
     // Resample to requested texture resolution
-    if ($cw === $texW && $ch === $texH) {
-        $out = $canvas;
-    } else {
-        $out = imagecreatetruecolor($texW, $texH);
-        imagecopyresampled($out, $canvas, 0, 0, 0, 0, $texW, $texH, $cw, $ch);
-        imagedestroy($canvas);
+    if ($cw !== $texW || $ch !== $texH) {
+        $canvas->resizeImage($texW, $texH, Imagick::FILTER_LANCZOS, 1);
     }
 
     header('Content-Type: image/png');
     header('Cache-Control: public, max-age=300');
-    imagepng($out);
-    imagedestroy($out);
+    echo $canvas->getImageBlob();
+    $canvas->destroy();
 }
 
 // ── Row planner ───────────────────────────────────────────────────────────────
 //
-// Computes the canvas Y position of every visible row (day headers, event rows,
-// bottom banner) without touching GD. Both output_board_image() and
+// Computes the canvas Y position of every visible row (section headers, event
+// rows, bottom banner) without touching Imagick. Both output_board_image() and
 // output_click_map() call this so their Y coordinates are always in sync.
 //
+// Events are first sorted by start time (the JSON source is not guaranteed to
+// be ordered), then split into two sections:
+//   - started  : start <= now  (top-level filter already enforces the time window)
+//   - upcoming : start >  now  (grouped by day)
+//
 // Returns an array of row descriptors. Relevant keys per type:
-//   type = 'day_header' : label, is_today, y_start, y_end
-//   type = 'event'      : event (raw array), hgurl, is_live, is_today,
-//                         time_str, title, y_start, y_end,
-//                         y_time, y_title, y_location  (text baselines, canvas px)
-//   type = 'banner'     : y_start, y_end
+//   type = 'section_header' : section ('started'|'day'), label,
+//                             is_today (day only), y_start, y_end
+//   type = 'event'          : event (raw array), hgurl, section, is_soon,
+//                             is_today, time_str, title, y_start, y_end,
+//                             y_time, y_title, y_location (text baselines, px)
+//   type = 'banner'         : y_start, y_end
 
 function plan_board_rows(array $events, int $limit, int $canvas_w, int $canvas_h,
                          int $bannerHeight, int $lineHeight, int $cellPadding): array {
-    $tz    = new DateTimeZone(SLT_TIMEZONE);
-    $now   = time();
-    $today = (new DateTime('now', $tz))->format('Y-m-d');
+    $tz          = new DateTimeZone(SLT_TIMEZONE);
+    $now         = time();
+    $today       = (new DateTime('now', $tz))->format('Y-m-d');
+    $soon_window = 3600; // flag upcoming events starting within 1 h as "soon"
 
-    $day_h   = (int) round($lineHeight * 0.55);  // day header: slightly more than half a row
-    $day_gap = (int) round($lineHeight * 0.1);   // gap before a new day section
+    // Sort by start time — JSON source may be unordered or stale
+    usort($events, fn($a, $b) => strtotime($a['start']) <=> strtotime($b['start']));
+
+    $day_h   = (int) round($lineHeight * 0.55);  // section header height
+    $day_gap = (int) round($lineHeight * 0.10);  // gap between sections
 
     $max_y = $canvas_h - $bannerHeight;          // bottom of usable content area
 
-    $rows     = [];
-    $y        = 6;
-    $prev_day = null;
-    $n        = 0;
+    $rows         = [];
+    $y            = 6;
+    $prev_section = null;
+    $prev_day     = null;
+    $n            = 0;
 
     foreach ($events as $ev) {
         if ($limit > 0 && $n >= $limit) break;
 
-        $start   = strtotime($ev['start']);
-        $end     = strtotime($ev['end']);
-        $is_live = ($start <= $now && $end > $now);
+        $start = strtotime($ev['start']);
+        $sdt   = (new DateTime($ev['start'], new DateTimeZone('UTC')))->setTimezone($tz);
+        $day   = $sdt->format('Y-m-d');
 
-        $sdt = (new DateTime($ev['start'], new DateTimeZone('UTC')))->setTimezone($tz);
-        $day = $sdt->format('Y-m-d');
+        // Section: events with start in the past are "started"; the top-level
+        // not_before filter already ensures they are within the display window.
+        $section = ($start <= $now) ? 'started' : 'upcoming';
+        $is_soon = ($section === 'upcoming' && ($start - $now) < $soon_window);
 
-        // Day header on day change — require room for header + at least one event (no widow)
-        if ($day !== $prev_day) {
-            if ($prev_day !== null) $y += $day_gap;
+        // ── Section / day header ─────────────────────────────────────────────
+
+        if ($section === 'started' && $prev_section !== 'started') {
+            // "CURRENTLY" header before the first started event
+            if ($y > 6) $y += $day_gap;
             if ($y + $day_h + $lineHeight > $max_y) break;
             $rows[] = [
-                'type'     => 'day_header',
+                'type'    => 'section_header',
+                'section' => 'started',
+                'label'   => 'CURRENTLY',
+                'y_start' => $y,
+                'y_end'   => $y + $day_h,
+            ];
+            $y += $day_h;
+
+        } elseif ($section === 'upcoming' && $day !== $prev_day) {
+            // Date header on day change (upcoming events only)
+            if ($prev_section !== null) $y += $day_gap;
+            if ($y + $day_h + $lineHeight > $max_y) break;
+            $rows[] = [
+                'type'     => 'section_header',
+                'section'  => 'day',
                 'label'    => strtoupper($sdt->format('D j M')),
                 'is_today' => ($day === $today),
                 'y_start'  => $y,
@@ -255,18 +293,21 @@ function plan_board_rows(array $events, int $limit, int $canvas_w, int $canvas_h
             $prev_day = $day;
         }
 
-        // Event row
+        $prev_section = $section;
+
+        // ── Event row ────────────────────────────────────────────────────────
+
         if ($y + $lineHeight > $max_y) break;
-        $title   = sanitise_title($ev['title']);
-        $pad     = $cellPadding;
-        // Text baselines: time+title at ~37% of row, location at ~72%
-        $y_text  = $y + $pad + (int) round(($lineHeight - $pad) * 0.60);
-        $y_loc   = $y + $pad + (int) round(($lineHeight - $pad) * 0.88);
+        $title  = sanitise_title($ev['title']);
+        $pad    = $cellPadding;
+        $y_text = $y + $pad + (int) round(($lineHeight - $pad) * 0.60);
+        $y_loc  = $y + $pad + (int) round(($lineHeight - $pad) * 0.88);
         $rows[] = [
             'type'       => 'event',
             'event'      => $ev,
             'hgurl'      => $ev['hgurl'],
-            'is_live'    => $is_live,
+            'section'    => $section,
+            'is_soon'    => $is_soon,
             'is_today'   => ($day === $today),
             'time_str'   => $sdt->format('g:ia'),
             'title'      => $title,
@@ -294,51 +335,54 @@ function plan_board_rows(array $events, int $limit, int $canvas_w, int $canvas_h
 // ── Board renderer ────────────────────────────────────────────────────────────
 //
 // Takes the row plan from plan_board_rows() and draws everything onto $img.
-// No layout logic here — only GD drawing calls.
+// No layout logic here — only Imagick drawing calls.
+// Fonts are resolved by name via fontconfig; no filesystem paths needed.
 
-function render_board_image(array $rows, $img, int $w, int $h, string $theme,
-                            ?string $font, int $mainFontSize,
-                            ?string $hfont, int $hourFontSize): void {
+function render_board_image(array $rows, Imagick $img, int $w, int $h, string $theme,
+                            ?string $mainFont, int $mainFontSize,
+                            ?string $hourFont, int $hourFontSize,
+                            array $color_overrides = []): void {
 
     // ── Colour palette ───────────────────────────────────────────────────────
+    //
+    // Theme sets defaults; $color_overrides (keyed by LSL param name, RRGGBB
+    // hex without '#') override individual entries.
 
-    // Light palette: neutral white, Google-Calendar-style typography
-    // Dark palette: true OLED dark, same accent blue
-    $pal = ($theme === 'light') ? [
-        'bg'         => [255, 255, 255],  // white
-        'row_bg'     => [255, 255, 255],
-        'live_bg'    => [232, 240, 254],  // very light blue tint for live
-        'live_accent'=> [ 26, 115, 232],  // Google blue
-        'title'      => [ 32,  33,  36],  // near-black #202124
-        'time'       => [ 95, 100, 104],  // medium grey #5F6468
-        'live_time'  => [ 26, 115, 232],  // Google blue
-        'location'   => [128, 134, 139],  // light grey #80868B
-        'day_text'   => [ 95, 100, 104],  // same as time
-        'today_text' => [ 26, 115, 232],  // Google blue
-        'separator'  => [232, 234, 237],  // #E8EAED
-        'banner_bg'  => [248, 249, 250],  // #F8F9FA
+    $dark = ($theme === 'dark');
+
+    $defaults = $dark ? [
+        'backgroundColor'        => '121212',  // true black (OLED)
+        'backgroundColorStarted' => '163E26',  // dark green tint
+        'backgroundColorSoon'    => '16263E',  // dark blue tint
+        'colorStartedAccent'     => '57BB76',  // green — left accent bar
+        'colorText'              => 'E8EAED',
+        'colorTime'              => '9AA0A6',  // medium grey
+        'colorLocation'          => '666D73',
+        'colorSection'           => 'C06090',  // brand colour, lightened for dark bg
+        'colorSeparator'         => '303030',
+        'backgroundColorBanner'  => '000000',
     ] : [
-        'bg'         => [ 18,  18,  18],  // true black (OLED)
-        'row_bg'     => [ 30,  30,  30],
-        'live_bg'    => [ 22,  38,  62],  // dark blue tint
-        'live_accent'=> [ 66, 133, 244],  // Google blue on dark
-        'title'      => [232, 234, 237],  // #E8EAED
-        'time'       => [154, 160, 166],  // medium grey
-        'live_time'  => [ 66, 133, 244],
-        'location'   => [102, 109, 115],
-        'day_text'   => [154, 160, 166],
-        'today_text' => [ 66, 133, 244],
-        'separator'  => [ 48,  48,  48],
-        'banner_bg'  => [  0,   0,   0],
+        'backgroundColor'        => 'FFFFFF',
+        'backgroundColorStarted' => 'DCF5DC',  // light green tint
+        'backgroundColorSoon'    => 'E8F0FE',  // light blue tint
+        'colorStartedAccent'     => '34A853',  // green — left accent bar
+        'colorText'              => '202124',  // near-black
+        'colorTime'              => '5F6468',  // medium grey
+        'colorLocation'          => '80868B',
+        'colorSection'           => '804060',  // brand/logo colour
+        'colorSeparator'         => 'E8EAED',
+        'backgroundColorBanner'  => 'F8F9FA',
     ];
 
-    $c = [];
-    foreach ($pal as $k => [$r, $g, $b]) {
-        $c[$k] = imagecolorallocate($img, $r, $g, $b);
-    }
+    // Merge overrides (strip leading '#' if present), build ImagickPixel map
+    $resolved = array_map(
+        fn($v) => ltrim($v, '#'),
+        array_merge($defaults, array_filter($color_overrides))
+    );
+    $c = array_map(fn($hex) => new ImagickPixel('#' . $hex), $resolved);
 
     // Background
-    imagefilledrectangle($img, 0, 0, $w - 1, $h - 1, $c['bg']);
+    fill_rect($img, 0, 0, $w - 1, $h - 1, $c['backgroundColor']);
 
     // ── Draw rows ────────────────────────────────────────────────────────────
 
@@ -346,56 +390,71 @@ function render_board_image(array $rows, $img, int $w, int $h, string $theme,
 
     foreach ($rows as $row) {
 
-        if ($row['type'] === 'day_header') {
-            $col     = $row['is_today'] ? $c['today_text'] : $c['day_text'];
+        if ($row['type'] === 'section_header') {
             $day_fsz = max(6, (int) round($hourFontSize * 0.9));
-            draw_text($img, $hfont ?? $font, $day_fsz, $col,
+            draw_text($img, $hourFont, $day_fsz, $c['colorSection'],
                       8, $row['y_end'] - 2, $row['label'], $w);
 
         } elseif ($row['type'] === 'event') {
-            $y0 = $row['y_start'];
-            $y1 = $row['y_end'];
+            $y0         = $row['y_start'];
+            $y1         = $row['y_end'];
+            $is_started = ($row['section'] === 'started');
 
-            // Card background
-            $bg = $row['is_live'] ? $c['live_bg'] : $c['row_bg'];
-            imagefilledrectangle($img, 0, $y0, $w - 1, $y1 - 1, $bg);
+            // Card background — green for started, blue for soon, default otherwise
+            $bg = $is_started       ? $c['backgroundColorStarted']
+                : ($row['is_soon']  ? $c['backgroundColorSoon']
+                                    : $c['backgroundColor']);
+            fill_rect($img, 0, $y0, $w - 1, $y1 - 1, $bg);
 
-            // Live accent bar (left edge)
-            if ($row['is_live']) {
-                imagefilledrectangle($img, 0, $y0, 3, $y1 - 1, $c['live_accent']);
+            // Left accent bar for started events
+            if ($is_started) {
+                fill_rect($img, 0, $y0, 3, $y1 - 1, $c['colorStartedAccent']);
             }
 
             // Time
-            $time_col = $row['is_live'] ? $c['live_time'] : $c['time'];
-            draw_text($img, $hfont ?? $font, $hourFontSize, $time_col,
+            draw_text($img, $hourFont, $hourFontSize, $c['colorTime'],
                       7, $row['y_time'], $row['time_str'], $w);
 
             // Title
             $title_x = $time_col_w;
             $title_w = $w - $title_x - 6;
-            $title   = fit_text($row['title'], $mainFontSize, $font, $title_w);
-            draw_text($img, $font, $mainFontSize, $c['title'],
+            $title   = fit_text($row['title'], $mainFontSize, $mainFont, $title_w, $img);
+            draw_text($img, $mainFont, $mainFontSize, $c['colorText'],
                       $title_x, $row['y_title'], $title, $w);
 
             // Location
             $loc_fsz = max(6, (int) round($hourFontSize * 0.85));
-            $loc     = fit_text($row['hgurl'], $loc_fsz, $font, $title_w);
-            draw_text($img, $font, $loc_fsz, $c['location'],
+            $loc     = fit_text($row['hgurl'], $loc_fsz, $hourFont, $title_w, $img);
+            draw_text($img, $hourFont, $loc_fsz, $c['colorLocation'],
                       $title_x, $row['y_location'], $loc, $w);
 
             // Row separator
-            imageline($img, $title_x, $y1 - 1, $w - 1, $y1 - 1, $c['separator']);
+            draw_line($img, $title_x, $y1 - 1, $w - 1, $y1 - 1, $c['colorSeparator']);
 
         } elseif ($row['type'] === 'banner') {
             $y0 = $row['y_start'];
-            imagefilledrectangle($img, 0, $y0, $w - 1, $h - 1, $c['banner_bg']);
-            imageline($img, 0, $y0, $w - 1, $y0, $c['separator']);
+            fill_rect($img, 0, $y0, $w - 1, $h - 1, $c['backgroundColorBanner']);
+            draw_line($img, 0, $y0, $w - 1, $y0, $c['colorSeparator']);
             draw_logo($img, $y0, $w, $y0 + $row['banner_h']);
         }
     }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+/**
+ * Convert a RRGGBB hex string (with or without leading '#') to [r, g, b].
+ *
+ * @return array{int,int,int}
+ */
+function hex_to_rgb(string $hex): array {
+    $hex = ltrim($hex, '#');
+    return [
+        hexdec(substr($hex, 0, 2)),
+        hexdec(substr($hex, 2, 2)),
+        hexdec(substr($hex, 4, 2)),
+    ];
+}
 
 /**
  * Compute the internal canvas size for a given output texture and board ratio.
@@ -418,65 +477,89 @@ function natural_canvas(int $texW, int $texH, float $ratio): array {
 }
 
 /**
- * Load the board logo (2do-logo-trim.png) and centre it in the footer strip.
- * Falls back silently if the file is missing.
+ * Fill a rectangle on an Imagick canvas.
  */
-function draw_logo($img, int $banner_y, int $canvas_w, int $banner_y_end): void {
-    $logo_file = __DIR__ . '/2do-logo-trim.png';
-    if (!file_exists($logo_file)) return;
-    $logo = @imagecreatefrompng($logo_file);
-    if (!$logo) return;
-    $lw = imagesx($logo);
-    $lh = imagesy($logo);
-    $banner_h = $banner_y_end - $banner_y;
-    $scale    = min(($banner_h - 6) / $lh, ($canvas_w * 0.6) / $lw);
-    $dw = (int)round($lw * $scale);
-    $dh = (int)round($lh * $scale);
-    $dx = (int)(($canvas_w - $dw) / 2);
-    $dy = $banner_y + (int)(($banner_h - $dh) / 2);
-    imagecopyresampled($img, $logo, $dx, $dy, 0, 0, $dw, $dh, $lw, $lh);
-    imagedestroy($logo);
+function fill_rect(Imagick $img, int $x1, int $y1, int $x2, int $y2, ImagickPixel $color): void {
+    $draw = new ImagickDraw();
+    $draw->setFillColor($color);
+    $draw->setStrokeOpacity(0);
+    $draw->rectangle($x1, $y1, $x2, $y2);
+    $img->drawImage($draw);
 }
 
 /**
- * Draw text on $img. Pass $x = null to centre horizontally.
- * Falls back to GD built-in bitmap fonts when no TTF font is available.
+ * Draw a line on an Imagick canvas.
  */
-function draw_text($img, ?string $font, float $size, int $colour,
+function draw_line(Imagick $img, int $x1, int $y1, int $x2, int $y2, ImagickPixel $color): void {
+    $draw = new ImagickDraw();
+    $draw->setStrokeColor($color);
+    $draw->setFillOpacity(0);
+    $draw->setStrokeWidth(1);
+    $draw->line($x1, $y1, $x2, $y2);
+    $img->drawImage($draw);
+}
+
+/**
+ * Draw text on an Imagick canvas. Pass $x = null to centre horizontally.
+ * Fonts are resolved by name via fontconfig — no filesystem paths needed.
+ */
+function draw_text(Imagick $img, ?string $font, float $size, ImagickPixel $color,
                    ?int $x, int $y, string $text, int $canvas_w): void {
     if ($text === '') return;
-    if ($font) {
-        $bbox = imagettfbbox($size, 0, $font, $text);
-        $tw   = $bbox[2] - $bbox[0];
-        $tx   = ($x === null) ? (int)(($canvas_w - $tw) / 2) : $x;
-        imagettftext($img, $size, 0, $tx, $y, $colour, $font, $text);
-    } else {
-        $gf = max(1, min(5, (int)round($size / 3)));
-        $cw = imagefontwidth($gf);
-        $tx = ($x === null) ? (int)(($canvas_w - mb_strlen($text) * $cw) / 2) : $x;
-        imagestring($img, $gf, $tx, $y - imagefontheight($gf), $text, $colour);
+    $draw = new ImagickDraw();
+    if ($font) $draw->setFont($font);
+    $draw->setFontSize($size);
+    $draw->setFillColor($color);
+    $draw->setTextAntialias(true);
+    if ($x === null) {
+        $metrics = $img->queryFontMetrics($draw, $text);
+        $x = (int)(($canvas_w - $metrics['textWidth']) / 2);
     }
+    $img->annotateImage($draw, $x, $y, 0, $text);
 }
 
 /**
  * Truncate $text so it fits within $max_px canvas pixels wide.
- * Appends an ellipsis character (UTF-8) when truncation occurs.
+ * Appends '…' when truncation occurs. Uses Imagick font metrics.
  */
-function fit_text(string $text, float $size, ?string $font, int $max_px): string {
-    $ellipsis = "\xE2\x80\xA6"; // …
-    if (!$font) {
-        $gf  = max(1, min(5, (int)round($size / 3)));
-        $max = max(1, (int)($max_px / imagefontwidth($gf)));
-        return mb_strlen($text) > $max ? mb_substr($text, 0, $max - 1) . $ellipsis : $text;
-    }
-    $bbox = imagettfbbox($size, 0, $font, $text);
-    if (($bbox[2] - $bbox[0]) <= $max_px) return $text;
+function fit_text(string $text, float $size, ?string $font, int $max_px, Imagick $img): string {
+    $ellipsis = '…';
+    $draw = new ImagickDraw();
+    if ($font) $draw->setFont($font);
+    $draw->setFontSize($size);
+    $metrics = $img->queryFontMetrics($draw, $text);
+    if ($metrics['textWidth'] <= $max_px) return $text;
     while (mb_strlen($text) > 1) {
-        $text = mb_substr($text, 0, -1);
-        $bbox = imagettfbbox($size, 0, $font, $text . $ellipsis);
-        if (($bbox[2] - $bbox[0]) <= $max_px) return $text . $ellipsis;
+        $text    = mb_substr($text, 0, -1);
+        $metrics = $img->queryFontMetrics($draw, $text . $ellipsis);
+        if ($metrics['textWidth'] <= $max_px) return $text . $ellipsis;
     }
     return $ellipsis;
+}
+
+/**
+ * Load the board logo and centre it in the footer strip.
+ * Falls back silently if the file is missing or Imagick fails.
+ */
+function draw_logo(Imagick $img, int $banner_y, int $canvas_w, int $banner_y_end): void {
+    $logo_file = __DIR__ . '/2do-logo-trim.png';
+    if (!file_exists($logo_file)) return;
+    try {
+        $logo     = new Imagick($logo_file);
+        $lw       = $logo->getImageWidth();
+        $lh       = $logo->getImageHeight();
+        $banner_h = $banner_y_end - $banner_y;
+        $scale    = min(($banner_h - 6) / $lh, ($canvas_w * 0.6) / $lw);
+        $dw       = (int) round($lw * $scale);
+        $dh       = (int) round($lh * $scale);
+        $logo->resizeImage($dw, $dh, Imagick::FILTER_LANCZOS, 1);
+        $dx = (int)(($canvas_w - $dw) / 2);
+        $dy = $banner_y + (int)(($banner_h - $dh) / 2);
+        $img->compositeImage($logo, Imagick::COMPOSITE_OVER, $dx, $dy);
+        $logo->destroy();
+    } catch (ImagickException $e) {
+        // Logo not critical — continue silently
+    }
 }
 
 /** Strip emoji and force ASCII, matching the aggregator's own title sanitisation. */
@@ -484,46 +567,4 @@ function sanitise_title(string $title): string {
     $title = preg_replace('/[\x{1F000}-\x{1FFFF}]/u', '', $title);
     $title = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $title);
     return trim($title);
-}
-
-/**
- * Find a usable TrueType font file on the server (macOS, Linux, Windows).
- *
- * $name can be a font family name (e.g. "Roboto", "Arial") or an absolute
- * file path. Drop font.ttf / font-bold.ttf next to this script to override.
- */
-function find_font(bool $bold = false, ?string $name = null): ?string {
-    // Absolute path: use directly if the file exists
-    if ($name && str_starts_with($name, '/') && file_exists($name)) return $name;
-    if ($name && str_contains($name, '\\') && file_exists($name)) return $name;
-    $b = $bold;
-    $rb = $b ? 'Bold' : 'Regular';
-    $candidates = [
-        // Local override (place font.ttf / font-bold.ttf next to this script)
-        __DIR__ . '/font' . ($b ? '-bold' : '') . '.ttf',
-        // Linux — Roboto (most Android/web servers)
-        "/usr/share/fonts/truetype/roboto/hinted/Roboto-{$rb}.ttf",
-        "/usr/share/fonts/truetype/roboto/Roboto-{$rb}.ttf",
-        "/usr/share/fonts/roboto/Roboto-{$rb}.ttf",
-        // macOS — San Francisco (system UI font)
-        '/System/Library/Fonts/SFNS.ttf',
-        // macOS — Arial
-        $b ? '/System/Library/Fonts/Supplemental/Arial Bold.ttf'
-           : '/System/Library/Fonts/Supplemental/Arial.ttf',
-        '/Library/Fonts/Arial Unicode.ttf',
-        // Windows — Arial
-        $b ? 'C:\\Windows\\Fonts\\arialbd.ttf'
-           : 'C:\\Windows\\Fonts\\arial.ttf',
-        // Linux — DejaVu Sans
-        '/usr/share/fonts/truetype/dejavu/DejaVuSans' . ($b ? '-Bold' : '') . '.ttf',
-        '/usr/share/fonts/dejavu/DejaVuSans'          . ($b ? '-Bold' : '') . '.ttf',
-        // Linux — Liberation Sans / Ubuntu / FreeSans
-        '/usr/share/fonts/truetype/liberation/LiberationSans' . ($b ? '-Bold' : '') . '-Regular.ttf',
-        '/usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf',
-        '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
-    ];
-    foreach ($candidates as $p) {
-        if (file_exists($p)) return $p;
-    }
-    return null;
 }

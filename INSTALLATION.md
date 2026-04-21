@@ -43,8 +43,8 @@ sudo apt-get install -y \
 
 ### macOS (Homebrew)
 
-Homebrew PHP ships with most extensions built-in (mbstring, xml, dom, json, curl, iconv…).
-Two extensions require a separate PECL install:
+Homebrew PHP ships with most extensions built-in — including mbstring, xml, dom, json, curl, iconv.
+`imagick` is the only one that requires a separate install:
 
 ```bash
 brew install php imagemagick pkg-config

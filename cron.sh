@@ -49,7 +49,7 @@ fail() {
 end() {
     log $@ " - end processing, full log in $LOG"
     mv $TMP.processing $LOG
-    [ "$tailpid" ] && kill -9 $tailpid
+    [ "${tailpid:-}" ] && kill -9 $tailpid
     exit $1
 }
 
