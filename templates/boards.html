@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>2DO Board – preview</title>
+		<link rel="stylesheet" href="styles.min.css" />
+		<style>
+			.boards {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 32px;
+				align-items: flex-start;
+				margin: 0 auto;
+				justify-content: center;
+			}
+			figure {
+				display: flex;
+				flex-direction: column;
+				margin: 0;
+				gap: 0.5em;
+			}
+			figure img {
+				display: block;
+			}
+			figcaption {
+				text-align: center;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Example boards</h1>
+		<div class="boards">
+			<figure>
+				<img
+					src="events.php?format=png"
+					width="512"
+					height="512"
+					style="width: 512px; height: 512px"
+					loading="lazy"
+				/>
+				<figcaption>events.php?format=png</figcaption>
+			</figure>
+			<figure>
+				<img
+					src="events.php?format=png&ratio=0.75"
+					width="512"
+					height="683"
+					style="width: 512px; height: 683px"
+					loading="lazy"
+				/>
+				<figcaption>events.php?format=png&amp;ratio=0.75</figcaption>
+			</figure>
+			<figure>
+				<img
+					src="events.php?format=png&ratio=0.5"
+					width="512"
+					height="1024"
+					style="width: 512px; height: 1024px"
+					loading="lazy"
+				/>
+				<figcaption>events.php?format=png&amp;ratio=0.5</figcaption>
+			</figure>
+			<figure>
+				<img
+					src="events.php?format=png&ratio=0.666667"
+					width="512"
+					height="768"
+					style="width: 512px; height: 768px"
+					loading="lazy"
+				/>
+				<figcaption>
+					events.php?format=png&amp;ratio=0.666667
+				</figcaption>
+			</figure>
+
+			<figure>
+				<img
+					src="events.php?format=png&ratio=1&theme=dark"
+					width="512"
+					height="512"
+					style="width: 512px; height: 512px"
+					loading="lazy"
+				/>
+				<figcaption>
+					events.php?format=png&amp;ratio=1&amp;theme=dark
+				</figcaption>
+			</figure>
+			<figure>
+				<img
+					src="events.php?format=png&ratio=0.75&theme=dark"
+					width="512"
+					height="683"
+					style="width: 512px; height: 683px"
+					loading="lazy"
+				/>
+				<figcaption>
+					events.php?format=png&amp;ratio=0.75&amp;theme=dark
+				</figcaption>
+			</figure>
+			<figure>
+				<img
+					src="events.php?format=png&ratio=0.5&theme=dark"
+					width="512"
+					height="1024"
+					style="width: 512px; height: 1024px"
+					loading="lazy"
+				/>
+				<figcaption>1:2 (portrait tall)</figcaption>
+			</figure>
+			<figure>
+				<img
+					src="events.php?format=png&ratio=0.666667&theme=dark"
+					width="512"
+					height="768"
+					style="width: 512px; height: 768px"
+					loading="lazy"
+				/>
+				<figcaption>2:3 (portrait)</figcaption>
+			</figure>
+		</div>
+	</body>
+</html>
