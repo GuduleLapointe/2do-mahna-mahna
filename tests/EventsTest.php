@@ -1,6 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
+use Imagick, ImagickPixel, ImagickDraw;
 
 class EventsTest extends TestCase
 {
@@ -21,6 +22,15 @@ class EventsTest extends TestCase
 			"DEV_HOSTS and DEV_PORT must be properly set in tests/.env" .
 				PHP_EOL,
 		);
+
+		if (
+			!$this->assertTrue(
+				extension_loaded("imagick"),
+				"Imagick extension must be installed and loaded",
+			)
+		) {
+			self::$envSet = false;
+		}
 	}
 
 	public function testLsl2Format(): void
@@ -77,19 +87,32 @@ class EventsTest extends TestCase
 		$response = file_get_contents(TEST_URL . "/events.php?format=png");
 		// Check if the response is not empty
 		$this->assertNotEmpty($response, "Response should not be empty");
-		// Save the response to a temporary file
-		$tempFile = tempnam(sys_get_temp_dir(), "test_");
-		file_put_contents($tempFile, $response);
-		// Check if the file is a valid PNG
-		$this->assertFileExists($tempFile, "Temporary file should exist");
-		// Use the file command to check if the file is a valid PNG
-		$output = shell_exec("file " . $tempFile);
-		$this->assertStringContainsString(
-			"PNG image data",
-			$output,
-			"File should be a valid PNG",
-		);
-		// Clean up
-		unlink($tempFile);
+		// Check if the file is a valid PNG using Imagick
+		try {
+			$imagick = new Imagick();
+			$imagick->readImageBlob($response);
+			$format = $imagick->getImageFormat();
+			$this->assertEquals("PNG", $format, "File should be a valid PNG");
+			$width = $imagick->getImageWidth();
+			$height = $imagick->getImageHeight();
+			$this->assertGreaterThan(
+				0,
+				$width,
+				"PNG width should be greater than 0",
+			);
+			$this->assertGreaterThan(
+				0,
+				$height,
+				"PNG height should be greater than 0",
+			);
+			// Use Imagick::identifyImage for detailed info
+			$identifyInfo = $imagick->identifyImage(true);
+			$this->assertNotEmpty(
+				$identifyInfo,
+				"Imagick should provide detailed image info",
+			);
+		} catch (Exception $e) {
+			$this->fail("Imagick failed to read the file: " . $e->getMessage());
+		}
 	}
 }
