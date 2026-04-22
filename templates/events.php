@@ -61,6 +61,9 @@
  * Requires: PHP 8.2+, Imagick extension (fonts resolved by name via fontconfig).
  */
 
+ini_set("display_errors", 1); # DEBUG
+ini_set("display_startup_errors", 1); # DEBUG
+error_reporting(E_ALL); # DEBUG
 define("BOARD_VER", "1.6.0");
 define("EVENTS_JSON", __DIR__ . "/events.json");
 define("SLT_TIMEZONE", "America/Los_Angeles");
@@ -213,12 +216,10 @@ function output_lsl2(array $events, int $limit): void
 		}
 		$s = strtotime($ev["start"]);
 		$e = strtotime($ev["end"]);
-		$bdt = new DateTime($ev["start"], new DateTimeZone("UTC"))->setTimezone(
-			$tz,
-		);
-		$edt = new DateTime($ev["end"], new DateTimeZone("UTC"))->setTimezone(
-			$tz,
-		);
+		$bdt = new DateTime($ev["start"], new DateTimeZone("UTC"));
+		$bdt->setTimezone($tz);
+		$edt = new DateTime($ev["end"], new DateTimeZone("UTC"));
+		$edt->setTimezone($tz);
 		echo $title .
 			"\n" .
 			implode("~", [
@@ -366,7 +367,8 @@ function plan_board_rows(
 ): array {
 	$tz = new DateTimeZone(SLT_TIMEZONE);
 	$now = time();
-	$today = new DateTime("now", $tz)->format("Y-m-d");
+	$today = new DateTime("now", $tz);
+	$today->format("Y-m-d");
 	$soon_window = 3600; // flag upcoming events starting within 1 h as "soon"
 
 	// Sort by start time — JSON source may be unordered or stale
@@ -392,9 +394,8 @@ function plan_board_rows(
 		}
 
 		$start = strtotime($ev["start"]);
-		$sdt = new DateTime($ev["start"], new DateTimeZone("UTC"))->setTimezone(
-			$tz,
-		);
+		$sdt = new DateTime($ev["start"], new DateTimeZone("UTC"));
+		$sdt->setTimezone($tz);
 		$day = $sdt->format("Y-m-d");
 
 		// Section: events with start in the past are "started"; the top-level
