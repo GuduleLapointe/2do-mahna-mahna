@@ -15,7 +15,7 @@
  * so that builders can copy values directly between the two.
  *
  * Common parameters:
- *   not_before    Seconds before now still included (default: 7200 = 2 h)
+ *   notBefore    Seconds before now still included (default: 7200 = 2 h)
  *   limit         Max events returned (default: 20 for lsl2, 0 = unlimited for png/clickmap)
  *
  * PNG / clickmap — output resolution (power-of-2 values recommended by the viewer):
@@ -34,21 +34,21 @@
  *
  * PNG / clickmap — layout (pixels in the internal canvas):
  *   bannerHeight   Height of the logo/footer strip (default: 36)
- *   lineHeight     Height of each event row         (default: 40)
- *   cellPadding    Inner padding within event rows   (default: 0)
+ *   rowHeight     Height of each event row         (default: 40)
+ *   padding    Inner padding within event rows   (default: 0)
  *
  * PNG / clickmap — typography:
- *   mainFontName   Font family name searched in system paths, or absolute .ttf path
+ *   font   Font family name searched in system paths, or absolute .ttf path
  *                  (default: first available among Roboto, SF, Arial, DejaVu…)
- *   mainFontSize   Title font size in points (default: 11)
- *   hourFontName   Font for the time column (default: mainFontName)
- *   hourFontSize   Time font size in points  (default: 9)
+ *   fontSize   Title font size in points (default: 11)
+ *   timeFont   Font for the time column (default: font)
+ *   timeFontSize   Time font size in points  (default: 9)
  *
  * PNG / clickmap — colours (RRGGBB web hex, no '#' — same convention as LSL):
  *   Colors override the theme defaults. Theme still sets all unspecified values.
- *   backgroundColorStarted   Background for events currently in progress
- *   backgroundColorSoon      Background for events starting within ~1 h
- *   colorSection             Section header text (default: brand/logo colour)
+ *   ongoingBackground   Background for events currently in progress
+ *   soonBackground      Background for events starting within ~1 h
+ *   sectionColor             Section header text (default: brand/logo colour)
  *   backgroundColor          Default row background  (future)
  *   fontColor                Default text colour     (future)
  *
@@ -61,6 +61,11 @@
  * Requires: PHP 8.2+, Imagick extension (fonts resolved by name via fontconfig).
  */
 
+namespace ToDo\Event;
+
+use DateTime, DateTimeZone;
+use Imagick, ImagickPixel, ImagickDraw;
+
 ini_set("display_errors", 1); # DEBUG
 ini_set("display_startup_errors", 1); # DEBUG
 error_reporting(E_ALL); # DEBUG
@@ -68,63 +73,41 @@ define("BOARD_VER", "1.6.0");
 define("EVENTS_JSON", __DIR__ . "/events.json");
 define("SLT_TIMEZONE", "America/Los_Angeles");
 
-$get = isset($_GET) ? $_GET : [];
+require_once __DIR__ . "/includes/config.php";
 
-// ── Parameters (same names and units as the LSL Configuration notecard) ───────
+// Use parameters from $config and $styles
+$format = $config["format"];
+$notBefore = $config["not-before"];
+$limit = $config["limit"];
 
-$format = $get["format"] ?? "lsl2";
-$not_before = isset($get["not_before"]) ? (int) $get["not_before"] : 7200;
-$limit = isset($get["limit"])
-	? (int) $get["limit"]
-	: ($format === "lsl2"
-		? 20
-		: 0);
+// Output resolution
+$textureWidth = $config["width"];
+$textureHeight = $config["height"];
 
-// Output resolution — power-of-2 values recommended by the viewer
-$textureWidth = isset($get["textureWidth"])
-	? max(64, (int) $get["textureWidth"])
-	: 512;
-$textureHeight = isset($get["textureHeight"])
-	? max(64, (int) $get["textureHeight"])
-	: 512;
+// Aspect ratio
+$ratio = $config["ratio"];
 
-// Aspect ratio of the board face (width / height). Default 1.0 = square.
-// e.g. ratio=0.75 for a 1.5×2 board, ratio=0.5 for 1×2, ratio=0.667 for 2×3.
-$ratio = isset($get["ratio"]) ? max(0.01, (float) $get["ratio"]) : 1.0;
-
-// Layout (canvas pixels)
-$bannerHeight = isset($get["bannerHeight"])
-	? max(0, (int) $get["bannerHeight"])
-	: 36;
-$lineHeight = isset($get["lineHeight"])
-	? max(10, (int) $get["lineHeight"])
-	: 40;
-$cellPadding = isset($get["cellPadding"])
-	? max(0, (int) $get["cellPadding"])
-	: 0;
+// Layout
+$bannerHeight = $styles["banner"]["height"];
+$lineHeight = $styles["main"]["line-height"];
+$rowHeight = $styles["main"]["row-height"];
+$padding = $styles["main"]["padding"] ?? 0;
 
 // Typography
-$mainFontName = $get["mainFontName"] ?? "Roboto";
-$hourFontName = $get["hourFontName"] ?? $mainFontName;
+$font = $styles["main"]["font"];
+$fontSize = $styles["main"]["font-size"];
 
-$mainFontSize = isset($get["mainFontSize"])
-	? max(6, (int) $get["mainFontSize"])
-	: 11;
-$hourFontName = $get["hourFontName"] ?? null; // defaults to mainFontName when null
-$hourFontSize = isset($get["hourFontSize"])
-	? max(6, (int) $get["hourFontSize"])
-	: 9;
+$timeFont = $styles["time"]["font"];
+$timeFontSize = $styles["time"]["font-size"];
+$timeColor = $styles["time"]["color"];
 
-// Theme — sets default palette; individual colour params below override it
-$theme = in_array($get["theme"] ?? "", ["dark", "light"])
-	? $get["theme"]
-	: "light";
+$locationFont = $styles["location"]["font"] ?? $font;
+$locationFontSize = $styles["location"]["font-size"];
+$locationColor = $styles["location"]["color"];
 
-// Colours (RRGGBB web hex, no '#' prefix — same convention as LSL)
-// These override the theme defaults when provided.
-$backgroundColorStarted = $get["backgroundColorStarted"] ?? null; // bg for ongoing events
-$backgroundColorSoon = $get["backgroundColorSoon"] ?? null; // bg for events starting within 1 h
-$colorSection = $get["colorSection"] ?? null; // section header text
+$ongoingBackground = $styles["ongoing"]["background"];
+$soonBackground = $styles["soon"]["background"];
+$sectionColor = $styles["section"]["color"];
 
 $allFonts = \Imagick::queryFonts();
 error_log("queryFonts(): found " . count($allFonts) . " fonts");
@@ -143,56 +126,56 @@ function setFont(?string $fontName)
 	// return $allFonts[0] ?? "DejaVuSans";
 }
 
-$mainFontName = setFont($mainFontName) ?? "DejaVuSans";
-error_log("mainFontName=$mainFontName");
-$hourFontName = $hourFontName ?? $mainFontName;
-$hourFontName = setFont($hourFontName) ?? $mainFontName;
-error_log("mainFontName=$mainFontName");
+$font = setFont($font ?? null) ?? "DejaVuSans";
+error_log("font=$font");
+$timeFont = $timeFont ?? $font;
+$timeFont = setFont($timeFont) ?? $font;
+error_log("font=$font");
 
 // ── Load and filter events ────────────────────────────────────────────────────
 
 $json = @file_get_contents(EVENTS_JSON);
 $raw = $json ? (json_decode($json, true) ?: []) : [];
-$notBefore = time() - $not_before;
+$notBeforeTimestamp = time() - $notBefore;
 $events = array_values(
-	array_filter($raw, fn($e) => strtotime($e["start"]) >= $notBefore),
+	array_filter($raw, fn($e) => strtotime($e["start"]) >= $notBeforeTimestamp),
 );
 
 header("Cache-Control: no-cache, must-revalidate");
 
 if ($format === "png") {
 	$color_overrides = array_filter([
-		"backgroundColorStarted" => $backgroundColorStarted,
-		"backgroundColorSoon" => $backgroundColorSoon,
-		"colorSection" => $colorSection,
+		"ongoingBackground" => $ongoingBackground,
+		"soonBackground" => $soonBackground,
+		"sectionColor" => $sectionColor,
 	]);
 	output_board_image(
 		$events,
-		$limit,
-		$textureWidth,
-		$textureHeight,
-		$ratio,
-		$theme,
-		$mainFontName,
-		$mainFontSize,
-		$hourFontName,
-		$hourFontSize,
-		$bannerHeight,
-		$lineHeight,
-		$cellPadding,
-		$color_overrides,
+		// $limit,
+		// $textureWidth,
+		// $textureHeight,
+		// $ratio,
+		// $config["theme"],
+		// $font,
+		// $fontSize,
+		// $timeFont,
+		// $timeFontSize,
+		// $bannerHeight,
+		// $rowHeight,
+		// $padding,
+		// $color_overrides,
 	);
 } elseif ($format === "clickmap") {
 	output_click_map(
 		$events,
-		$limit,
-		$textureWidth,
-		$textureHeight,
-		$ratio,
-		$get,
-		$bannerHeight,
-		$lineHeight,
-		$cellPadding,
+		// $limit,
+		// $textureWidth,
+		// $textureHeight,
+		// $ratio,
+		// $get,
+		// $bannerHeight,
+		// $rowHeight,
+		// $padding,
 	);
 } else {
 	output_lsl2($events, $limit);
@@ -210,25 +193,25 @@ function output_lsl2(array $events, int $limit): void
 		if ($limit > 0 && $n >= $limit) {
 			break;
 		}
-		$title = sanitise_title($ev["title"]);
+		$title = sanitize_title($ev["title"]);
 		if (!$title) {
 			continue;
 		}
-		$s = strtotime($ev["start"]);
-		$e = strtotime($ev["end"]);
-		$bdt = new DateTime($ev["start"], new DateTimeZone("UTC"));
-		$bdt->setTimezone($tz);
-		$edt = new DateTime($ev["end"], new DateTimeZone("UTC"));
-		$edt->setTimezone($tz);
+		$startTimestamp = strtotime($ev["start"]);
+		$endTimestamp = strtotime($ev["end"]);
+		$startDateTime = new DateTime($ev["start"], new DateTimeZone("UTC"));
+		$startDateTime->setTimezone($tz);
+		$endDateTime = new DateTime($ev["end"], new DateTimeZone("UTC"));
+		$endDateTime->setTimezone($tz);
 		echo $title .
 			"\n" .
 			implode("~", [
-				$bdt->format("h:iA"),
-				$bdt->format("Y-m-d"),
-				$s,
-				$edt->format("h:iA"),
-				$edt->format("Y-m-d"),
-				$e,
+				$startDateTime->format("h:iA"),
+				$startDateTime->format("Y-m-d"),
+				$startTimestamp,
+				$endDateTime->format("h:iA"),
+				$endDateTime->format("Y-m-d"),
+				$endTimestamp,
 			]) .
 			"\n" .
 			$ev["hgurl"] .
@@ -243,30 +226,27 @@ function output_lsl2(array $events, int $limit): void
 // Lines 2+: hgurl~y_start~y_end  — one per visible event, in display order.
 //           y_start / y_end are pixel coordinates in textureWidth × textureHeight space.
 
-function output_click_map(
-	array $events,
-	int $limit,
-	int $texW,
-	int $texH,
-	float $ratio,
-	array $get,
-	int $bannerHeight,
-	int $lineHeight,
-	int $cellPadding,
-): void {
+function output_click_map(array $events): // int $limit,
+// int $width,
+// int $height,
+// float $ratio,
+// array $get,
+// int $bannerHeight,
+// int $rowHeight,
+// int $padding, void {
 	header("Content-Type: text/plain; charset=utf-8");
-	[$cw, $ch] = natural_canvas($texW, $texH, $ratio);
+	[$canvasWidth, $canvasHeigth] = natural_canvas($width, $height, $ratio);
 	$rows = plan_board_rows(
 		$events,
-		$limit,
-		$cw,
-		$ch,
-		$bannerHeight,
-		$lineHeight,
-		$cellPadding,
+		// $limit,
+		// $canvasWidth,
+		// $canvasHeigth,
+		// $bannerHeight,
+		// $rowHeight,
+		// $padding,
 	);
 
-	$params = array_merge($get, ["format" => "png"]);
+	$params = array_merge($_GET, ["format" => "png"]);
 	$host = $_SERVER["HTTP_HOST"] ?? "localhost";
 	$uri = strtok($_SERVER["REQUEST_URI"] ?? "/events/events.php", "?");
 	echo "https://" . $host . $uri . "?" . http_build_query($params) . "\n";
@@ -274,8 +254,8 @@ function output_click_map(
 	// Scale Y from canvas space to texture output space
 	foreach ($rows as $row) {
 		if ($row["type"] === "event") {
-			$y0 = (int) round(($row["y_start"] * $texH) / $ch);
-			$y1 = (int) round(($row["y_end"] * $texH) / $ch);
+			$y0 = (int) round(($row["y_start"] * $height) / $canvasHeigth);
+			$y1 = (int) round(($row["y_end"] * $height) / $canvasHeigth);
 			echo $row["hgurl"] . "~" . $y0 . "~" . $y1 . "\n";
 		}
 	}
@@ -283,58 +263,68 @@ function output_click_map(
 
 // ── Format: png ──────────────────────────────────────────────────────────────
 
-function output_board_image(
-	array $events,
-	int $limit,
-	int $texW,
-	int $texH,
-	float $ratio,
-	string $theme,
-	?string $mainFontName,
-	int $mainFontSize,
-	?string $hourFontName,
-	int $hourFontSize,
-	int $bannerHeight,
-	int $lineHeight,
-	int $cellPadding,
-	array $color_overrides = [],
-): void {
-	[$cw, $ch] = natural_canvas($texW, $texH, $ratio);
+function output_board_image(array $events): // int $limit,
+// int $width,
+// int $height,
+// float $ratio,
+// string $themeName,
+// ?string $font,
+// int $fontSize,
+// ?string $timeFont,
+// int $timeFontSize,
+// int $bannerHeight,
+// int $rowHeight,
+// int $padding,
+// array $color_overrides = [], void {
+	global $config, $styles;
+
+	[$canvasWidth, $canvasHeigth] = natural_canvas($width, $height, $ratio);
 	$rows = plan_board_rows(
 		$events,
-		$limit,
-		$cw,
-		$ch,
-		$bannerHeight,
-		$lineHeight,
-		$cellPadding,
+		// $limit,
+		// $canvasWidth,
+		// $canvasHeigth,
+		// $bannerHeight,
+		// $rowHeight,
+		// $padding,
 	);
-	$canvas = new Imagick();
-	$canvas->newImage($cw, $ch, new ImagickPixel("white"));
-	$canvas->setImageFormat("png");
+	try {
+		$canvas = new Imagick();
+		$canvas->newImage(
+			$canvasWidth,
+			$canvasHeigth,
+			new ImagickPixel("white"),
+		);
+		$canvas->setImageFormat("png");
 
-	render_board_image(
-		$rows,
-		$canvas,
-		$cw,
-		$ch,
-		$theme,
-		$mainFontName,
-		$mainFontSize,
-		$hourFontName ?? $mainFontName,
-		$hourFontSize,
-		$color_overrides,
-	);
+		render_board_image(
+			$rows,
+			// $canvas,
+			// $canvasWidth,
+			// $canvasHeigth,
+			// $themeName,
+			// $font,
+			// $fontSize,
+			// $timeFont ?? $font,
+			// $timeFontSize,
+			// $color_overrides,
+		);
 
-	// Resample to requested texture resolution
-	if ($cw !== $texW || $ch !== $texH) {
-		$canvas->resizeImage($texW, $texH, Imagick::FILTER_LANCZOS, 1);
+		// Resample to requested texture resolution
+		if ($canvasWidth !== $width || $canvasHeigth !== $height) {
+			$canvas->resizeImage($width, $height, Imagick::FILTER_LANCZOS, 1);
+		}
+
+		header("Content-Type: image/png");
+		header("Cache-Control: public, max-age=300");
+		echo $canvas->getImageBlob();
+		$canvas->destroy();
+	} catch (ImagickException $e) {
+		header("Content-Type: text/plain");
+		http_response_code(500);
+		echo "Error generating image: " . $e->getMessage() . "\n";
+		echo "Stack trace: " . $e->getTraceAsString();
 	}
-
-	header("Content-Type: image/png");
-	header("Cache-Control: public, max-age=300");
-	echo $canvas->getImageBlob();
-	$canvas->destroy();
 }
 
 // ── Row planner ───────────────────────────────────────────────────────────────
@@ -356,19 +346,15 @@ function output_board_image(
 //                             y_time, y_title, y_location (text baselines, px)
 //   type = 'banner'         : y_start, y_end
 
-function plan_board_rows(
-	array $events,
-	int $limit,
-	int $canvas_w,
-	int $canvas_h,
-	int $bannerHeight,
-	int $lineHeight,
-	int $cellPadding,
-): array {
+function plan_board_rows(array $events): // int $limit,
+// int $canvasWidth,
+// int $canvasHeigth,
+// int $bannerHeight,
+// int $rowHeight,
+// int $padding, array {
 	$tz = new DateTimeZone(SLT_TIMEZONE);
 	$now = time();
-	$today = new DateTime("now", $tz);
-	$today->format("Y-m-d");
+	$today = new DateTime("now", $tz)->format("Y-m-d");
 	$soon_window = 3600; // flag upcoming events starting within 1 h as "soon"
 
 	// Sort by start time — JSON source may be unordered or stale
@@ -377,10 +363,10 @@ function plan_board_rows(
 		fn($a, $b) => strtotime($a["start"]) <=> strtotime($b["start"]),
 	);
 
-	$day_h = (int) round($lineHeight * 0.55); // section header height
-	$day_gap = (int) round($lineHeight * 0.1); // gap between sections
+	$day_h = (int) round($rowHeight * 0.55); // section header height
+	$day_gap = (int) round($rowHeight * 0.1); // gap between sections
 
-	$max_y = $canvas_h - $bannerHeight; // bottom of usable content area
+	$max_y = $canvasHeigth - $bannerHeight; // bottom of usable content area
 
 	$rows = [];
 	$y = 6;
@@ -393,13 +379,13 @@ function plan_board_rows(
 			break;
 		}
 
-		$start = strtotime($ev["start"]);
-		$sdt = new DateTime($ev["start"], new DateTimeZone("UTC"));
-		$sdt->setTimezone($tz);
-		$day = $sdt->format("Y-m-d");
+		$startTimestamp = strtotime($ev["start"]);
+		$startDateTime = new DateTime($ev["start"], new DateTimeZone("UTC"));
+		$startDateTime->setTimezone($tz);
+		$day = $startDateTime->format("Y-m-d");
 
 		// Section: events with start in the past are "started"; the top-level
-		// not_before filter already ensures they are within the display window.
+		// notBefore filter already ensures they are within the display window.
 		$section = $start <= $now ? "started" : "upcoming";
 		$is_soon = $section === "upcoming" && $start - $now < $soon_window;
 
@@ -410,7 +396,7 @@ function plan_board_rows(
 			if ($y > 6) {
 				$y += $day_gap;
 			}
-			if ($y + $day_h + $lineHeight > $max_y) {
+			if ($y + $day_h + $rowHeight > $max_y) {
 				break;
 			}
 			$rows[] = [
@@ -426,13 +412,13 @@ function plan_board_rows(
 			if ($prev_section !== null) {
 				$y += $day_gap;
 			}
-			if ($y + $day_h + $lineHeight > $max_y) {
+			if ($y + $day_h + $rowHeight > $max_y) {
 				break;
 			}
 			$rows[] = [
 				"type" => "section_header",
 				"section" => "day",
-				"label" => strtoupper($sdt->format("D j M")),
+				"label" => strtoupper($startDateTime->format("D j M")),
 				"is_today" => $day === $today,
 				"y_start" => $y,
 				"y_end" => $y + $day_h,
@@ -445,13 +431,13 @@ function plan_board_rows(
 
 		// ── Event row ────────────────────────────────────────────────────────
 
-		if ($y + $lineHeight > $max_y) {
+		if ($y + $rowHeight > $max_y) {
 			break;
 		}
-		$title = sanitise_title($ev["title"]);
-		$pad = $cellPadding;
-		$y_text = $y + $pad + (int) round(($lineHeight - $pad) * 0.6);
-		$y_loc = $y + $pad + (int) round(($lineHeight - $pad) * 0.88);
+		$title = sanitize_title($ev["title"]);
+		$pad = $padding;
+		$y_text = $y + $pad + (int) round(($rowHeight - $pad) * 0.6);
+		$y_loc = $y + $pad + (int) round(($rowHeight - $pad) * 0.88);
 		$rows[] = [
 			"type" => "event",
 			"event" => $ev,
@@ -459,23 +445,23 @@ function plan_board_rows(
 			"section" => $section,
 			"is_soon" => $is_soon,
 			"is_today" => $day === $today,
-			"time_str" => $sdt->format("g:ia"),
+			"time_str" => $startDateTime->format("g:ia"),
 			"title" => $title,
 			"y_start" => $y,
-			"y_end" => $y + $lineHeight,
+			"y_end" => $y + $rowHeight,
 			"y_time" => $y_text,
 			"y_title" => $y_text,
 			"y_location" => $y_loc,
 		];
-		$y += $lineHeight;
+		$y += $rowHeight;
 		$n++;
 	}
 
 	// Banner pinned to canvas bottom
 	$rows[] = [
 		"type" => "banner",
-		"y_start" => $canvas_h - $bannerHeight,
-		"y_end" => $canvas_h - 1,
+		"y_start" => $canvasHeigth - $bannerHeight,
+		"y_end" => $canvasHeigth - 1,
 		"banner_h" => $bannerHeight,
 	];
 
@@ -488,171 +474,182 @@ function plan_board_rows(
 // No layout logic here — only Imagick drawing calls.
 // Fonts are resolved by name via fontconfig; no filesystem paths needed.
 
-function render_board_image(
-	array $rows,
-	Imagick $img,
-	int $w,
-	int $h,
-	string $theme,
-	?string $mainFont,
-	int $mainFontSize,
-	?string $hourFontName,
-	int $hourFontSize,
-	array $color_overrides = [],
-): void {
-	// ── Colour palette ───────────────────────────────────────────────────────
-	//
-	// Theme sets defaults; $color_overrides (keyed by LSL param name, RRGGBB
-	// hex without '#') override individual entries.
+function render_board_image(array $rows, Imagick $img): void
+{
+	// int $width,
+	// int $height,
+	// string $themeName,
+	// ?string $font,
+	// int $fontSize,
+	// ?string $timeFont,
+	// int $timeFontSize,
+	// array $color_overrides = [],
+	global $config, $styles;
 
-	$dark = $theme === "dark";
+	try {
+		// ── Colour palette ───────────────────────────────────────────────────────
+		//
+		// Theme sets defaults; $color_overrides (keyed by LSL param name, RRGGBB
+		// hex without '#') override individual entries.
 
-	$defaults = $dark
-		? [
-			"backgroundColor" => "121212", // true black (OLED)
-			"backgroundColorStarted" => "163E26", // dark green tint
-			"backgroundColorSoon" => "16263E", // dark blue tint
-			"colorStartedAccent" => "57BB76", // green — left accent bar
-			"colorText" => "E8EAED",
-			"colorTime" => "9AA0A6", // medium grey
-			"colorLocation" => "666D73",
-			"colorSection" => "C06090", // brand colour, lightened for dark bg
-			"colorSeparator" => "303030",
-			"backgroundColorBanner" => "000000",
-		]
-		: [
-			"backgroundColor" => "FFFFFF",
-			"backgroundColorStarted" => "DCF5DC", // light green tint
-			"backgroundColorSoon" => "E8F0FE", // light blue tint
-			"colorStartedAccent" => "34A853", // green — left accent bar
-			"colorText" => "202124", // near-black
-			"colorTime" => "5F6468", // medium grey
-			"colorLocation" => "80868B",
-			"colorSection" => "804060", // brand/logo colour
-			"colorSeparator" => "E8EAED",
-			"backgroundColorBanner" => "F8F9FA",
-		];
+		// $dark = $themeName === "dark";
 
-	// Merge overrides (strip leading '#' if present), build ImagickPixel map
-	$resolved = array_map(
-		fn($v) => ltrim($v, "#"),
-		array_merge($defaults, array_filter($color_overrides)),
-	);
-	$c = array_map(fn($hex) => new ImagickPixel("#" . $hex), $resolved);
+		// $defaults = $dark
+		// 	? [
+		// 		"backgroundColor" => "121212", // true black (OLED)
+		// 		"ongoingBackground" => "163E26", // dark green tint
+		// 		"soonBackground" => "16263E", // dark blue tint
+		// 		"colorOngoingAccent" => "57BB76", // green — left accent bar
+		// 		"colorText" => "E8EAED",
+		// 		"colorTime" => "9AA0A6", // medium grey
+		// 		"colorLocation" => "666D73",
+		// 		"sectionColor" => "C06090", // brand colour, lightened for dark bg
+		// 		"colorSeparator" => "303030",
+		// 		"backgroundColorBanner" => "000000",
+		// 	]
+		// 	: [
+		// 		"backgroundColor" => "FFFFFF",
+		// 		"ongoingBackground" => "DCF5DC", // light green tint
+		// 		"soonBackground" => "E8F0FE", // light blue tint
+		// 		"colorOngoingAccent" => "34A853", // green — left accent bar
+		// 		"colorText" => "202124", // near-black
+		// 		"colorTime" => "5F6468", // medium grey
+		// 		"colorLocation" => "80868B",
+		// 		"sectionColor" => "804060", // brand/logo colour
+		// 		"colorSeparator" => "E8EAED",
+		// 		"backgroundColorBanner" => "F8F9FA",
+		// 	];
 
-	// Background
-	fill_rect($img, 0, 0, $w - 1, $h - 1, $c["backgroundColor"]);
+		// // Merge overrides (strip leading '#' if present), build ImagickPixel map
+		// $resolved = array_map(
+		// 	fn($v) => ltrim($v, "#"),
+		// 	array_merge($defaults, array_filter($color_overrides)),
+		// );
+		// $c = array_map(fn($hex) => new ImagickPixel("#" . $hex), $resolved);
 
-	// ── Draw rows ────────────────────────────────────────────────────────────
+		// Background
+		fill_rect($img, 0, 0, $width - 1, $height - 1, $c["backgroundColor"]);
 
-	$time_col_w = 60; // width of time column (canvas px)
+		// ── Draw rows ────────────────────────────────────────────────────────────
 
-	foreach ($rows as $row) {
-		if ($row["type"] === "section_header") {
-			$day_fsz = max(6, (int) round($hourFontSize * 0.9));
-			draw_text(
-				$img,
-				$hourFontName,
-				$day_fsz,
-				$c["colorSection"],
-				8,
-				$row["y_end"] - 2,
-				$row["label"],
-				$w,
-			);
-		} elseif ($row["type"] === "event") {
-			$y0 = $row["y_start"];
-			$y1 = $row["y_end"];
-			$is_started = $row["section"] === "started";
+		$time_col_w = 60; // width of time column (canvas px)
 
-			// Card background — green for started, blue for soon, default otherwise
-			$bg = $is_started
-				? $c["backgroundColorStarted"]
-				: ($row["is_soon"]
-					? $c["backgroundColorSoon"]
-					: $c["backgroundColor"]);
-			fill_rect($img, 0, $y0, $w - 1, $y1 - 1, $bg);
+		foreach ($rows as $row) {
+			if ($row["type"] === "section_header") {
+				$day_fsz = max(6, (int) round($timeFontSize * 0.9));
+				draw_text(
+					$img,
+					$timeFont,
+					$day_fsz,
+					$c["sectionColor"],
+					8,
+					$row["y_end"] - 2,
+					$row["label"],
+					$width,
+				);
+			} elseif ($row["type"] === "event") {
+				$y0 = $row["y_start"];
+				$y1 = $row["y_end"];
+				$is_started = $row["section"] === "started";
 
-			// Left accent bar for started events
-			if ($is_started) {
-				fill_rect($img, 0, $y0, 3, $y1 - 1, $c["colorStartedAccent"]);
+				// Card background — green for started, blue for soon, default otherwise
+				$bg = $is_started
+					? $c["ongoingBackground"]
+					: ($row["is_soon"]
+						? $c["soonBackground"]
+						: $c["backgroundColor"]);
+				fill_rect($img, 0, $y0, $width - 1, $y1 - 1, $bg);
+
+				// Left accent bar for started events
+				if ($is_started) {
+					fill_rect(
+						$img,
+						0,
+						$y0,
+						3,
+						$y1 - 1,
+						$c["colorOngoingAccent"],
+					);
+				}
+
+				// Time
+				draw_text(
+					$img,
+					$timeFont,
+					$timeFontSize,
+					$c["colorTime"],
+					7,
+					$row["y_time"],
+					$row["time_str"],
+					$width,
+				);
+
+				// Title
+				$title_x = $time_col_w;
+				$title_w = $width - $title_x - 6;
+				$title = fit_text(
+					$row["title"],
+					$fontSize,
+					$font,
+					$title_w,
+					$img,
+				);
+				draw_text(
+					$img,
+					$font,
+					$fontSize,
+					$c["colorText"],
+					$title_x,
+					$row["y_title"],
+					$title,
+					$width,
+				);
+
+				// Location
+				$loc_fsz = max(6, (int) round($timeFontSize * 0.85));
+				$loc = fit_text(
+					$row["hgurl"],
+					$loc_fsz,
+					$timeFont,
+					$title_w,
+					$img,
+				);
+				draw_text(
+					$img,
+					$timeFont,
+					$loc_fsz,
+					$c["colorLocation"],
+					$title_x,
+					$row["y_location"],
+					$loc,
+					$width,
+				);
+
+				// Row separator
+				draw_line(
+					$img,
+					$title_x,
+					$y1 - 1,
+					$width - 1,
+					$y1 - 1,
+					$c["colorSeparator"],
+				);
+			} elseif ($row["type"] === "banner") {
+				$y0 = $row["y_start"];
+				fill_rect(
+					$img,
+					0,
+					$y0,
+					$width - 1,
+					$height - 1,
+					$c["backgroundColorBanner"],
+				);
+				draw_line($img, 0, $y0, $width - 1, $y0, $c["colorSeparator"]);
+				draw_image($img, $y0, $width, $y0 + $row["banner_h"]);
 			}
-
-			// Time
-			draw_text(
-				$img,
-				$hourFontName,
-				$hourFontSize,
-				$c["colorTime"],
-				7,
-				$row["y_time"],
-				$row["time_str"],
-				$w,
-			);
-
-			// Title
-			$title_x = $time_col_w;
-			$title_w = $w - $title_x - 6;
-			$title = fit_text(
-				$row["title"],
-				$mainFontSize,
-				$mainFont,
-				$title_w,
-				$img,
-			);
-			draw_text(
-				$img,
-				$mainFont,
-				$mainFontSize,
-				$c["colorText"],
-				$title_x,
-				$row["y_title"],
-				$title,
-				$w,
-			);
-
-			// Location
-			$loc_fsz = max(6, (int) round($hourFontSize * 0.85));
-			$loc = fit_text(
-				$row["hgurl"],
-				$loc_fsz,
-				$hourFontName,
-				$title_w,
-				$img,
-			);
-			draw_text(
-				$img,
-				$hourFontName,
-				$loc_fsz,
-				$c["colorLocation"],
-				$title_x,
-				$row["y_location"],
-				$loc,
-				$w,
-			);
-
-			// Row separator
-			draw_line(
-				$img,
-				$title_x,
-				$y1 - 1,
-				$w - 1,
-				$y1 - 1,
-				$c["colorSeparator"],
-			);
-		} elseif ($row["type"] === "banner") {
-			$y0 = $row["y_start"];
-			fill_rect(
-				$img,
-				0,
-				$y0,
-				$w - 1,
-				$h - 1,
-				$c["backgroundColorBanner"],
-			);
-			draw_line($img, 0, $y0, $w - 1, $y0, $c["colorSeparator"]);
-			draw_logo($img, $y0, $w, $y0 + $row["banner_h"]);
 		}
+	} catch (ImagickException $e) {
+		throw $e;
 	}
 }
 
@@ -683,19 +680,19 @@ function hex_to_rgb(string $hex): array
  *
  * @return array{int,int}  [canvas_w, canvas_h]
  */
-function natural_canvas(int $texW, int $texH, float $ratio): array
+function natural_canvas(int $width, int $height, float $ratio): array
 {
 	if ($ratio <= 0) {
-		return [$texW, $texH];
+		return [$width, $height];
 	}
 	// Portrait or square (ratio ≤ texW/texH): fix canvas width = texW, scale height up
-	$ch = (int) round($texW / $ratio);
-	if ($ch >= $texH) {
-		return [$texW, $ch];
+	$canvasHeigth = (int) round($width / $ratio);
+	if ($canvasHeigth >= $height) {
+		return [$width, $canvasHeigth];
 	}
 	// Landscape (ratio > texW/texH): fix canvas height = texH, scale width up
-	$cw = (int) round($texH * $ratio);
-	return [$cw, $texH];
+	$canvasWidth = (int) round($height * $ratio);
+	return [$canvasWidth, $height];
 }
 
 /**
@@ -747,7 +744,7 @@ function draw_text(
 	?int $x,
 	int $y,
 	string $text,
-	int $canvas_w,
+	int $canvasWidth,
 ): void {
 	if ($text === "") {
 		return;
@@ -761,7 +758,7 @@ function draw_text(
 	$draw->setTextAntialias(true);
 	if ($x === null) {
 		$metrics = $img->queryFontMetrics($draw, $text);
-		$x = (int) (($canvas_w - $metrics["textWidth"]) / 2);
+		$x = (int) (($canvasWidth - $metrics["textWidth"]) / 2);
 	}
 	$img->annotateImage($draw, $x, $y, 0, $text);
 }
@@ -801,10 +798,10 @@ function fit_text(
  * Load the board logo and centre it in the footer strip.
  * Falls back silently if the file is missing or Imagick fails.
  */
-function draw_logo(
+function draw_image(
 	Imagick $img,
 	int $banner_y,
-	int $canvas_w,
+	int $canvasWidth,
 	int $banner_y_end,
 ): void {
 	$logo_file = __DIR__ . "/2do-logo-trim.png";
@@ -816,11 +813,11 @@ function draw_logo(
 		$lw = $logo->getImageWidth();
 		$lh = $logo->getImageHeight();
 		$banner_h = $banner_y_end - $banner_y;
-		$scale = min(($banner_h - 6) / $lh, ($canvas_w * 0.6) / $lw);
+		$scale = min(($banner_h - 6) / $lh, ($canvasWidth * 0.6) / $lw);
 		$dw = (int) round($lw * $scale);
 		$dh = (int) round($lh * $scale);
 		$logo->resizeImage($dw, $dh, Imagick::FILTER_LANCZOS, 1);
-		$dx = (int) (($canvas_w - $dw) / 2);
+		$dx = (int) (($canvasWidth - $dw) / 2);
 		$dy = $banner_y + (int) (($banner_h - $dh) / 2);
 		$img->compositeImage($logo, Imagick::COMPOSITE_OVER, $dx, $dy);
 		$logo->destroy();
@@ -830,7 +827,7 @@ function draw_logo(
 }
 
 /** Strip emoji and force ASCII, matching the aggregator's own title sanitisation. */
-function sanitise_title(string $title): string
+function sanitize_title(string $title): string
 {
 	$title = preg_replace("/[\x{1F000}-\x{1FFFF}]/u", "", $title);
 	$title = iconv("UTF-8", "ASCII//TRANSLIT//IGNORE", $title);

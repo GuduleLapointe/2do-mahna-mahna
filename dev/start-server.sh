@@ -1,14 +1,16 @@
 #!/bin/bash
 
-LOCAL_PORT=8082
-
 set -euo pipefail
 
 BASEDIR=$(cd "$(dirname "$0")/.." && pwd)
 WEBROOT="$BASEDIR/output"
 
-cd "$BASEDIR"
-[ -f .env ] && source .env
+[ -f $BASEDIR/.env ] && source $BASEDIR/.env
+[ -f $BASEDIR/tests/.env ] && source $BASEDIR/tests/.env
+
+DEV_PORT=${DEV_PORT:-8000}
+DEV_HOST=${DEV_HOST:-localhost}
+LISTEN_IP=${LISTEN_IP:-0.0.0.0}
 
 [ -n "$MAGICK_FONT_PATH" ] && export MAGICK_FONT_PATH
 
@@ -22,29 +24,36 @@ rsync -av templates/events.php "$WEBROOT/events.php" \
 && echo "Synced templates/ → output/"
 
 # Get local IP
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    LOCAL_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || echo "localhost")
+if [ $LISTEN_IP != "0.0.0.0" ]; then
+    DEV_IP=$LISTEN_IP
 else
-    LOCAL_IP=$(hostname -I | awk '{print $1}')
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        DEV_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || echo "localhost")
+    else
+        DEV_IP=$(hostname -I | awk '{print $1}')
+    fi
 fi
 
 echo ""
 echo "Server available at:"
-echo "  https://localhost:$LOCAL_PORT"
-echo "  https://${LOCAL_IP}:$LOCAL_PORT"
+echo "  https://$DEV_HOST:$DEV_PORT"
+echo "  https://$DEV_IP:$DEV_PORT"
 echo ""
 echo "Quick tests:"
-echo "  https://localhost:$LOCAL_PORT/events.php               (lsl2)"
-echo "  https://localhost:$LOCAL_PORT/events.php?format=png    (board image)"
-echo "  https://localhost:$LOCAL_PORT/events.php?format=layout (click map)"
+echo "  https://$DEV_HOST:$DEV_PORT/events.php               (lsl2)"
+echo "  https://$DEV_HOST:$DEV_PORT/events.php?format=png    (board image)"
+echo "  https://$DEV_HOST:$DEV_PORT/events.php?format=layout (click map)"
 echo ""
 
 # Auto-sync events.php on change (requires fswatch: brew install fswatch)
 if command -v fswatch >/dev/null 2>&1; then
     echo "Watching templates/ for changes (fswatch)..."
-    fswatch -o "$BASEDIR/templates/events.php" | while read; do
-        cp "$BASEDIR/templates/events.php" "$WEBROOT/events.php"
-        echo "  [sync] templates/ → output/"
+    fswatch -o "$BASEDIR/templates/events.php" "$BASEDIR/includes/config.php" \
+        | while read; do
+	    cp "$BASEDIR/templates/events.php" "$WEBROOT/events.php"
+	    mkdir -p "$WEBROOT/includes"
+	    cp "$BASEDIR/includes/config.php" "$WEBROOT/includes/config.php"
+		echo "  [sync] templates/ → output/"
     done &
     FSWATCH_PID=$!
     trap "kill $FSWATCH_PID 2>/dev/null" EXIT
@@ -55,8 +64,8 @@ fi
 
 # Start server (symfony for HTTPS, php -S as fallback)
 if command -v symfony >/dev/null 2>&1; then
-    symfony serve --port=$LOCAL_PORT --dir=output --allow-all-ip "$@"
+    symfony serve --port=$DEV_PORT --dir=output --allow-all-ip "$@"
 else
     echo "Symfony CLI not found, using plain php -S (no HTTPS — Safari may complain)"
-    php -S "0.0.0.0:$LOCAL_PORT" -t "$WEBROOT"
+    php -S "$LISTEN_IP:$DEV_PORT" -t "$WEBROOT"
 fi
