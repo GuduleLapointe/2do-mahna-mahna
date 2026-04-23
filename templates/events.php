@@ -161,9 +161,8 @@ class Event
 	 */
 	function output_click_map(): void
 	{
-		todo_die("DEBUG stop, output_click_map disabled");
 		header("Content-Type: text/plain; charset=utf-8");
-		debug_log("output image");
+
 		Event::setCanvas();
 		$rows = Event::planBoardRows();
 
