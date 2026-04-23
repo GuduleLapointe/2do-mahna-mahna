@@ -29,9 +29,9 @@ namespace ToDo\Event;
 use DateTime, DateTimeZone;
 use Imagick, ImagickPixel, ImagickDraw;
 
-ini_set("display_errors", 1); # DEBUG
-ini_set("display_startup_errors", 1); # DEBUG
-error_reporting(E_ALL); # DEBUG
+// ini_set("display_errors", 1); # DEBUG
+// ini_set("display_startup_errors", 1); # DEBUG
+// error_reporting(E_ALL); # DEBUG
 define("BOARD_VER", "1.6.0");
 define("EVENTS_JSON", __DIR__ . "/events.json");
 define("SLT_TIMEZONE", "America/Los_Angeles");
@@ -87,22 +87,22 @@ class Event
 				fn($e) => strtotime($e["start"]) >= $notBeforeTimestamp,
 			),
 		);
-		debug_log(count(self::$events) . " events");
+		// debug_log(count(self::$events) . " events");
 	}
 
 	private function output(): void
 	{
 		switch (self::$config["format"] ?? "lsl2") {
 			case "png":
-				debug_log("format=png");
+				// debug_log("format=png");
 				Event::outputBoardImage();
 				break;
 			case "clickmap":
-				debug_log("format=clickmap");
+				// debug_log("format=clickmap");
 				Event::output_click_map();
 				break;
 			default:
-				debug_log("format=lsl2");
+				// debug_log("format=lsl2");
 				Event::output_lsl2();
 				break;
 		}
@@ -206,18 +206,30 @@ class Event
 			$canvas->setImageFormat("png");
 
 			self::render_board_image($rows);
-			// die("DEBUG stop after render_board_image");
 			// Resample to requested texture resolution
+			// Resample to requested texture resolution if needed
 			if (
 				self::$canvas->width() !== self::$config["width"] ||
 				self::$canvas->height() !== self::$config["height"]
 			) {
+				// debug_log(
+				// 	"Resizing canvas from " .
+				// 		self::$canvas->width() .
+				// 		"x" .
+				// 		self::$canvas->height() .
+				// 		" to " .
+				// 		self::$config["width"] .
+				// 		"x" .
+				// 		self::$config["height"],
+				// );
 				$canvas->resizeImage(
 					self::$config["width"],
 					self::$config["height"],
 					Imagick::FILTER_LANCZOS,
 					1,
 				);
+				// } else {
+				// 	debug_log("Canvas already at correct dimensions");
 			}
 
 			header("Content-Type: image/png");
@@ -268,6 +280,7 @@ class Event
 		$dayGap = (int) round(self::$styles["row"]["padding"] ?? 0); // gap between sections
 		$canvasHeight = self::$canvas->height();
 		$contentHeight = $canvasHeight - self::$styles["banner"]["height"];
+		// debug_log("Available content height: $contentHeight");
 		$rowHeight = self::$styles["row"]["height"];
 		$bannerHeight = self::$styles["banner"]["height"] ?? 0;
 
@@ -303,8 +316,16 @@ class Event
 				if ($y > 6) {
 					$y += $dayGap;
 				}
-				if ($y + $dayHeightCalc + $rowHeight > $contentHeight) {
+				$heightNeeded = $y + $dayHeightCalc + $rowHeight;
+				if ($heightNeeded > $contentHeight) {
+					// debug_log(
+					// 	"Section $section requested height = $y + $dayHeightCalc + $rowHeight = $heightNeeded > $contentHeight), stopping",
+					// );
 					break;
+					// } else {
+					// 	debug_log(
+					// 		"Section $section requested height = $heightNeeded = $y + $dayHeightCalc + $rowHeight <= $contentHeight), proceeding",
+					// 	);
 				}
 				self::$canvas->addRow([
 					"type" => "section_header",
@@ -313,14 +334,22 @@ class Event
 					"y_start" => $y,
 					"y_end" => $y + $dayHeightCalc,
 				]);
-				$y += $dayHeightCalc + 4;
+				$y += $dayHeightCalc; // TODO: implement top/bottom padding in section header style
 			} elseif ($section === "upcoming" && $day !== $prev_day) {
 				// Date header on day change (upcoming events only)
 				if ($prev_section !== null) {
 					$y += $dayGap;
 				}
-				if ($y + $dayHeightCalc + $rowHeight > $contentHeight) {
+				$heightNeeded = $y + $dayHeightCalc + $rowHeight;
+				if ($heightNeeded > $contentHeight) {
+					// debug_log(
+					// 	"Section $section requested height = $heightNeeded = $y + $dayHeightCalc + $rowHeight > $contentHeight), stopping",
+					// );
 					break;
+					// } else {
+					// 	debug_log(
+					// 		"Section $section requested height = $heightNeeded = $y + $dayHeightCalc + $rowHeight <= $contentHeight), proceeding",
+					// 	);
 				}
 				self::$canvas->addRow([
 					"type" => "section_header",
@@ -337,10 +366,19 @@ class Event
 			$prev_section = $section;
 
 			// Event row
-			if ($y + $rowHeight > $contentHeight) {
-				break;
-			}
 			$title = sanitize_title($event["title"]);
+			$heightNeeded = $y + $rowHeight;
+			if ($heightNeeded > $contentHeight) {
+				// debug_log(
+				// 	"Row $i requested height = $heightNeeded = $y + $rowHeight > $contentHeight), stopping",
+				// );
+				break;
+				// } else {
+				// 	debug_log(
+				// 		"Row $i requested height = $heightNeeded = $y + $rowHeight <= $contentHeight), adding $title",
+				// 	);
+			}
+
 			$padding = self::$styles["row"]["padding"] ?? 0;
 			$y_text =
 				$y + $padding + (int) round(($rowHeight - $padding) * 0.6);
@@ -395,12 +433,10 @@ class Event
 			return $color;
 		}
 
-		// Get dimensions from $config
-		$width = self::$config["width"];
-		$height = self::$config["height"];
+		// Use canvas working dimensions (not output texture size — they differ when ratio != 1)
+		$width = self::$canvas->width();
+		$height = self::$canvas->height();
 		$rows = self::$canvas->rows();
-		$canvasHeight = self::$canvas->height();
-		$contentHeight = $canvasHeight - self::$styles["banner"]["height"];
 
 		try {
 			// Background
@@ -599,7 +635,7 @@ class Canvas extends Imagick
 			$height = (int) round($width / $ratio);
 		}
 
-		debug_log("Canvas: width=$width height=$height ratio=$ratio");
+		// debug_log("Canvas: width=$width height=$height ratio=$ratio");
 
 		$this->width = $width;
 		$this->height = $height;

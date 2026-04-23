@@ -66,11 +66,11 @@ $themes = [
 require_once __DIR__ . "/helpers.php";
 
 define("BASE_DIR", dirname(__DIR__, 2));
-debug_log("BASE_DIR: " . BASE_DIR . PHP_EOL);
+// debug_log("BASE_DIR: " . BASE_DIR . PHP_EOL);
 
 // Load environment variables
 if (file_exists(BASE_DIR . "/.env")) {
-	debug_log("Loading .env file " . BASE_DIR . "/.env");
+	// debug_log("Loading .env file " . BASE_DIR . "/.env");
 	try {
 		$env = parse_ini_file(BASE_DIR . "/.env");
 		$_ENV = array_merge_recursive($_ENV, $env);
@@ -83,7 +83,7 @@ $_ENV["BASE_URL"] =
 	($_SERVER["HTTPS"] === "On" ? "https" : "http") .
 	"://" .
 	$_SERVER["HTTP_HOST"];
-debug_log("BASE_URL: " . $_ENV["BASE_URL"] . PHP_EOL);
+// debug_log("BASE_URL: " . $_ENV["BASE_URL"] . PHP_EOL);
 
 $config = [
 	"theme" => $_GET["theme"] ?? "default",
