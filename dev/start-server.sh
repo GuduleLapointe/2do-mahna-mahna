@@ -19,9 +19,14 @@ echo "  Project: $BASEDIR"
 echo "  Webroot: $WEBROOT"
 echo "  Magick font path: ${MAGICK_FONT_PATH:-}"
 
+updateFiles() {
+	rsync -a templates/events.php "$WEBROOT/"
+	echo "√ events.php → output/"
+	rsync -a includes/bootstrap.php includes/helpers.php "$WEBROOT/includes/"
+	echo "√ bootstrap.php, helpers.php → output/includes/"
+}
 # Initial sync of templates to output/
-rsync -av templates/events.php "$WEBROOT/events.php" \
-&& echo "Synced templates/ → output/"
+updateFiles
 
 # Get local IP
 if [ $LISTEN_IP != "0.0.0.0" ]; then
@@ -48,12 +53,9 @@ echo ""
 # Auto-sync events.php on change (requires fswatch: brew install fswatch)
 if command -v fswatch >/dev/null 2>&1; then
     echo "Watching templates/ for changes (fswatch)..."
-    fswatch -o "$BASEDIR/templates/events.php" "$BASEDIR/includes/config.php" \
+    fswatch -o "$BASEDIR/templates/events.php" "$BASEDIR/includes/bootstrap.php" "$BASEDIR/includes/helpers.php" \
         | while read; do
-	    cp "$BASEDIR/templates/events.php" "$WEBROOT/events.php"
-	    mkdir -p "$WEBROOT/includes"
-	    cp "$BASEDIR/includes/config.php" "$WEBROOT/includes/config.php"
-		echo "  [sync] templates/ → output/"
+        updateFiles
     done &
     FSWATCH_PID=$!
     trap "kill $FSWATCH_PID 2>/dev/null" EXIT

@@ -1,5 +1,7 @@
 <?php
 
+global $defaults, $styles;
+
 $defaults = [
 	"format" => "lsl2",
 	"width" => 512,
@@ -12,15 +14,18 @@ $defaults = [
 			"font" => "Roboto",
 			"font-size" => 16,
 			"color" => "#202124",
-			"background" => "#cccccc",
+			"background" => "white",
 			"line-height" => 1.2,
-			"row-height" => 40,
+			"padding" => 0,
+		],
+		"row" => [
+			"height" => 40,
 			"padding" => 0,
 		],
 		"time" => [
 			"font" => "DejaVuSansMono",
 			"font-size" => 12,
-			"color" => "pink", // "#5F6468",
+			"color" => "#5F6468",
 		],
 		"location" => [
 			"font-size" => 9,
@@ -28,6 +33,10 @@ $defaults = [
 		],
 		"section" => [
 			"color" => "#999999",
+			"background" => "magenta",
+		],
+		"separator" => [
+			"color" => "#cccccc",
 		],
 		"banner" => [
 			"filename" => "2do-logo-trim.png",
@@ -54,27 +63,27 @@ $themes = [
 	],
 ];
 
-function color($color, $format = "hex")
-{
-	if (empty($color)) {
-		return null;
-	}
-	$color = preg_replace("/^([0-9a-fA-F]+)$/", "#$1", $color);
+require_once __DIR__ . "/helpers.php";
+
+define("BASE_DIR", dirname(__DIR__, 2));
+debug_log("BASE_DIR: " . BASE_DIR . PHP_EOL);
+
+// Load environment variables
+if (file_exists(BASE_DIR . "/.env")) {
+	debug_log("Loading .env file " . BASE_DIR . "/.env");
 	try {
-		$pixel = new ImagickPixel($color);
-		$rgb = $pixel->getColor();
-		if ($format == "hex") {
-			$hex = strtolower(
-				sprintf("#%02X%02X%02X", $rgb["r"], $rgb["g"], $rgb["b"]),
-			);
-			return $hex;
-		}
-		return $rgb;
-	} catch (ImagickException $e) {
-		error_log("Invalid color: " . $color);
-		return null;
+		$env = parse_ini_file(BASE_DIR . "/.env");
+		$_ENV = array_merge_recursive($_ENV, $env);
+	} catch (Exception $e) {
+		error_log("Failed to load .env file: " . $e->getMessage());
 	}
 }
+
+$_ENV["BASE_URL"] =
+	($_SERVER["HTTPS"] === "On" ? "https" : "http") .
+	"://" .
+	$_SERVER["HTTP_HOST"];
+debug_log("BASE_URL: " . $_ENV["BASE_URL"] . PHP_EOL);
 
 $config = [
 	"theme" => $_GET["theme"] ?? "default",

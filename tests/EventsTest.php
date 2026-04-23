@@ -86,7 +86,7 @@ class EventsTest extends TestCase
 		}
 		$response = file_get_contents(TEST_URL . "/events.php?format=png");
 		// Check if the response is not empty
-		$this->assertNotEmpty($response, "Response should not be empty");
+		$this->assertNotEmpty($response, "Image should not be empty");
 		// Check if the file is a valid PNG using Imagick
 		try {
 			$imagick = new Imagick();

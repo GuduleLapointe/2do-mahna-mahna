@@ -50,4 +50,4 @@ echo "Board version: " . BOARD_VER . "\n";
 
 // We do not need to load the php files yet, we currently only test the API endpoints
 // require_once __DIR__ . "/../templates/events.php";
-// require_once __DIR__ . "/../includes/config.php";
+// require_once __DIR__ . "/../includes/bootstrap.php";
