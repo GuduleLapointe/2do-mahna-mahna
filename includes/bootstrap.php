@@ -92,7 +92,7 @@ $config = [
 	"height" => $_GET["height"] ?? $defaults["height"],
 	"not-before" => $_GET["not-before"] ?? $defaults["not-before"],
 	"limit" => $_GET["limit"] ?? $defaults["limit"],
-	"ratio" => $_GET["ratio"] ?? $defaults["ratio"],
+	"ratio" => max(0.25, min(4.0, (float)($_GET["ratio"] ?? $defaults["ratio"]))),
 ];
 
 $styles = $themes[$config["theme"]] ?? $defaults["styles"];
