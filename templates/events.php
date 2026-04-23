@@ -269,7 +269,11 @@ class Event
 		$tz = new DateTimeZone(SLT_TIMEZONE);
 		$now = time();
 		$limit = self::$config["limit"];
-		$today = new DateTime("now", $tz)->format("Y-m-d");
+		// Do not merge DateTime formatting with creation, the IDE may
+		// reformat it improperly, breaking the script in some environments.
+		// Keep them separate.
+		$today = new DateTime("now", $tz);
+		$today->format("Y-m-d");
 		$soon_window = self::$config["soon"]["delay"] ?? 3600; // flag upcoming events starting within 1 h as "soon"
 
 		// Sort by start time — JSON source may be unordered or stale
@@ -827,4 +831,5 @@ class Canvas extends Imagick
 	}
 }
 
-new Event()->serve();
+$event = new Event();
+$event->serve();
