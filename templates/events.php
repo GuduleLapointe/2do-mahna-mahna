@@ -748,7 +748,9 @@ class Canvas extends Imagick
 		$draw = new ImagickDraw();
 		$font =
 			$this->styles[$section]["font"] ?? $this->styles["main"]["font"];
-		$draw->setFont($font);
+		if ($font) {
+			$draw->setFont($font);
+		}
 		$fontSize =
 			$this->styles[$section]["font-size"] ??
 			$this->styles["main"]["font-size"];

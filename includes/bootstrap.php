@@ -117,6 +117,10 @@ foreach ($styles as $section_key => &$section) {
 				$value = color($value);
 				break;
 
+			case "font":
+				$value = setFont($value);
+				break;
+
 			case "ratio":
 				$value = floatval($value);
 				break;
