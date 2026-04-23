@@ -6,7 +6,8 @@ Tone: natural. Be direct, pragmatic, and concise — answer in 1–2 lines; avoi
 
 ## Important:
 
-Source code is located in templates/, never make changes directly in output/, they would be overriden automatically by the dev server and/or the deploy processes.
+- Source code is located in templates/, never make changes directly in output/, they would be overriden automatically by the dev server and/or the deploy processes.
+- Never hardcode system files path, never try to scan filesystem outside the document root, it might crash the site depending on the web server configuration.
 
 ```
 2do-aggregator
