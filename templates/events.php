@@ -164,21 +164,24 @@ class Event
 		header("Content-Type: text/plain; charset=utf-8");
 
 		Event::setCanvas();
-		$rows = Event::planBoardRows();
+		Event::planBoardRows();
+		$rows = self::$canvas->rows();
 
 		$params = array_merge($_GET, ["format" => "png"]);
 		$host = $_SERVER["HTTP_HOST"] ?? "localhost";
 		$uri = strtok($_SERVER["REQUEST_URI"] ?? "/events/events.php", "?");
 		echo "https://" . $host . $uri . "?" . http_build_query($params) . "\n";
 
-		// Scale Y from canvas space to texture output space
+		$canvasHeight = self::$canvas->height();
+		$textureHeight = self::$config["height"];
+
 		foreach ($rows as $row) {
 			if ($row["type"] === "event") {
 				$y0 = (int) round(
-					($row["y_start"] * $config["height"]) / $canvasHeight,
+					($row["y_start"] * $textureHeight) / $canvasHeight,
 				);
 				$y1 = (int) round(
-					($row["y_end"] * $config["height"]) / $canvasHeight,
+					($row["y_end"] * $textureHeight) / $canvasHeight,
 				);
 				echo $row["hgurl"] . "~" . $y0 . "~" . $y1 . "\n";
 			}
