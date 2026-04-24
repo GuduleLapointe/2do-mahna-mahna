@@ -13,29 +13,35 @@ It is not a separate renderer option — it complements the PNG renderer so that
 
 Because `llHTTPRequest` is asynchronous, the PNG and clickmap fetches can run in parallel with no coordination overhead. The PNG URL does not need to be embedded in the clickmap response.
 
+**Deduplication by ratio** — each face has its own `ratio`, which determines canvas size, font/padding scaling, and — critically — how many events fit. Two faces with the same ratio will produce identical PNGs and identical clickmaps. Making one request per unique ratio instead of one per face avoids redundant HTTP calls.
+
+- Group active faces by ratio before looping
+- For each unique ratio: send one PNG request and one clickmap request
+- Apply results to all faces sharing that ratio (see caching below)
+
 **`refreshEvents()` (renamed from `doRequest`)**
 
 - If `renderer=png`:
-  1. Call `refreshTexturePNG()`, which loops over active faces
-  2. For each face: send the PNG request AND a clickmap request with the same parameters (`ratio`, `width`, `height`)
+  1. Call `refreshTexturePNG()`, which groups faces by ratio and loops over unique ratios
+  2. For each unique ratio: send the PNG request AND a clickmap request with the same parameters
   3. Both are async — no coordination needed
 - Otherwise (classic renderer):
   1. Send `format=lsl2` request as now
 
-**Per-face clickmap** — each face has its own `ratio`, so the server computes a different canvas size per face, which affects font/padding scaling and — critically — how many events fit. Two faces on the same board can show completely different subsets of the event list. Each face therefore needs its own clickmap, independent from the others.
+**Texture UUID cache** — `osSetDynamicTextureURLBlendFace` returns a UUID for the generated texture. Store a `ratio => UUID` mapping. When applying a texture to faces that share the same ratio, use `llSetTexture(uuid, face)` for all faces after the first — no additional HTTP request or dynamic texture call needed. On refresh, pass the stored UUID as `dynamicID` so the texture slot is reused in place.
 
-Store clickmaps indexed by face number (e.g. a flat LSL list: `[face, hgurl, y0, y1, face, hgurl, y0, y1, ...]`).
+**Clickmap cache** — store clickmaps indexed by ratio (string key). Before requesting a clickmap for a face, check if one for that ratio already exists. If yes, reuse it directly.
 
 **`http_response`**
 
-- If PNG renderer: identify which face the clickmap belongs to (pass face as a query param so it comes back in the response key), store it in the per-face clickmap list
-- If classic renderer: generate textures as now, then build a clickmap in the same format from the fixed row heights of the osDraw layout (one clickmap per face, same structure)
+- If PNG renderer: identify the ratio from the request key (pass `ratio` as a query param), store the returned UUID in the ratio→UUID cache, apply the texture to all faces with that ratio, store the clickmap in the ratio→clickmap cache
+- If classic renderer: generate textures as now, then build a clickmap in the same format from the fixed row heights of the osDraw layout
 
-**Unified clickmap format** — one `hgurl~y_start~y_end` per event row (coordinates are UV fractions 0.0–1.0, top to bottom). Same structure regardless of renderer.
+**Unified clickmap format** — one `hgurl~y_start~y_end` per event row (coordinates are UV fractions 0.0–1.0, top to bottom). Indexed by ratio, looked up by face at touch time.
 
 **`touch_end`**
 
-Single handler for both renderers: read `llDetectedTouchFace()` to select the right clickmap, read `llDetectedTouchST()` for the V coordinate, find the matching row, teleport.
+Single handler for both renderers: read `llDetectedTouchFace()`, get its ratio, look up the clickmap for that ratio, read `llDetectedTouchST()` for the V coordinate, find the matching row, teleport.
 
 In debug mode: print the resolved teleport URL to the owner instead of executing the teleport — allows precise validation of the coordinate mapping for both renderers and all faces.
 
