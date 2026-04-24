@@ -7,9 +7,11 @@
  *
  *   lsl2      (default) Plain-text event list consumed by the LSL board script.
  *   png       PNG board image, intended for osSetDynamicTextureURL.
- *   clickmap  Plain text: PNG URL on line 1, then one "hgurl~y_start~y_end"
- *             line per visible event — used by the LSL script to map a touch
- *             Y coordinate to the correct event for teleport.
+ *   clickmap  CSV: one "x0,y0,x1,y1,destination" line per clickable zone.
+ *             x0/y0/x1/y1 are UV fractions (0.0=top-left, 1.0=bottom-right).
+ *             destination is "host:port Region" for teleport zones, or
+ *             "href:https://…" for web links (banner). Used by the LSL script
+ *             to map a touch UV coordinate to the correct action.
  *
  * Parameters use the same names and units as the LSL board Configuration notecard
  * so that builders can copy values directly between the two.
@@ -155,9 +157,9 @@ class Event
 	/**
 	 * Output events in clickmap format.
 	 *
-	 * Lines 2+:
-	 * 	hgurl~y_start~y_end  — one per visible event, in display order.
-	 * 	y_start / y_end are pixel coordinates in textureWidth × textureHeight space.
+	 * One "hgurl~y_start~y_end" line per visible event, in display order.
+	 * y_start / y_end are UV fractions from top (0.0 = top, 1.0 = bottom).
+	 * Banner row is emitted last with an empty hgurl as a sentinel.
 	 */
 	function output_click_map(): void
 	{
@@ -166,24 +168,17 @@ class Event
 		Event::setCanvas();
 		Event::planBoardRows();
 		$rows = self::$canvas->rows();
-
-		$params = array_merge($_GET, ["format" => "png"]);
-		$host = $_SERVER["HTTP_HOST"] ?? "localhost";
-		$uri = strtok($_SERVER["REQUEST_URI"] ?? "/events/events.php", "?");
-		echo "https://" . $host . $uri . "?" . http_build_query($params) . "\n";
-
 		$canvasHeight = self::$canvas->height();
-		$textureHeight = self::$config["height"];
 
 		foreach ($rows as $row) {
 			if ($row["type"] === "event") {
-				$y0 = (int) round(
-					($row["y_start"] * $textureHeight) / $canvasHeight,
-				);
-				$y1 = (int) round(
-					($row["y_end"] * $textureHeight) / $canvasHeight,
-				);
-				echo $row["hgurl"] . "~" . $y0 . "~" . $y1 . "\n";
+				$y0 = $row["y_start"] / $canvasHeight;
+				$y1 = $row["y_end"] / $canvasHeight;
+				echo "0," . $y0 . ",1," . $y1 . "," . $row["hgurl"] . "\n";
+			} elseif ($row["type"] === "banner") {
+				$y0 = $row["y_start"] / $canvasHeight;
+				$link = self::$styles["banner"]["link"] ?? "https://2do.directory/events/";
+				echo "0," . $y0 . ",1,1.0,href:" . $link . "\n";
 			}
 		}
 	}

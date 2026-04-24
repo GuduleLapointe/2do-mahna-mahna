@@ -46,6 +46,7 @@ $defaults = [
 			"position" => "bottom",
 			"background" => "F8F9FA",
 			"label" => "More events:",
+			"link" => "https://2do.directory/events/",
 		],
 		"ongoing" => [
 			"background" => "#DCF5DC", // light green tint
