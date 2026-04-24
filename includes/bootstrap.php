@@ -17,10 +17,11 @@ $defaults = [
 			"background" => "white",
 			"line-height" => 1.2,
 			"padding" => 0,
+			"gap" => 0,
 		],
 		"row" => [
 			// "height" => 40,
-			"padding" => 4,
+			"padding" => 20,
 		],
 		"time" => [
 			"font" => "DejaVuSansMono",
@@ -43,6 +44,7 @@ $defaults = [
 			"height" => 40,
 			"position" => "bottom",
 			"background" => "F8F9FA",
+			"label" => "More events:",
 		],
 		"ongoing" => [
 			"background" => "#DCF5DC", // light green tint

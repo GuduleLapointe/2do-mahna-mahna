@@ -568,7 +568,7 @@ class Event
 						$y0,
 						$width,
 						$y0 + $row["banner_h"],
-						"More events:",
+						self::$styles["banner"]["label"] ?? "",
 					);
 				}
 			}
