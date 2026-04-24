@@ -34,6 +34,13 @@ This should happen in the aggregation/parsing step, before any output format is 
 
 ## Medium term
 
+### Update server
+
+For automatic LSL script update. 
+- This is currently implemented through our own external "scrup" service. We can use the same architecture or make a simpler one if applicable. 
+- events.php should provide additional methods to advertise and serve script updates.
+- When the full app is implemented, this would happen through API endpoint(s)
+
 ### Additional themes
 
 A few radically different themes beyond color variations. Implemented the same way as `dark` (overrides in `$themes[]` in `bootstrap.php`), but with more personality.
