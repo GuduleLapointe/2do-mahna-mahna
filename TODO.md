@@ -9,16 +9,30 @@ Ideas and planned improvements, roughly in order of priority. Not all of these w
 ### Clickmap implementation
 
 The clickmap format (`events.php?format=clickmap`) exists but does not work yet.
-It is not a separate renderer option — it is required alongside the PNG renderer for touch-to-teleport to work the same way it does in the current LSL/osDraw renderer.
+It is not a separate renderer option — it complements the PNG renderer so that touch-to-teleport works the same way it does in the classic osDraw renderer.
 
-The flow should be:
-1. Board fetches the PNG via `format=png` and applies it to the face
-2. Board also fetches `format=clickmap` (or both in a single call?) to get the y-coordinate map
-3. On touch, the board reads `llDetectedTouchST()` to get the UV coordinates, maps them to an event row, and teleports
+Because `llHTTPRequest` is asynchronous, the PNG and clickmap fetches can run in parallel with no coordination overhead. The PNG URL does not need to be embedded in the clickmap response.
 
-The clickmap output is: PNG URL on line 1, then one `hgurl~y_start~y_end` per event row (matching the rows drawn on the PNG).
+**`refreshEvents()` (renamed from `doRequest`)**
 
-The current LSL board already has a clickmap handler for the osDraw renderer — that logic needs to be adapted for the PNG renderer mode.
+- If `renderer=png`:
+  1. Send `format=clickmap` request (async, to get coordinate map)
+  2. Call `refreshTexturePNG()` immediately — no need to wait for the clickmap response
+- Otherwise (classic renderer):
+  1. Send `format=lsl2` request as now
+
+**`http_response`**
+
+- If PNG renderer: store the clickmap rows (texture is already applied, nothing else to do)
+- If classic renderer: generate textures as now, then also build a clickmap in the same format from the fixed row heights used by the osDraw layout
+
+**Unified clickmap format** — one `hgurl~y_start~y_end` per event row (coordinates are UV fractions 0.0–1.0, top to bottom). Same structure regardless of renderer.
+
+**`touch_end`**
+
+Single handler for both renderers: read `llDetectedTouchST()`, compare the V coordinate against the clickmap, look up the event, teleport.
+
+In debug mode: print the resolved teleport URL to the owner instead of executing the teleport — allows precise validation of the coordinate mapping for both renderers.
 
 ### Event deduplication
 
