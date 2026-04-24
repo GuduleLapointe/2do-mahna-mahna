@@ -12,16 +12,21 @@ $defaults = [
 	"styles" => [
 		"main" => [
 			"font" => "Roboto",
-			"font-size" => 24,
+			"font-size" => 20,
 			"color" => "#202124",
 			"background" => "white",
 			"line-height" => 1.2,
 			"padding" => 0,
-			"gap" => 0,
+			"gap" => 10,
+		],
+		"section" => [
+			"color" => "white",
+			"background" => "#dd2a84",
+			"padding" => 10,
 		],
 		"row" => [
 			// "height" => 40,
-			"padding" => 20,
+			"padding" => 10,
 		],
 		"time" => [
 			"font" => "DejaVuSansMono",
@@ -29,12 +34,8 @@ $defaults = [
 			"color" => "#5F6468",
 		],
 		"location" => [
-			"font-size" => 9,
+			"font-size" => 12,
 			"color" => "#80868B",
-		],
-		"section" => [
-			"color" => "#999999",
-			"background" => "magenta",
 		],
 		"separator" => [
 			"color" => "#cccccc",
@@ -158,6 +159,7 @@ foreach ($styles as $section_key => &$section) {
 
 			case "font-size":
 			case "padding":
+			case "gap":
 			case "height":
 				$value = scaleToWidth($value, $config);
 				break;

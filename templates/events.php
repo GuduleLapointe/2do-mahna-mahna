@@ -285,18 +285,19 @@ class Event
 		$fontSize = self::$styles["main"]["font-size"] ?? 16;
 		$locationFontSize = self::$styles["location"]["font-size"] ?? $fontSize;
 		$padding = self::$styles["main"]["padding"] ?? 0;
-		$rowPadding = 4; //self::$styles["row"]["padding"] ?? 0;
+		$dayGap = self::$styles["main"]["gap"] ?? 0;
+		$rowPadding = self::$styles["row"]["padding"] ?? 0;
 		$eventHeight =
 			self::$styles["row"]["height"] ??
-			(int) round($fontSize + $locationFontSize + $rowPadding);
-		debug_log(
-			"rowHeight: $eventHeight - calc " .
-				($fontSize + $locationFontSize + 2 * $rowPadding),
-		);
-		// $sectionHeight = (int) round($eventHeight * 0.7); // section header height
-		$sectionHeight = $eventHeight;
-		$dayHeight = $sectionHeight;
-		$dayGap = (int) round(self::$styles["row"]["padding"] ?? 0); // gap between sections
+			(int) round(
+				$rowPadding +
+					max($locationFontSize * 0.25, $rowPadding) +
+					$fontSize +
+					$locationFontSize,
+			);
+		$sectionFontSize = self::$styles["section"]["font-size"] ?? $fontSize;
+		$sectionPadding = self::$styles["section"]["padding"] ?? 0;
+		$sectionHeight = $sectionPadding * 2 + $sectionFontSize;
 		$canvasHeight = self::$canvas->height();
 		$contentHeight = $canvasHeight - self::$styles["banner"]["height"];
 		// debug_log("Available content height: $contentHeight");
@@ -305,6 +306,7 @@ class Event
 		$rows = [];
 		$y = $padding;
 		$prev_section = null;
+		$first_in_section = true;
 		$prev_day = null;
 
 		$i = 0;
@@ -328,26 +330,20 @@ class Event
 				$section === "upcoming" &&
 				$startTimestamp - $now < $soon_window;
 
-			// Section / day header
+			// Section header — emitted on first started event or on each new day
+			$sectionLabel = null;
+			$sectionName = null;
+			$sectionIsToday = false;
 			if ($section === "started" && $prev_section !== "started") {
-				// "CURRENTLY" header before the first started event
-				// if ($y > 6) {
-				// 	$y += $dayGap;
-				// }
-				$heightNeeded = $y + $sectionHeight + $eventHeight;
-				if ($heightNeeded > $contentHeight) {
-					break;
-				}
-				self::$canvas->addRow([
-					"type" => "section_header",
-					"section" => "ongoing",
-					"label" => "CURRENTLY",
-					"y_start" => $y,
-					"y_end" => $y + $sectionHeight,
-				]);
-				$y += $rowHeight;
+				$sectionName = "ongoing";
+				$sectionLabel = "CURRENTLY";
 			} elseif ($section === "upcoming" && $day !== $prev_day) {
-				// Date header on day change (upcoming events only)
+				$sectionName = "day";
+				$sectionLabel = strtoupper($startDateTime->format("D j M"));
+				$sectionIsToday = $day === $today;
+				$prev_day = $day;
+			}
+			if ($sectionLabel !== null) {
 				if ($prev_section !== null) {
 					$y += $dayGap;
 				}
@@ -357,14 +353,18 @@ class Event
 				}
 				self::$canvas->addRow([
 					"type" => "section_header",
-					"section" => "day",
-					"label" => strtoupper($startDateTime->format("D j M")),
-					"is_today" => $day === $today,
+					"section" => $sectionName,
+					"label" => $sectionLabel,
+					"is_today" => $sectionIsToday,
 					"y_start" => $y,
 					"y_end" => $y + $sectionHeight,
+					"y_label" =>
+						$y +
+						$sectionPadding +
+						(int) round($sectionFontSize * 0.85),
 				]);
 				$y += $sectionHeight;
-				$prev_day = $day;
+				$first_in_section = true;
 			}
 
 			$prev_section = $section;
@@ -376,21 +376,9 @@ class Event
 				break;
 			}
 
-			$y_title =
-				$y +
-				$rowPadding +
-				(int) round(($eventHeight - $rowPadding) * 0.6);
-			$y_loc =
-				$y +
-				$rowPadding +
-				(int) round(($eventHeight - $rowPadding) * 0.88);
+			$y_title = $y + $rowPadding + $fontSize;
+			$y_loc = $y_title + $locationFontSize;
 			$y_time = $y_title;
-			// $y_title =
-			// 	$y +
-			// 	$rowPadding +
-			// 	(self::$styles["time"]["font-size"] ?? $fontSize) -
-			// 	$fontSize;
-			// $y_loc = $y + $rowPadding + $fontSize;
 			self::$canvas->addRow([
 				"type" => "event",
 				"event" => $event,
@@ -405,8 +393,10 @@ class Event
 				"y_time" => $y_time,
 				"y_title" => $y_title,
 				"y_location" => $y_loc,
+				"first_in_section" => $first_in_section,
 			]);
-			$y += $eventHeight + 1;
+			$first_in_section = false;
+			$y += $eventHeight;
 			$i++;
 		}
 
@@ -459,19 +449,29 @@ class Event
 
 			$time_col_w =
 				self::$styles["time"]["width"] ??
-				self::$styles["time"]["font-size"] * 6;
+				self::$styles["time"]["font-size"] * 5.5;
 
 			foreach ($rows as $row) {
 				if ($row["type"] === "section_header") {
+					$sectionBg = self::$styles["section"]["background"] ?? null;
+					if ($sectionBg) {
+						self::$canvas->fillRectangle(
+							0,
+							$row["y_start"],
+							$width - 1,
+							$row["y_end"] - 1,
+							$sectionBg,
+						);
+					}
 					self::$canvas->drawText(
 						"section",
 						$row["label"],
 						8,
-						$row["y_end"] - 2,
+						$row["y_label"],
 					);
 				} elseif ($row["type"] === "event") {
-					$y0 = $row["y_start"];
-					$y1 = $row["y_end"];
+					$y0 = (int) $row["y_start"];
+					$y1 = (int) $row["y_end"];
 					$is_started = $row["section"] === "started";
 
 					// Card background — green for started, blue for soon, default otherwise
@@ -520,7 +520,7 @@ class Event
 						"main",
 						$title,
 						$title_x,
-						$row["y_title"],
+						(int) $row["y_title"],
 					);
 
 					// Location
@@ -535,19 +535,21 @@ class Event
 						"location",
 						$loc,
 						$title_x,
-						$row["y_location"],
+						(int) $row["y_location"],
 					);
 
-					// Row separator
-					self::$canvas->drawLine(
-						$title_x,
-						$y1 - 1,
-						$width - 1,
-						$y1 - 1,
-						self::$styles["separator"]["color"],
-					);
+					// Row separator — top of row, skipped for the first event of each section
+					if (!$row["first_in_section"]) {
+						self::$canvas->drawLine(
+							0,
+							$y0,
+							$width - 1,
+							$y0,
+							self::$styles["separator"]["color"],
+						);
+					}
 				} elseif ($row["type"] === "banner") {
-					$y0 = $row["y_start"];
+					$y0 = (int) $row["y_start"];
 					self::$canvas->fillRectangle(
 						0,
 						$y0,
@@ -706,10 +708,10 @@ class Canvas extends Imagick
 	 * Fill a rectangle on an Imagick canvas.
 	 */
 	public function fillRectangle(
-		int $x1,
-		int $y1,
-		int $x2,
-		int $y2,
+		float $x1,
+		float $y1,
+		float $x2,
+		float $y2,
 		string $color,
 	): void {
 		$draw = new ImagickDraw();
@@ -723,10 +725,10 @@ class Canvas extends Imagick
 	 * Draw a line on an Imagick canvas.
 	 */
 	public function drawLine(
-		int $x1,
-		int $y1,
-		int $x2,
-		int $y2,
+		float $x1,
+		float $y1,
+		float $x2,
+		float $y2,
 		string $color,
 	): void {
 		$draw = new ImagickDraw();
@@ -743,9 +745,11 @@ class Canvas extends Imagick
 	function drawText(
 		string $section,
 		string $text,
-		?int $posX,
-		int $posY,
+		?float $posX,
+		float $posY,
 	): void {
+		// $posX = (int) $posX;
+		// $posY = (int) $posY;
 		if ($text === "") {
 			return;
 		}
@@ -778,7 +782,7 @@ class Canvas extends Imagick
 		string $text,
 		float $size,
 		?string $font,
-		int $max_px,
+		float $max_px,
 	): string {
 		$ellipsis = "…";
 		$draw = new ImagickDraw();
@@ -806,9 +810,9 @@ class Canvas extends Imagick
 	 */
 	function addImageFromPath(
 		string $imagePath,
-		int $banner_y,
-		int $canvasWidth,
-		int $banner_y_end,
+		float $banner_y,
+		float $canvasWidth,
+		float $banner_y_end,
 		string $label = "",
 	): void {
 		$banner_h = $banner_y_end - $banner_y;
