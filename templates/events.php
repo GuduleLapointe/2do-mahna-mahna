@@ -456,7 +456,9 @@ class Event
 
 			// Draw rows
 
-			$time_col_w = 60; // width of time column (canvas px)
+			$time_col_w =
+				self::$styles["time"]["width"] ??
+				self::$styles["time"]["font-size"] * 5;
 
 			foreach ($rows as $row) {
 				if ($row["type"] === "section_header") {
@@ -635,10 +637,10 @@ class Canvas extends Imagick
 		// Calculate canvas dimensions based on ratio
 		if ($ratio > 1) {
 			// Landscape: fix canvas height = texture height, scale width up
-			$width = (int) round($height * $ratio);
+			$width = (int) round($width * $ratio);
 		} elseif ($ratio > 0) {
 			// Portrait or square: fix canvas width = texture width, scale height up
-			$height = (int) round($width / $ratio);
+			$height = (int) round($height / $ratio);
 		}
 
 		// debug_log("Canvas: width=$width height=$height ratio=$ratio");

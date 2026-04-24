@@ -92,13 +92,42 @@ $config = [
 	"height" => $_GET["height"] ?? $defaults["height"],
 	"not-before" => $_GET["not-before"] ?? $defaults["not-before"],
 	"limit" => $_GET["limit"] ?? $defaults["limit"],
-	"ratio" => max(0.25, min(4.0, (float)($_GET["ratio"] ?? $defaults["ratio"]))),
+	"ratio" => max(
+		0.25,
+		min(4.0, (float) ($_GET["ratio"] ?? $defaults["ratio"])),
+	),
 ];
+
+// Canvas width determines the scale factor for all pixel dimensions.
+// Mirrors Canvas::__construct() logic — both will move to a shared helper later.
 
 $styles = $themes[$config["theme"]] ?? $defaults["styles"];
 
 // Add missing sections from defaults
 $styles = array_merge($defaults["styles"], $styles);
+
+function scaleToWidth($value, $config)
+{
+	if ($value == 0) {
+		return $value;
+	}
+
+	$finalWidth = $config["width"] * $config["ratio"];
+
+	if ($config["scale"] ?? false) {
+		$scale = $config["scale"];
+	} elseif ($finalWidth > 512) {
+		// Style dimensions are defined at the 512px reference width: fontSize=16 means 16px on a 512px canvas.
+		$scale = $finalWidth / 512.0;
+	} else {
+		$scale = 1;
+	}
+	if ($scale == 1) {
+		return $value;
+	}
+
+	return $value * $scale;
+}
 
 // Merge individual keys with defaults
 foreach ($styles as $section_key => &$section) {
@@ -124,8 +153,14 @@ foreach ($styles as $section_key => &$section) {
 			case "ratio":
 				$value = floatval($value);
 				break;
-			case "width":
+
+			case "font-size":
+			case "padding":
 			case "height":
+				$value = scaleToWidth($value, $config);
+				break;
+
+			case "width":
 			case "not-before":
 			case "limit":
 				$value = intval($value);
@@ -134,3 +169,4 @@ foreach ($styles as $section_key => &$section) {
 		$section[$key] = $value;
 	}
 }
+unset($section);
