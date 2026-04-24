@@ -16,23 +16,28 @@ Because `llHTTPRequest` is asynchronous, the PNG and clickmap fetches can run in
 **`refreshEvents()` (renamed from `doRequest`)**
 
 - If `renderer=png`:
-  1. Send `format=clickmap` request (async, to get coordinate map)
-  2. Call `refreshTexturePNG()` immediately — no need to wait for the clickmap response
+  1. Call `refreshTexturePNG()`, which loops over active faces
+  2. For each face: send the PNG request AND a clickmap request with the same parameters (`ratio`, `width`, `height`)
+  3. Both are async — no coordination needed
 - Otherwise (classic renderer):
   1. Send `format=lsl2` request as now
 
+**Per-face clickmap** — each face has its own `ratio`, so the server computes a different canvas size per face, which affects font/padding scaling and — critically — how many events fit. Two faces on the same board can show completely different subsets of the event list. Each face therefore needs its own clickmap, independent from the others.
+
+Store clickmaps indexed by face number (e.g. a flat LSL list: `[face, hgurl, y0, y1, face, hgurl, y0, y1, ...]`).
+
 **`http_response`**
 
-- If PNG renderer: store the clickmap rows (texture is already applied, nothing else to do)
-- If classic renderer: generate textures as now, then also build a clickmap in the same format from the fixed row heights used by the osDraw layout
+- If PNG renderer: identify which face the clickmap belongs to (pass face as a query param so it comes back in the response key), store it in the per-face clickmap list
+- If classic renderer: generate textures as now, then build a clickmap in the same format from the fixed row heights of the osDraw layout (one clickmap per face, same structure)
 
 **Unified clickmap format** — one `hgurl~y_start~y_end` per event row (coordinates are UV fractions 0.0–1.0, top to bottom). Same structure regardless of renderer.
 
 **`touch_end`**
 
-Single handler for both renderers: read `llDetectedTouchST()`, compare the V coordinate against the clickmap, look up the event, teleport.
+Single handler for both renderers: read `llDetectedTouchFace()` to select the right clickmap, read `llDetectedTouchST()` for the V coordinate, find the matching row, teleport.
 
-In debug mode: print the resolved teleport URL to the owner instead of executing the teleport — allows precise validation of the coordinate mapping for both renderers.
+In debug mode: print the resolved teleport URL to the owner instead of executing the teleport — allows precise validation of the coordinate mapping for both renderers and all faces.
 
 ### Event deduplication
 
