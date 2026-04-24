@@ -34,7 +34,7 @@ Because `llHTTPRequest` is asynchronous, the PNG and clickmap fetches can run in
 
 **`http_response`**
 
-- If PNG renderer: identify the ratio from the request key (pass `ratio` as a query param), store the returned UUID in the ratio→UUID cache, apply the texture to all faces with that ratio, store the clickmap in the ratio→clickmap cache
+- If PNG renderer: extract the ratio from the request URL (already present by necessity), store the returned UUID in the ratio→UUID cache, apply the texture to all faces with that ratio, store the clickmap in the ratio→clickmap cache
 - If classic renderer: generate textures as now, then build a clickmap in the same format from the fixed row heights of the osDraw layout
 
 **Unified clickmap format** — one `hgurl~y_start~y_end` per event row (coordinates are UV fractions 0.0–1.0, top to bottom). Indexed by ratio, looked up by face at touch time.
