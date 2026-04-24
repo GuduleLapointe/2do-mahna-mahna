@@ -1,7 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use Imagick, ImagickPixel, ImagickDraw;
+// use Imagick;
 
 class EventsTest extends TestCase
 {
@@ -87,6 +87,20 @@ class EventsTest extends TestCase
 		$response = file_get_contents(TEST_URL . "/events.php?format=png");
 		// Check if the response is not empty
 		$this->assertNotEmpty($response, "Image should not be empty");
+
+		// Check Content-Type header
+		$contentType = "";
+		foreach ($http_response_header ?? [] as $header) {
+			if (stripos($header, "Content-Type:") === 0) {
+				$contentType = $header;
+				break;
+			}
+		}
+		$this->assertStringContainsString(
+			"image/png",
+			$contentType,
+			"Content-Type header should specify image/png",
+		);
 		// Check if the file is a valid PNG using Imagick
 		try {
 			$imagick = new Imagick();

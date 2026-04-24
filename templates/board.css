@@ -13,12 +13,12 @@
 		}
 		&.ongoing {
 			background: #dcf5dc;
-			accent-color: #34a853;
+			border-color: #34a853;
 		}
 
 		&.soon {
 			background: #e8f0fe;
-			accent-color: #1a73e8;
+			border-color: #1a73e8;
 		}
 	}
 

@@ -12,15 +12,15 @@ $defaults = [
 	"styles" => [
 		"main" => [
 			"font" => "Roboto",
-			"font-size" => 16,
+			"font-size" => 24,
 			"color" => "#202124",
 			"background" => "white",
 			"line-height" => 1.2,
 			"padding" => 0,
 		],
 		"row" => [
-			"height" => 40,
-			"padding" => 0,
+			// "height" => 40,
+			"padding" => 4,
 		],
 		"time" => [
 			"font" => "DejaVuSansMono",
@@ -40,13 +40,13 @@ $defaults = [
 		],
 		"banner" => [
 			"filename" => "2do-logo-trim.png",
-			"height" => 32,
+			"height" => 40,
 			"position" => "bottom",
 			"background" => "F8F9FA",
 		],
 		"ongoing" => [
 			"background" => "#DCF5DC", // light green tint
-			"accent" => "#34A853", // green — left accent bar
+			"border-color" => "#34A853", // green — left border color
 		],
 		"soon" => [
 			"background" => "#E8F0FE",
@@ -142,7 +142,7 @@ foreach ($styles as $section_key => &$section) {
 		switch ($key) {
 			case "color":
 			case "background":
-			case "accent":
+			case "border-color":
 				$value = color($value);
 				break;
 

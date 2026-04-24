@@ -282,16 +282,28 @@ class Event
 			fn($a, $b) => strtotime($a["start"]) <=> strtotime($b["start"]),
 		);
 
-		$dayHeightCalc = (int) round(self::$styles["row"]["height"] * 0.55); // section header height
+		$fontSize = self::$styles["main"]["font-size"] ?? 16;
+		$locationFontSize = self::$styles["location"]["font-size"] ?? $fontSize;
+		$padding = self::$styles["main"]["padding"] ?? 0;
+		$rowPadding = 4; //self::$styles["row"]["padding"] ?? 0;
+		$eventHeight =
+			self::$styles["row"]["height"] ??
+			(int) round($fontSize + $locationFontSize + $rowPadding);
+		debug_log(
+			"rowHeight: $eventHeight - calc " .
+				($fontSize + $locationFontSize + 2 * $rowPadding),
+		);
+		// $sectionHeight = (int) round($eventHeight * 0.7); // section header height
+		$sectionHeight = $eventHeight;
+		$dayHeight = $sectionHeight;
 		$dayGap = (int) round(self::$styles["row"]["padding"] ?? 0); // gap between sections
 		$canvasHeight = self::$canvas->height();
 		$contentHeight = $canvasHeight - self::$styles["banner"]["height"];
 		// debug_log("Available content height: $contentHeight");
-		$rowHeight = self::$styles["row"]["height"];
 		$bannerHeight = self::$styles["banner"]["height"] ?? 0;
 
 		$rows = [];
-		$y = self::$styles["main"]["padding"] ?? 0;
+		$y = $padding;
 		$prev_section = null;
 		$prev_day = null;
 
@@ -319,43 +331,29 @@ class Event
 			// Section / day header
 			if ($section === "started" && $prev_section !== "started") {
 				// "CURRENTLY" header before the first started event
-				if ($y > 6) {
-					$y += $dayGap;
-				}
-				$heightNeeded = $y + $dayHeightCalc + $rowHeight;
+				// if ($y > 6) {
+				// 	$y += $dayGap;
+				// }
+				$heightNeeded = $y + $sectionHeight + $eventHeight;
 				if ($heightNeeded > $contentHeight) {
-					// debug_log(
-					// 	"Section $section requested height = $y + $dayHeightCalc + $rowHeight = $heightNeeded > $contentHeight), stopping",
-					// );
 					break;
-					// } else {
-					// 	debug_log(
-					// 		"Section $section requested height = $heightNeeded = $y + $dayHeightCalc + $rowHeight <= $contentHeight), proceeding",
-					// 	);
 				}
 				self::$canvas->addRow([
 					"type" => "section_header",
-					"section" => "started",
+					"section" => "ongoing",
 					"label" => "CURRENTLY",
 					"y_start" => $y,
-					"y_end" => $y + $dayHeightCalc,
+					"y_end" => $y + $sectionHeight,
 				]);
-				$y += $dayHeightCalc; // TODO: implement top/bottom padding in section header style
+				$y += $rowHeight;
 			} elseif ($section === "upcoming" && $day !== $prev_day) {
 				// Date header on day change (upcoming events only)
 				if ($prev_section !== null) {
 					$y += $dayGap;
 				}
-				$heightNeeded = $y + $dayHeightCalc + $rowHeight;
+				$heightNeeded = $y + $sectionHeight + $eventHeight;
 				if ($heightNeeded > $contentHeight) {
-					// debug_log(
-					// 	"Section $section requested height = $heightNeeded = $y + $dayHeightCalc + $rowHeight > $contentHeight), stopping",
-					// );
 					break;
-					// } else {
-					// 	debug_log(
-					// 		"Section $section requested height = $heightNeeded = $y + $dayHeightCalc + $rowHeight <= $contentHeight), proceeding",
-					// 	);
 				}
 				self::$canvas->addRow([
 					"type" => "section_header",
@@ -363,9 +361,9 @@ class Event
 					"label" => strtoupper($startDateTime->format("D j M")),
 					"is_today" => $day === $today,
 					"y_start" => $y,
-					"y_end" => $y + $dayHeightCalc,
+					"y_end" => $y + $sectionHeight,
 				]);
-				$y += $dayHeightCalc;
+				$y += $sectionHeight;
 				$prev_day = $day;
 			}
 
@@ -373,23 +371,26 @@ class Event
 
 			// Event row
 			$title = sanitize_title($event["title"]);
-			$heightNeeded = $y + $rowHeight;
+			$heightNeeded = $y + $eventHeight;
 			if ($heightNeeded > $contentHeight) {
-				// debug_log(
-				// 	"Row $i requested height = $heightNeeded = $y + $rowHeight > $contentHeight), stopping",
-				// );
 				break;
-				// } else {
-				// 	debug_log(
-				// 		"Row $i requested height = $heightNeeded = $y + $rowHeight <= $contentHeight), adding $title",
-				// 	);
 			}
 
-			$padding = self::$styles["row"]["padding"] ?? 0;
-			$y_text =
-				$y + $padding + (int) round(($rowHeight - $padding) * 0.6);
+			$y_title =
+				$y +
+				$rowPadding +
+				(int) round(($eventHeight - $rowPadding) * 0.6);
 			$y_loc =
-				$y + $padding + (int) round(($rowHeight - $padding) * 0.88);
+				$y +
+				$rowPadding +
+				(int) round(($eventHeight - $rowPadding) * 0.88);
+			$y_time = $y_title;
+			// $y_title =
+			// 	$y +
+			// 	$rowPadding +
+			// 	(self::$styles["time"]["font-size"] ?? $fontSize) -
+			// 	$fontSize;
+			// $y_loc = $y + $rowPadding + $fontSize;
 			self::$canvas->addRow([
 				"type" => "event",
 				"event" => $event,
@@ -400,12 +401,12 @@ class Event
 				"time_str" => $startDateTime->format("g:ia"),
 				"title" => $title,
 				"y_start" => $y,
-				"y_end" => $y + $rowHeight,
-				"y_time" => $y_text,
-				"y_title" => $y_text,
+				"y_end" => $y + $eventHeight,
+				"y_time" => $y_time,
+				"y_title" => $y_title,
 				"y_location" => $y_loc,
 			]);
-			$y += $rowHeight;
+			$y += $eventHeight + 1;
 			$i++;
 		}
 
@@ -458,7 +459,7 @@ class Event
 
 			$time_col_w =
 				self::$styles["time"]["width"] ??
-				self::$styles["time"]["font-size"] * 5;
+				self::$styles["time"]["font-size"] * 6;
 
 			foreach ($rows as $row) {
 				if ($row["type"] === "section_header") {
@@ -487,14 +488,14 @@ class Event
 						$bg,
 					);
 
-					// Left accent bar for started events
+					// Left border color for started events
 					if ($is_started) {
 						self::$canvas->fillRectangle(
 							0,
 							$y0,
 							3,
 							$y1 - 1,
-							self::$styles["ongoing"]["accent"],
+							self::$styles["ongoing"]["border-color"],
 						);
 					}
 
@@ -567,6 +568,7 @@ class Event
 						$y0,
 						$width,
 						$y0 + $row["banner_h"],
+						"More events:",
 					);
 				}
 			}
@@ -799,28 +801,69 @@ class Canvas extends Imagick
 	}
 
 	/**
-	 * Load the board logo and centre it in the footer strip.
-	 * Falls back silently if the file is missing or Imagick fails.
+	 * Draw an optional text label followed by a logo, centred in the footer strip.
+	 * Either part is omitted gracefully if missing or unavailable.
 	 */
 	function addImageFromPath(
 		string $imagePath,
 		int $banner_y,
 		int $canvasWidth,
 		int $banner_y_end,
+		string $label = "",
 	): void {
-		if (!file_exists($imagePath)) {
-			return;
+		$banner_h = $banner_y_end - $banner_y;
+
+		// Load and scale logo
+		$localImage = null;
+		$dw = 0;
+		$dh = 0;
+		if (file_exists($imagePath)) {
+			try {
+				$localImage = new Imagick($imagePath);
+				$lw = $localImage->getImageWidth();
+				$lh = $localImage->getImageHeight();
+				$scale = min(($banner_h - 6) / $lh, ($canvasWidth * 0.6) / $lw);
+				$dw = (int) round($lw * $scale);
+				$dh = (int) round($lh * $scale);
+				$localImage->resizeImage($dw, $dh, Imagick::FILTER_LANCZOS, 1);
+			} catch (ImagickException $e) {
+				$localImage = null;
+			}
 		}
-		try {
-			$localImage = new Imagick($imagePath);
-			$lw = $localImage->getImageWidth();
-			$lh = $localImage->getImageHeight();
-			$banner_h = $banner_y_end - $banner_y;
-			$scale = min(($banner_h - 6) / $lh, ($canvasWidth * 0.6) / $lw);
-			$dw = (int) round($lw * $scale);
-			$dh = (int) round($lh * $scale);
-			$localImage->resizeImage($dw, $dh, Imagick::FILTER_LANCZOS, 1);
-			$dx = (int) (($canvasWidth - $dw) / 2);
+
+		// Measure label text
+		$labelWidth = 0;
+		$draw = null;
+		$metrics = [];
+		if ($label !== "") {
+			$draw = new ImagickDraw();
+			$font = $this->styles["main"]["font"] ?? null;
+			if ($font) {
+				$draw->setFont($font);
+			}
+			$draw->setFontSize($this->styles["main"]["font-size"]);
+			$draw->setFillColor($this->styles["main"]["color"]);
+			$draw->setTextAntialias(true);
+			$metrics = $this->queryFontMetrics($draw, $label);
+			$labelWidth = (int) ceil($metrics["textWidth"]);
+		}
+
+		// Centre text + gap + logo as a unit
+		$gap =
+			$localImage !== null && $labelWidth > 0
+				? max(4, (int) ($this->styles["main"]["font-size"] * 0.4))
+				: 0;
+		$startX = (int) (($canvasWidth - $labelWidth - $gap - $dw) / 2);
+
+		// Draw label
+		if ($draw !== null && $labelWidth > 0) {
+			$textY = $banner_y + (int) (($banner_h + $metrics["ascender"]) / 2);
+			$this->annotateImage($draw, $startX, $textY, 0, $label);
+		}
+
+		// Draw logo
+		if ($localImage !== null) {
+			$dx = $startX + $labelWidth + $gap;
 			$dy = $banner_y + (int) (($banner_h - $dh) / 2);
 			$this->compositeImage(
 				$localImage,
@@ -829,8 +872,6 @@ class Canvas extends Imagick
 				$dy,
 			);
 			$localImage->destroy();
-		} catch (ImagickException $e) {
-			// Logo not critical — continue silently
 		}
 	}
 }
