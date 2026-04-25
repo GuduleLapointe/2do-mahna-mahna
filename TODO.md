@@ -25,11 +25,13 @@ GET /api/v3/events          → v3 CSV event list (canvas params optional)
 GET /api/v3/events.png      → PNG board image
 GET /api/v3/events.json     → full JSON event list
 GET /api/v2/events          → legacy lsl2 format (backward compat)
+GET /events.lsl            	→ Deprecation notice
 GET /events.lsl2            → alias → /api/v2/events (for old in-world scripts)
+GET /events.lsl3            → alias → /api/v2/events (for old in-world scripts)
 ```
 
 The existing `events.php?api=v3`, `?format=png`, etc. can be retired once the
-router is in place — they are not yet publicly used.
+router is in place — they are not yet publicly used. Direct access to events.php is not needed anymore either.
 
 ### Deduplication by ratio
 
@@ -77,15 +79,6 @@ Ideas:
 - **Sci-fi** — dark background, cyan/magenta accents, futuristic typography
 
 Aim for 3–4 themes that look immediately distinct from the default and from each other.
-
-### Configurable teleport method
-
-Currently touching an event always does a direct teleport (`osTP...`).
-Add an option to show the map instead (`llMapDestination()`), so the user can decide before jumping.
-
-Configuration notecard key: `teleportMode = direct | map`
-
-Default: `direct` (current behavior).
 
 ---
 
