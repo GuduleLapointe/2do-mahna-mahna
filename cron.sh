@@ -21,7 +21,7 @@ OS=$(uname | tr [:upper:] [:lower:])
 DEBUG=${DEBUG:-}
 TRACE=${TRACE:-}
 
-builddir=$BASEDIR/output/
+builddir=$BASEDIR/public/
 
 mkdir -p $BASEDIR/logs
 

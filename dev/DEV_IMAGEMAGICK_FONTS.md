@@ -55,7 +55,7 @@ export MAGICK_FONT_PATH=~/.magick
 MAGICK_FONT_PATH=~/.magick symfony server:start
 
 # For PHP built-in server
-MAGICK_FONT_PATH=~/.magick php -S localhost:8082 -t output/
+MAGICK_FONT_PATH=~/.magick php -S localhost:8082 -t public/
 
 # For permanent configuration (add to ~/.bashrc or ~/.zshrc)
 echo 'export MAGICK_FONT_PATH=~/.magick' >> ~/.bashrc

@@ -3,7 +3,7 @@
 # Script to run all tests for the 2do-aggregator project
 
 BASEDIR=$(cd "$(dirname "$0")/.." && pwd)
-WEBROOT="$BASEDIR/output"
+WEBROOT="$BASEDIR/public"
 
 [ -f $BASEDIR/.env ] && source $BASEDIR/.env
 [ -f $BASEDIR/tests/.env ] && source $BASEDIR/tests/.env

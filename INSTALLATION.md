@@ -17,7 +17,7 @@
    cp config/exclude.txt.example config/exclude.txt    # event exclusions (optional)
    ```
 4. Configure your web server (see [Web server](#web-server) below)
-5. Run `./aggregator.php output/` and check the output
+5. Run `./aggregator.php public/` and check the output
 6. Run `./cron.sh` and verify it syncs correctly
 7. Schedule the cron job (see [Scheduling](#scheduling-cron) below)
 
@@ -103,7 +103,7 @@ Only needed to run the local dev server (`dev/start-server.sh`).
 | Tool | Role | Install |
 |------|------|---------|
 | Symfony CLI | Local HTTPS dev server | <https://symfony.com/download> |
-| `fswatch` | Auto-sync `templates/` → `output/` on save | `brew install fswatch` (macOS) / `apt-get install fswatch` |
+| `fswatch` | Auto-sync `src/` → `public/` on save | `brew install fswatch` (macOS) / `apt-get install fswatch` |
 
 Both are optional: without Symfony CLI the script falls back to `php -S` (plain HTTP), and without `fswatch` you copy files manually.
 
@@ -111,7 +111,7 @@ Both are optional: without Symfony CLI the script falls back to `php -S` (plain 
 
 ## Web server
 
-The aggregator writes its output to a directory (default `output/`). That directory
+The aggregator writes its output to a directory (default `public/`). That directory
 must be served by a web server. Assuming `/var/www/html` is your document root and
 the aggregator runs in `/opt/2do-aggregator`, this would produce:
 
@@ -136,7 +136,7 @@ server-side. It is the recommended URL for the 2do Board because:
 Alias `events.lsl2` to `events.php` so the board always gets the dynamic version:
 
 ```apache
-Alias /events/events.lsl2 /opt/2do-aggregator/output/events.php
+Alias /events/events.lsl2 /opt/2do-aggregator/public/events.php
 ```
 
 ### events.php URL parameters
@@ -184,7 +184,7 @@ xmlrpc
 Run the aggregator manually once to confirm everything works:
 
 ```bash
-php aggregator.php output/
+php aggregator.php public/
 ```
 
 ---

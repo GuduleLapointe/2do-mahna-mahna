@@ -23,16 +23,16 @@ class HTML_Exporter {
 
     public function export() {
         // DEBUG copy original styles and js to output
-        // copy(APP_DIR . '/templates/styles.css', $this->output_dir . '/styles.css'); 
-        // copy(APP_DIR . '/templates/script.js', $this->output_dir . '/script.js');
+        // copy(APP_DIR . '/src/styles.css', $this->output_dir . '/styles.css'); 
+        // copy(APP_DIR . '/src/script.js', $this->output_dir . '/script.js');
 
         // Minify CSS
-        $css = new Minify\CSS(APP_DIR . '/templates/styles.css');
-        $css->minify(APP_DIR . '/templates/styles.min.css');
+        $css = new Minify\CSS(APP_DIR . '/src/styles.css');
+        $css->minify(APP_DIR . '/src/styles.min.css');
 
         // Minify JS
-        $js = new Minify\JS(APP_DIR . '/templates/script.js');
-        $js->minify(APP_DIR . '/templates/script.min.js');
+        $js = new Minify\JS(APP_DIR . '/src/script.js');
+        $js->minify(APP_DIR . '/src/script.min.js');
 
         // Fill sections in index.html
 
@@ -41,7 +41,7 @@ class HTML_Exporter {
         // Lire et convertir le contenu du README
         
         // Charger le modèle de la page HTML
-        $page = file_get_contents(APP_DIR . '/templates/index.html');
+        $page = file_get_contents(APP_DIR . '/src/index.html');
         
         // Remplacer le contenu de la section 'readme' par le contenu du README
         // $page = str_replace('<section id="readme"></section>', '<section id="readme">' . $html . '</section>', $page);
@@ -109,7 +109,7 @@ class HTML_Exporter {
         // Inject boards.html into the boards section
         $boardsSection = $dom->getElementById('boards');
         if ($boardsSection) {
-            $boardsHtml = file_get_contents(APP_DIR . '/templates/boards.html');
+            $boardsHtml = file_get_contents(APP_DIR . '/src/boards.html');
             $boardsDom  = new DOMDocument();
             libxml_use_internal_errors(true);
             $boardsDom->loadHTML('<?xml encoding="UTF-8">' . $boardsHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
@@ -167,24 +167,24 @@ class HTML_Exporter {
             '2do-logo-trim.png',
         );
         foreach($files as $file) {
-            $result = copy(APP_DIR . '/templates/' . $file, $this->output_dir . '/' . $file);
+            $result = copy(APP_DIR . '/src/' . $file, $this->output_dir . '/' . $file);
             if($result !== false) Aggregator::notice("updated " . $this->output_dir . '/' . $file);
             else Aggregator::admin_notice("Error $result writing " . $this->output_dir . '/' . $file, 1, true);
         }
-        // $result = copy(APP_DIR . '/templates/index.html', $this->output_dir . '/index.html');
+        // $result = copy(APP_DIR . '/src/index.html', $this->output_dir . '/index.html');
         // if($result !== false) Aggregator::notice("updated " . $this->output_dir . '/index.html');
         // else Aggregator::admin_notice("Error $result writing " . $this->output_dir . '/index.html', 1, true);
 
         // // Copy minified files to output directory
-        // $result = copy(APP_DIR . '/templates/styles.min.css', $this->output_dir . '/styles.min.css');
+        // $result = copy(APP_DIR . '/src/styles.min.css', $this->output_dir . '/styles.min.css');
         // if($result !== false) Aggregator::notice("updated " . $this->output_dir . '/styles.min.css');
         // else Aggregator::admin_notice("Error $result writing " . $this->output_dir . '/styles.min.css', 1, true);
 
-        // $result = copy(APP_DIR . '/templates/script.min.js', $this->output_dir . '/script.min.js');
+        // $result = copy(APP_DIR . '/src/script.min.js', $this->output_dir . '/script.min.js');
         // if($result !== false) Aggregator::notice("updated " . $this->output_dir . '/script.min.js');
         // else Aggregator::admin_notice("Error $result writing " . $this->output_dir . '/script.min.js', 1, true);
 
-        // $result = copy(APP_DIR . '/templates/2do-logo-trim.png', $this->output_dir . '/2do-logo-trim.png');
+        // $result = copy(APP_DIR . '/src/2do-logo-trim.png', $this->output_dir . '/2do-logo-trim.png');
         // if($result !== false) Aggregator::notice("updated " . $this->output_dir . '/2do-logo-trim.png');
         // else Aggregator::admin_notice("Error $result writing " . $this->output_dir . '/2do-logo-trim.png', 1, true);
     }

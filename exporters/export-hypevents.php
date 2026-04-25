@@ -30,11 +30,11 @@ class HYPEvents_Exporter
 		foreach ($this->events as $event) {
 			// copy web templates to output_dir
 			copy(
-				APP_DIR . "/templates/events.lsl",
+				APP_DIR . "/src/events.lsl",
 				$this->output_dir . "/events.lsl",
 			);
 			copy(
-				APP_DIR . "/templates/events.php",
+				APP_DIR . "/src/events.php",
 				$this->output_dir . "/events.php",
 			);
 

@@ -45,6 +45,15 @@ Single handler for both renderers: read `llDetectedTouchFace()`, get its ratio, 
 
 In debug mode: print the resolved teleport URL to the owner instead of executing the teleport — allows precise validation of the coordinate mapping for both renderers and all faces.
 
+### Restore events.lsl2 static file generation
+
+The aggregator used to generate a static `events.lsl2` file alongside `events.json`.
+This file is now served dynamically by `events.php?format=lsl2`, but the static file
+must still be generated for compatibility with setups where the web server alias
+(`events.lsl2` → `events.php?format=lsl2`) is not configured.
+
+Restore the static file generation in the aggregator's cron/export step.
+
 ### Event deduplication
 
 Some events appear multiple times:
