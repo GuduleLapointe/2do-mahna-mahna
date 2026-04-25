@@ -20,8 +20,8 @@ echo "  Webroot: $WEBROOT"
 echo "  Magick font path: ${MAGICK_FONT_PATH:-}"
 
 updateFiles() {
-	rsync -a src/events.php "$WEBROOT/"
-	echo "√ events.php → public/"
+	rsync -a src/index.php src/events.php "$WEBROOT/"
+	echo "√ index.php, events.php → public/"
 	rsync -a includes/bootstrap.php includes/helpers.php "$WEBROOT/includes/"
 	echo "√ bootstrap.php, helpers.php → public/includes/"
 }
@@ -66,7 +66,7 @@ fi
 
 # Start server (symfony for HTTPS, php -S as fallback)
 if command -v symfony >/dev/null 2>&1; then
-    symfony serve --port=$DEV_PORT --dir=public--allow-all-ip "$@"
+    symfony serve --port=$DEV_PORT --dir=public --allow-all-ip "$@"
 else
     echo "Symfony CLI not found, using plain php -S (no HTTPS — Safari may complain)"
     php -S "$LISTEN_IP:$DEV_PORT" -t "$WEBROOT"
