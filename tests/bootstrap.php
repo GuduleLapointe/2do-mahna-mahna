@@ -26,7 +26,7 @@ if (empty($_ENV["DEV_HOST"]) || empty($_ENV["DEV_PORT"])) {
 } else {
 	define(
 		"TEST_URL",
-		"${_ENV["DEV_SCHEME"]}://${_ENV["DEV_HOST"]}:${_ENV["DEV_PORT"]}",
+		"{$_ENV["DEV_SCHEME"]}://{$_ENV["DEV_HOST"]}:{$_ENV["DEV_PORT"]}",
 	);
 }
 

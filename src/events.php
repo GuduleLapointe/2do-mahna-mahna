@@ -193,14 +193,19 @@ class Event
 	}
 
 	/**
-	 * Helper: encode one CSV row as a string (no trailing newline).
+	 * Helper: encode one CSV row as a string (no trailing newline, RFC 4180).
 	 */
 	private static function csv_line(array $fields): string
 	{
-		$f = fopen("php://temp", "r+");
-		fputcsv($f, $fields);
-		rewind($f);
-		return rtrim(stream_get_contents($f), "\r\n");
+		$cols = [];
+		foreach ($fields as $field) {
+			$field = (string) $field;
+			if (str_contains($field, ",") || str_contains($field, '"') || str_contains($field, "\n")) {
+				$field = '"' . str_replace('"', '""', $field) . '"';
+			}
+			$cols[] = $field;
+		}
+		return implode(",", $cols);
 	}
 
 	/**

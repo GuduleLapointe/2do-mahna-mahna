@@ -33,31 +33,22 @@ class EventsTest extends TestCase
 		}
 	}
 
-	public function testLsl2Format(): void
+	public function testApi_v2(): void
 	{
 		if (!self::$envSet) {
 			$this->markTestSkipped("Environment not set");
 		}
-
-		$response = file_get_contents(TEST_URL . "/events.php");
-		// Check if the response is not empty
+		$response = file_get_contents(TEST_URL . "/events.php?api=v2");
 		$this->assertNotEmpty($response, "Response should not be empty");
 
-		// Line 1 is the version
-		//
-		// Check if the response starts with the version
-		// $version_regex = defined("BOARD_VER") ? BOARD_VER : ".";
 		$version_regex =
-			"/" .
-			(defined("BOARD_VER") ? BOARD_VER : "[0-9]+\.([0-9]+)+") .
-			"/";
+			"/" . (defined("BOARD_VER") ? BOARD_VER : "[0-9]+\.[0-9]+") . "/";
 		$this->assertMatchesRegularExpression(
 			$version_regex,
 			$response,
-			"Response should start with the version $version_regex",
+			"Response should contain version $version_regex",
 		);
-		// Check if the response contains the expected number of lines
-		// count($lines) should be 1 + a multiple of 3
+
 		$lines = explode("\n", trim($response));
 		$count = count($lines);
 		$this->assertTrue(
@@ -65,18 +56,68 @@ class EventsTest extends TestCase
 			"Response should have 1 + a multiple of 3 lines, got $count",
 		);
 
-		// Line 3 must contain start time, start date, end time, end date, and timestamp, separated by ~
-		// E.g. 10:00AM~2026-04-22~1776877200~12:00PM~2026-04-22~1776884400
+		// Line index 2 = timespec of first event
 		if (isset($lines[2])) {
 			$time = "[0-9]{2}:[0-9]{2}[AP]M";
 			$date = "[0-9]{4}-[0-1][0-9]-[0-3][0-9]";
-			$timestamp = "[1-9][0-9]+";
+			$ts = "[1-9][0-9]+";
 			$this->assertMatchesRegularExpression(
-				"/^$time~$date~$timestamp~$time~$date~$timestamp$/",
+				"/^$time~$date~$ts~$time~$date~$ts$/",
 				$lines[2],
-				"Line 3 should contain formatted begin and end times, separated by ~",
+				"Line 3 should be a timespec",
 			);
 		}
+	}
+
+	public function testApi_v3(): void
+	{
+		if (!self::$envSet) {
+			$this->markTestSkipped("Environment not set");
+		}
+		$response = file_get_contents(TEST_URL . "/events.php?api=v3");
+		$this->assertNotEmpty($response, "Response should not be empty");
+
+		$lines = array_filter(
+			explode("\n", trim($response)),
+			fn($l) => $l !== "",
+		);
+		$this->assertNotEmpty(
+			$lines,
+			"Response should have at least one event line",
+		);
+
+		$timeRx = "[0-9]{2}:[0-9]{2}[AP]M";
+		$dateRx = "[0-9]{4}-[0-1][0-9]-[0-3][0-9]";
+		$tsRx = "[1-9][0-9]+";
+		$timespecRx = "/^$timeRx~$dateRx~$tsRx~$timeRx~$dateRx~$tsRx$/";
+
+		foreach ($lines as $i => $line) {
+			$parts = str_getcsv($line, ",", '"', "\\");
+			$this->assertGreaterThanOrEqual(
+				3,
+				count($parts),
+				"Line $i should have at least 3 CSV fields: $line",
+			);
+			$this->assertMatchesRegularExpression(
+				$timespecRx,
+				$parts[1],
+				"Line $i field 1 should be a timespec: {$parts[1]}",
+			);
+		}
+	}
+
+	public function testApiDefault(): void
+	{
+		if (!self::$envSet) {
+			$this->markTestSkipped("Environment not set");
+		}
+		$default = file_get_contents(TEST_URL . "/events.php");
+		$v3 = file_get_contents(TEST_URL . "/events.php?api=v3");
+		$this->assertEquals(
+			$v3,
+			$default,
+			"Default response should match api=v3",
+		);
 	}
 
 	public function testPngFormat(): void
