@@ -95,7 +95,6 @@ $config = [
 	"format"     => $_GET["format"] ?? null,
 	"width"      => $_GET["width"] ?? $defaults["width"],
 	"height"     => $_GET["height"] ?? $defaults["height"],
-	"has_canvas" => isset($_GET["width"]) || isset($_GET["height"]) || isset($_GET["ratio"]),
 	"not-before" => $_GET["not-before"] ?? $defaults["not-before"],
 	"limit"      => $_GET["limit"] ?? $defaults["limit"],
 	"ratio"      => max(

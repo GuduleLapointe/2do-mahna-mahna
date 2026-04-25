@@ -16,14 +16,26 @@ been audited against the old format documentation. Before the v2.0 release:
   or intentionally dropped in the new getConfig() parser.
 - Document the final supported key list in the README / Configuration notecard template.
 
-### Clickmap / API v3 — implemented ✓
+### REST API endpoints
 
-Unified touch handler and clickmap are complete. `events.php?api=v3` is the new
-default. The LSL script (v2.0) uses only v3 for both renderers.
+Introduce a front-controller router (`public/index.php`) and clean URL endpoints:
 
-Remaining improvement: **deduplication by ratio** — faces sharing the same ratio
-still send duplicate PNG and v3 requests. Cache `ratio → UUID` and
-`ratio → clickmap` to avoid redundant HTTP calls on multi-face prims.
+```
+GET /api/v3/events          → v3 CSV event list (canvas params optional)
+GET /api/v3/events.png      → PNG board image
+GET /api/v3/events.json     → full JSON event list
+GET /api/v2/events          → legacy lsl2 format (backward compat)
+GET /events.lsl2            → alias → /api/v2/events (for old in-world scripts)
+```
+
+The existing `events.php?api=v3`, `?format=png`, etc. can be retired once the
+router is in place — they are not yet publicly used.
+
+### Deduplication by ratio
+
+Faces sharing the same ratio still send duplicate PNG and v3 requests.
+Cache `ratio → UUID` and `ratio → clickmap` to avoid redundant HTTP calls
+on multi-face prims.
 
 ### Restore events.lsl2 static file generation
 

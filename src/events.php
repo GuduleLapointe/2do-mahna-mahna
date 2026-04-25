@@ -109,13 +109,7 @@ class Event
 			Event::output_lsl2();
 		} else {
 			// Default: api=v3
-			// With canvas params → clickmap CSV with coordinates + name column
-			// Without canvas params → simple event list CSV
-			if (self::$config["has_canvas"]) {
-				Event::output_v3_clickmap();
-			} else {
-				Event::output_v3_list();
-			}
+			Event::output_v3();
 		}
 	}
 
@@ -209,10 +203,20 @@ class Event
 	}
 
 	/**
-	 * API v3 with canvas params: clickmap CSV with name column.
-	 * Format: x0,y0,x1,y1,destination,name — one line per clickable zone.
+	 * API v3: unified clickmap + event data.
+	 *
+	 * One CSV line per visible row (events + banner), in display order.
+	 * Format: x0,y0,x1,y1,destination,start_time,start_stamp,end_time,end_stamp,title
+	 *   - x0/y0/x1/y1 : UV fractions (0.0=top-left, 1.0=bottom-right)
+	 *   - destination  : "host:port Region" for teleport, "href:url" for web links
+	 *   - start_time   : "h:iA" formatted (e.g. "10:30AM") for display
+	 *   - start_stamp  : unix timestamp
+	 *   - end_time     : "h:iA" formatted
+	 *   - end_stamp    : unix timestamp
+	 *   - title        : last — free-form text, safe to truncate on partial parse
+	 * Banner row: x0,y0,1,1.0,href:url,,,,, (time/title fields empty)
 	 */
-	function output_v3_clickmap(): void
+	function output_v3(): void
 	{
 		header("Content-Type: text/plain; charset=utf-8");
 
@@ -220,62 +224,31 @@ class Event
 		Event::planBoardRows();
 		$rows         = self::$canvas->rows();
 		$canvasHeight = self::$canvas->height();
+		$tz           = new DateTimeZone(SLT_TIMEZONE);
 
 		foreach ($rows as $row) {
 			if ($row["type"] === "event") {
-				$y0 = $row["y_start"] / $canvasHeight;
-				$y1 = $row["y_end"]   / $canvasHeight;
-				echo self::csv_line([0, $y0, 1, $y1, $row["hgurl"], $row["title"] ?? ""]) . "\n";
+				$y0    = $row["y_start"] / $canvasHeight;
+				$y1    = $row["y_end"]   / $canvasHeight;
+				$event = $row["event"];
+				$startDT = new DateTime($event["start"], new DateTimeZone("UTC"));
+				$startDT->setTimezone($tz);
+				$endDT = new DateTime($event["end"], new DateTimeZone("UTC"));
+				$endDT->setTimezone($tz);
+				echo self::csv_line([
+					0, $y0, 1, $y1,
+					$row["hgurl"],
+					$startDT->format("h:iA"),
+					strtotime($event["start"]),
+					$endDT->format("h:iA"),
+					strtotime($event["end"]),
+					$row["title"] ?? "",
+				]) . "\n";
 			} elseif ($row["type"] === "banner") {
 				$y0   = $row["y_start"] / $canvasHeight;
 				$link = self::$styles["banner"]["link"] ?? "https://2do.directory/events/";
-				echo self::csv_line([0, $y0, 1, 1.0, "href:" . $link, ""]) . "\n";
+				echo self::csv_line([0, $y0, 1, 1.0, "href:" . $link, "", "", "", "", ""]) . "\n";
 			}
-		}
-	}
-
-	/**
-	 * API v3 without canvas params: simple event list CSV.
-	 * Format: name,timespec,destination — one line per event, in display order.
-	 * Column order matches the lsl2 stride-3 layout so the legacy osDraw renderer
-	 * needs no index changes.
-	 */
-	function output_v3_list(): void
-	{
-		header("Content-Type: text/plain; charset=utf-8");
-		$tz    = new DateTimeZone(SLT_TIMEZONE);
-		$i     = 0;
-		$limit = self::$config["limit"];
-
-		usort(
-			self::$events,
-			fn($a, $b) => strtotime($a["start"]) <=> strtotime($b["start"]),
-		);
-
-		foreach (self::$events as $event) {
-			if ($limit > 0 && $i >= $limit) {
-				break;
-			}
-			$title = sanitize_title($event["title"]);
-			if (!$title) {
-				continue;
-			}
-			$startTimestamp = strtotime($event["start"]);
-			$endTimestamp   = strtotime($event["end"]);
-			$startDT = new DateTime($event["start"], new DateTimeZone("UTC"));
-			$startDT->setTimezone($tz);
-			$endDT = new DateTime($event["end"], new DateTimeZone("UTC"));
-			$endDT->setTimezone($tz);
-			$timespec = implode("~", [
-				$startDT->format("h:iA"),
-				$startDT->format("Y-m-d"),
-				$startTimestamp,
-				$endDT->format("h:iA"),
-				$endDT->format("Y-m-d"),
-				$endTimestamp,
-			]);
-			echo self::csv_line([$title, $timespec, $event["hgurl"]]) . "\n";
-			$i++;
 		}
 	}
 
