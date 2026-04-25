@@ -90,13 +90,15 @@ $_ENV["BASE_URL"] =
 // debug_log("BASE_URL: " . $_ENV["BASE_URL"] . PHP_EOL);
 
 $config = [
-	"theme" => $_GET["theme"] ?? "default",
-	"format" => $_GET["format"] ?? $defaults["format"],
-	"width" => $_GET["width"] ?? $defaults["width"],
-	"height" => $_GET["height"] ?? $defaults["height"],
+	"theme"      => $_GET["theme"] ?? "default",
+	"api"        => $_GET["api"] ?? null,
+	"format"     => $_GET["format"] ?? null,
+	"width"      => $_GET["width"] ?? $defaults["width"],
+	"height"     => $_GET["height"] ?? $defaults["height"],
+	"has_canvas" => isset($_GET["width"]) || isset($_GET["height"]) || isset($_GET["ratio"]),
 	"not-before" => $_GET["not-before"] ?? $defaults["not-before"],
-	"limit" => $_GET["limit"] ?? $defaults["limit"],
-	"ratio" => max(
+	"limit"      => $_GET["limit"] ?? $defaults["limit"],
+	"ratio"      => max(
 		0.25,
 		min(4.0, (float) ($_GET["ratio"] ?? $defaults["ratio"])),
 	),

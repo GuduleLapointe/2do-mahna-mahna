@@ -2,19 +2,23 @@
 /**
  * 2do Events – dynamic event generator
  *
- * Reads events.json and outputs filtered events in one of
- * three formats selected via ?format=:
+ * Reads events.json and outputs filtered events. Output is selected via
+ * ?api= (preferred) or legacy ?format=:
  *
- *   lsl2      (default) Plain-text event list consumed by the LSL board script.
- *   png       PNG board image, intended for osSetDynamicTextureURL.
- *   clickmap  CSV: one "x0,y0,x1,y1,destination" line per clickable zone.
- *             x0/y0/x1/y1 are UV fractions (0.0=top-left, 1.0=bottom-right).
- *             destination is "host:port Region" for teleport zones, or
- *             "href:https://…" for web links (banner). Used by the LSL script
- *             to map a touch UV coordinate to the correct action.
+ *   api=v3 (default)
+ *     Without canvas params: CSV event list — name,timespec,destination
+ *     With canvas params (width/height/ratio): CSV clickmap with coordinates —
+ *       x0,y0,x1,y1,destination,name
+ *   api=v2  or  format=lsl2
+ *     Plain-text event list consumed by legacy LSL board scripts.
+ *   format=png
+ *     PNG board image for osSetDynamicTextureURL.
+ *   format=json
+ *     Full event list as JSON (for external consumers).
  *
- * Parameters use the same names and units as the LSL board Configuration notecard
- * so that builders can copy values directly between the two.
+ * Canvas parameters: width, height, ratio (same names as LSL Configuration notecard).
+ * UV fractions: 0.0=top-left, 1.0=bottom-right.
+ * destination is "host:port Region" for teleport or "href:https://…" for web links.
  *
  * @package 2do
  * @subpackage Event
@@ -40,7 +44,7 @@ define("SLT_TIMEZONE", "America/Los_Angeles");
 
 class Event
 {
-	private static string $format = "lsl2";
+	private static string $format = "v3";
 	private static array $config = [];
 	private static array $styles = [];
 	private static array $events = [];
@@ -94,19 +98,24 @@ class Event
 
 	private function output(): void
 	{
-		switch (self::$config["format"] ?? "lsl2") {
-			case "png":
-				// debug_log("format=png");
-				Event::outputBoardImage();
-				break;
-			case "clickmap":
-				// debug_log("format=clickmap");
-				Event::output_click_map();
-				break;
-			default:
-				// debug_log("format=lsl2");
-				Event::output_lsl2();
-				break;
+		$format = self::$config["format"] ?? null;
+		$api    = self::$config["api"]    ?? null;
+
+		if ($format === "png") {
+			Event::outputBoardImage();
+		} elseif ($format === "json") {
+			Event::output_json();
+		} elseif ($format === "lsl2" || $api === "v2") {
+			Event::output_lsl2();
+		} else {
+			// Default: api=v3
+			// With canvas params → clickmap CSV with coordinates + name column
+			// Without canvas params → simple event list CSV
+			if (self::$config["has_canvas"]) {
+				Event::output_v3_clickmap();
+			} else {
+				Event::output_v3_list();
+			}
 		}
 	}
 
@@ -181,6 +190,97 @@ class Event
 				echo "0," . $y0 . ",1,1.0,href:" . $link . "\n";
 			}
 		}
+	}
+
+	/**
+	 * Helper: encode one CSV row as a string (no trailing newline).
+	 */
+	private static function csv_line(array $fields): string
+	{
+		$f = fopen("php://temp", "r+");
+		fputcsv($f, $fields);
+		rewind($f);
+		return rtrim(stream_get_contents($f), "\r\n");
+	}
+
+	/**
+	 * API v3 with canvas params: clickmap CSV with name column.
+	 * Format: x0,y0,x1,y1,destination,name — one line per clickable zone.
+	 */
+	function output_v3_clickmap(): void
+	{
+		header("Content-Type: text/plain; charset=utf-8");
+
+		Event::setCanvas();
+		Event::planBoardRows();
+		$rows         = self::$canvas->rows();
+		$canvasHeight = self::$canvas->height();
+
+		foreach ($rows as $row) {
+			if ($row["type"] === "event") {
+				$y0 = $row["y_start"] / $canvasHeight;
+				$y1 = $row["y_end"]   / $canvasHeight;
+				echo self::csv_line([0, $y0, 1, $y1, $row["hgurl"], $row["title"] ?? ""]) . "\n";
+			} elseif ($row["type"] === "banner") {
+				$y0   = $row["y_start"] / $canvasHeight;
+				$link = self::$styles["banner"]["link"] ?? "https://2do.directory/events/";
+				echo self::csv_line([0, $y0, 1, 1.0, "href:" . $link, ""]) . "\n";
+			}
+		}
+	}
+
+	/**
+	 * API v3 without canvas params: simple event list CSV.
+	 * Format: name,timespec,destination — one line per event, in display order.
+	 * Column order matches the lsl2 stride-3 layout so the legacy osDraw renderer
+	 * needs no index changes.
+	 */
+	function output_v3_list(): void
+	{
+		header("Content-Type: text/plain; charset=utf-8");
+		$tz    = new DateTimeZone(SLT_TIMEZONE);
+		$i     = 0;
+		$limit = self::$config["limit"];
+
+		usort(
+			self::$events,
+			fn($a, $b) => strtotime($a["start"]) <=> strtotime($b["start"]),
+		);
+
+		foreach (self::$events as $event) {
+			if ($limit > 0 && $i >= $limit) {
+				break;
+			}
+			$title = sanitize_title($event["title"]);
+			if (!$title) {
+				continue;
+			}
+			$startTimestamp = strtotime($event["start"]);
+			$endTimestamp   = strtotime($event["end"]);
+			$startDT = new DateTime($event["start"], new DateTimeZone("UTC"));
+			$startDT->setTimezone($tz);
+			$endDT = new DateTime($event["end"], new DateTimeZone("UTC"));
+			$endDT->setTimezone($tz);
+			$timespec = implode("~", [
+				$startDT->format("h:iA"),
+				$startDT->format("Y-m-d"),
+				$startTimestamp,
+				$endDT->format("h:iA"),
+				$endDT->format("Y-m-d"),
+				$endTimestamp,
+			]);
+			echo self::csv_line([$title, $timespec, $event["hgurl"]]) . "\n";
+			$i++;
+		}
+	}
+
+	/**
+	 * JSON output — full event list for external consumers.
+	 */
+	function output_json(): void
+	{
+		header("Content-Type: application/json; charset=utf-8");
+		echo json_encode(self::$events, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 	}
 
 	/**

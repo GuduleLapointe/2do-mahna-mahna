@@ -6,44 +6,24 @@ Ideas and planned improvements, roughly in order of priority. Not all of these w
 
 ## Near term
 
-### Clickmap implementation
+### Verify legacy config parameters
 
-The clickmap format (`events.php?format=clickmap`) exists but does not work yet.
-It is not a separate renderer option — it complements the PNG renderer so that touch-to-teleport works the same way it does in the classic osDraw renderer.
+The LSL board notecard supports a set of configuration keys. Unknown keys now log a
+debug message (already implemented), but the full list of supported keys has never
+been audited against the old format documentation. Before the v2.0 release:
 
-Because `llHTTPRequest` is asynchronous, the PNG and clickmap fetches can run in parallel with no coordination overhead. The PNG URL does not need to be embedded in the clickmap response.
+- Review all notecard keys from the legacy script (v1.x) and confirm each is handled
+  or intentionally dropped in the new getConfig() parser.
+- Document the final supported key list in the README / Configuration notecard template.
 
-**Deduplication by ratio** — each face has its own `ratio`, which determines canvas size, font/padding scaling, and — critically — how many events fit. Two faces with the same ratio will produce identical PNGs and identical clickmaps. Making one request per unique ratio instead of one per face avoids redundant HTTP calls.
+### Clickmap / API v3 — implemented ✓
 
-- Group active faces by ratio before looping
-- For each unique ratio: send one PNG request and one clickmap request
-- Apply results to all faces sharing that ratio (see caching below)
+Unified touch handler and clickmap are complete. `events.php?api=v3` is the new
+default. The LSL script (v2.0) uses only v3 for both renderers.
 
-**`refreshEvents()` (renamed from `doRequest`)**
-
-- If `renderer=png`:
-  1. Call `refreshTexturePNG()`, which groups faces by ratio and loops over unique ratios
-  2. For each unique ratio: send the PNG request AND a clickmap request with the same parameters
-  3. Both are async — no coordination needed
-- Otherwise (classic renderer):
-  1. Send `format=lsl2` request as now
-
-**Texture UUID cache** — `osSetDynamicTextureURLBlendFace` returns a UUID for the generated texture. Store a `ratio => UUID` mapping. When applying a texture to faces that share the same ratio, use `llSetTexture(uuid, face)` for all faces after the first — no additional HTTP request or dynamic texture call needed. On refresh, pass the stored UUID as `dynamicID` so the texture slot is reused in place.
-
-**Clickmap cache** — store clickmaps indexed by ratio (string key). Before requesting a clickmap for a face, check if one for that ratio already exists. If yes, reuse it directly.
-
-**`http_response`**
-
-- If PNG renderer: extract the ratio from the request URL (1 by default, already present by necessity if different), store the returned UUID in the ratio→UUID cache, apply the texture to all faces with that ratio, store the clickmap in the ratio→clickmap cache
-- If classic renderer: generate textures as now, then build a clickmap in the same format from the fixed row heights of the osDraw layout
-
-**Unified clickmap format** — one `hgurl~y_start~y_end` per event row (coordinates are UV fractions 0.0–1.0, top to bottom). Indexed by ratio, looked up by face at touch time.
-
-**`touch_end`**
-
-Single handler for both renderers: read `llDetectedTouchFace()`, get its ratio, look up the clickmap for that ratio, read `llDetectedTouchST()` for the V coordinate, find the matching row, teleport.
-
-In debug mode: print the resolved teleport URL to the owner instead of executing the teleport — allows precise validation of the coordinate mapping for both renderers and all faces.
+Remaining improvement: **deduplication by ratio** — faces sharing the same ratio
+still send duplicate PNG and v3 requests. Cache `ratio → UUID` and
+`ratio → clickmap` to avoid redundant HTTP calls on multi-face prims.
 
 ### Restore events.lsl2 static file generation
 
