@@ -6,9 +6,10 @@
  * ?api= (preferred) or legacy ?format=:
  *
  *   api=v3 (default)
- *     Without canvas params: CSV event list — name,timespec,destination
- *     With canvas params (width/height/ratio): CSV clickmap with coordinates —
- *       x0,y0,x1,y1,destination,name
+ *     CSV, one line per row. Format:
+ *       x0,y0,x1,y1,destination,start_time,start_stamp,end_time,end_stamp,title
+ *     renderer=osdraw: positions are 0,0,0,0; up to ?limit events returned.
+ *     renderer omitted: canvas layout used; positions are UV fractions from canvas.
  *   api=v2  or  format=lsl2
  *     Plain-text event list consumed by legacy LSL board scripts.
  *   format=png
@@ -203,28 +204,62 @@ class Event
 	}
 
 	/**
-	 * API v3: unified clickmap + event data.
+	 * API v3: unified event data and clickmap.
 	 *
-	 * One CSV line per visible row (events + banner), in display order.
 	 * Format: x0,y0,x1,y1,destination,start_time,start_stamp,end_time,end_stamp,title
-	 *   - x0/y0/x1/y1 : UV fractions (0.0=top-left, 1.0=bottom-right)
+	 *   - x0/y0/x1/y1 : UV fractions (0.0=top-left, 1.0=bottom-right),
+	 *                    or 0,0,0,0 when renderer=osdraw
 	 *   - destination  : "host:port Region" for teleport, "href:url" for web links
 	 *   - start_time   : "h:iA" formatted (e.g. "10:30AM") for display
 	 *   - start_stamp  : unix timestamp
 	 *   - end_time     : "h:iA" formatted
 	 *   - end_stamp    : unix timestamp
 	 *   - title        : last — free-form text, safe to truncate on partial parse
-	 * Banner row: x0,y0,1,1.0,href:url,,,,, (time/title fields empty)
+	 * Canvas mode: positions are UV fractions; banner row appended at end.
+	 * osDraw mode (?renderer=osdraw): positions are 0,0,0,0; no banner row; up to ?limit events.
 	 */
 	function output_v3(): void
 	{
 		header("Content-Type: text/plain; charset=utf-8");
 
+		$tz = new DateTimeZone(SLT_TIMEZONE);
+
+		if ((self::$config["renderer"] ?? null) === "osdraw") {
+			// List mode: no canvas layout, up to $limit events with empty positions
+			$limit = (int) self::$config["limit"];
+			$i = 0;
+			usort(self::$events, fn($a, $b) => strtotime($a["start"]) <=> strtotime($b["start"]));
+			foreach (self::$events as $event) {
+				if ($limit > 0 && $i >= $limit) {
+					break;
+				}
+				$title = sanitize_title($event["title"]);
+				if (!$title) {
+					continue;
+				}
+				$startDT = new DateTime($event["start"], new DateTimeZone("UTC"));
+				$startDT->setTimezone($tz);
+				$endDT = new DateTime($event["end"], new DateTimeZone("UTC"));
+				$endDT->setTimezone($tz);
+				echo self::csv_line([
+					0, 0, 0, 0,
+					$event["hgurl"],
+					$startDT->format("h:iA"),
+					strtotime($event["start"]),
+					$endDT->format("h:iA"),
+					strtotime($event["end"]),
+					$title,
+				]) . "\n";
+				$i++;
+			}
+			return;
+		}
+
+		// Canvas mode: compute layout, output positioned rows
 		Event::setCanvas();
 		Event::planBoardRows();
 		$rows         = self::$canvas->rows();
 		$canvasHeight = self::$canvas->height();
-		$tz           = new DateTimeZone(SLT_TIMEZONE);
 
 		foreach ($rows as $row) {
 			if ($row["type"] === "event") {

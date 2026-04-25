@@ -93,6 +93,7 @@ $config = [
 	"theme"      => $_GET["theme"] ?? "default",
 	"api"        => $_GET["api"] ?? null,
 	"format"     => $_GET["format"] ?? null,
+	"renderer"   => $_GET["renderer"] ?? null,
 	"width"      => $_GET["width"] ?? $defaults["width"],
 	"height"     => $_GET["height"] ?? $defaults["height"],
 	"not-before" => $_GET["not-before"] ?? $defaults["not-before"],
