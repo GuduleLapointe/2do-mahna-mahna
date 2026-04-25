@@ -22,21 +22,19 @@ class HYPEvents_Exporter
 
 	public function export()
 	{
+		// Deploy PHP endpoint and its dependencies
+		copy(APP_DIR . "/src/events.lsl",           $this->output_dir . "/events.lsl");
+		copy(APP_DIR . "/src/events.php",            $this->output_dir . "/events.php");
+		@mkdir($this->output_dir . "/includes", 0755, true);
+		copy(APP_DIR . "/includes/bootstrap.php",   $this->output_dir . "/includes/bootstrap.php");
+		copy(APP_DIR . "/includes/helpers.php",     $this->output_dir . "/includes/helpers.php");
+
 		$output = BOARD_VER . "\n";
 
 		$prev_day = "";
 		$today = date("l F j");
 
 		foreach ($this->events as $event) {
-			// copy web templates to output_dir
-			copy(
-				APP_DIR . "/src/events.lsl",
-				$this->output_dir . "/events.lsl",
-			);
-			copy(
-				APP_DIR . "/src/events.php",
-				$this->output_dir . "/events.php",
-			);
 
 			$name = $event->name;
 			// make sure name is converted to utf8 if not already
