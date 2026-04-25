@@ -63,11 +63,14 @@ class Aggregator
 		// Rough cache system, mostly to ease development without affecting production
 		$cache_file = APP_DIR . "/cache/cache_fetcher.json";
 		$cache_time = 55 * 60; // 55 minutes, to accomodate for 1 hour cron job
+		$config_file = APP_DIR . "/config/aggregator.json";
 
-		if (
+		$cache_stale =
 			!file_exists($cache_file) ||
-			filemtime($cache_file) + $cache_time < time()
-		) {
+			filemtime($cache_file) + $cache_time < time() ||
+			(file_exists($config_file) && filemtime($config_file) > filemtime($cache_file));
+
+		if ($cache_stale) {
 			$fetcher = new Fetcher();
 			file_put_contents($cache_file, serialize($fetcher));
 			touch($cache_file); // Met à jour l'heure de modification du fichier

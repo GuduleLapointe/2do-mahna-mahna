@@ -1,0 +1,5 @@
+{
+    "_comment": "Copy this file to aggregator.json and adjust as needed.",
+
+    "dedup_cross_source": true
+}

@@ -165,7 +165,95 @@ class Fetcher
 			return $a->dateUTC <=> $b->dateUTC;
 		});
 
+		$this->deduplicate();
+
 		Aggregator::notice(count($this->events) . " events fetched");
+	}
+
+	/**
+	 * Deduplicate events after sorting.
+	 *
+	 * Rule 1 (always): merge consecutive events with the same title and destination
+	 *   whose start is within 1 hour of the previous event's end.
+	 * Rule 2 (optional, default on): drop duplicate same-slot events (same start,
+	 *   duration, and destination) that come from different sources.
+	 */
+	private function deduplicate(): void
+	{
+		$before = count($this->events);
+		$this->mergeConsecutive();
+		$afterMerge = count($this->events);
+
+		$dedupCrossSource = true;
+		$jsonFile = APP_DIR . "/config/aggregator.json";
+		if (file_exists($jsonFile)) {
+			$cfg = json_decode(file_get_contents($jsonFile), true);
+			if (isset($cfg["dedup_cross_source"])) {
+				$dedupCrossSource = (bool) $cfg["dedup_cross_source"];
+			}
+		}
+
+		if ($dedupCrossSource) {
+			$this->deduplicateSameSlot();
+		}
+
+		$after = count($this->events);
+		if ($after < $before) {
+			Aggregator::notice(
+				sprintf(
+					"Deduplication: %d → %d events (%d merged, %d cross-source duplicates removed)",
+					$before,
+					$after,
+					$before - $afterMerge,
+					$afterMerge - $after,
+				),
+			);
+		}
+	}
+
+	/**
+	 * Merge consecutive events that share the same title and destination and
+	 * whose next start falls within 1 hour of the current event's end.
+	 */
+	private function mergeConsecutive(): void
+	{
+		$merged = [];
+		foreach ($this->events as $event) {
+			$last = end($merged);
+			if (
+				$last !== false &&
+				$last->name === $event->name &&
+				$last->simname === $event->simname
+			) {
+				$lastEnd = strtotime($last->dateUTC) + $last->duration * 60;
+				$nextStart = strtotime($event->dateUTC);
+				if ($nextStart <= $lastEnd + 3600) {
+					$eventEnd = strtotime($event->dateUTC) + $event->duration * 60;
+					$last->duration = (int) ((max($lastEnd, $eventEnd) - strtotime($last->dateUTC)) / 60);
+					continue;
+				}
+			}
+			$merged[] = $event;
+		}
+		$this->events = $merged;
+	}
+
+	/**
+	 * Remove events that share the same start time, duration, and destination
+	 * as an already-seen event (cross-source duplicates). The first occurrence wins.
+	 */
+	private function deduplicateSameSlot(): void
+	{
+		$seen = [];
+		$result = [];
+		foreach ($this->events as $event) {
+			$key = $event->dateUTC . "|" . $event->duration . "|" . $event->simname;
+			if (!isset($seen[$key])) {
+				$seen[$key] = true;
+				$result[] = $event;
+			}
+		}
+		$this->events = $result;
 	}
 
 	private function fetch_ical($slug, $calendar)

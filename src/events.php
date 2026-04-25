@@ -100,7 +100,7 @@ class Event
 	private function output(): void
 	{
 		$format = self::$config["format"] ?? null;
-		$api    = self::$config["api"]    ?? null;
+		$api = self::$config["api"] ?? null;
 
 		if ($format === "png") {
 			Event::outputBoardImage();
@@ -181,7 +181,9 @@ class Event
 				echo "0," . $y0 . ",1," . $y1 . "," . $row["hgurl"] . "\n";
 			} elseif ($row["type"] === "banner") {
 				$y0 = $row["y_start"] / $canvasHeight;
-				$link = self::$styles["banner"]["link"] ?? "https://2do.directory/events/";
+				$link =
+					self::$styles["banner"]["link"] ??
+					"https://2do.directory/events/";
 				echo "0," . $y0 . ",1,1.0,href:" . $link . "\n";
 			}
 		}
@@ -195,7 +197,11 @@ class Event
 		$cols = [];
 		foreach ($fields as $field) {
 			$field = (string) $field;
-			if (str_contains($field, ",") || str_contains($field, '"') || str_contains($field, "\n")) {
+			if (
+				str_contains($field, ",") ||
+				str_contains($field, '"') ||
+				str_contains($field, "\n")
+			) {
 				$field = '"' . str_replace('"', '""', $field) . '"';
 			}
 			$cols[] = $field;
@@ -228,7 +234,10 @@ class Event
 			// List mode: no canvas layout, up to $limit events with empty positions
 			$limit = (int) self::$config["limit"];
 			$i = 0;
-			usort(self::$events, fn($a, $b) => strtotime($a["start"]) <=> strtotime($b["start"]));
+			usort(
+				self::$events,
+				fn($a, $b) => strtotime($a["start"]) <=> strtotime($b["start"]),
+			);
 			foreach (self::$events as $event) {
 				if ($limit > 0 && $i >= $limit) {
 					break;
@@ -237,12 +246,18 @@ class Event
 				if (!$title) {
 					continue;
 				}
-				$startDT = new DateTime($event["start"], new DateTimeZone("UTC"));
+				$startDT = new DateTime(
+					$event["start"],
+					new DateTimeZone("UTC"),
+				);
 				$startDT->setTimezone($tz);
 				$endDT = new DateTime($event["end"], new DateTimeZone("UTC"));
 				$endDT->setTimezone($tz);
 				echo self::csv_line([
-					0, 0, 0, 0,
+					0,
+					0,
+					0,
+					0,
 					$event["hgurl"],
 					$startDT->format("h:iA"),
 					strtotime($event["start"]),
@@ -258,20 +273,26 @@ class Event
 		// Canvas mode: compute layout, output positioned rows
 		Event::setCanvas();
 		Event::planBoardRows();
-		$rows         = self::$canvas->rows();
+		$rows = self::$canvas->rows();
 		$canvasHeight = self::$canvas->height();
 
 		foreach ($rows as $row) {
 			if ($row["type"] === "event") {
-				$y0    = $row["y_start"] / $canvasHeight;
-				$y1    = $row["y_end"]   / $canvasHeight;
+				$y0 = $row["y_start"] / $canvasHeight;
+				$y1 = $row["y_end"] / $canvasHeight;
 				$event = $row["event"];
-				$startDT = new DateTime($event["start"], new DateTimeZone("UTC"));
+				$startDT = new DateTime(
+					$event["start"],
+					new DateTimeZone("UTC"),
+				);
 				$startDT->setTimezone($tz);
 				$endDT = new DateTime($event["end"], new DateTimeZone("UTC"));
 				$endDT->setTimezone($tz);
 				echo self::csv_line([
-					0, $y0, 1, $y1,
+					0,
+					$y0,
+					1,
+					$y1,
 					$row["hgurl"],
 					$startDT->format("h:iA"),
 					strtotime($event["start"]),
@@ -280,9 +301,22 @@ class Event
 					$row["title"] ?? "",
 				]) . "\n";
 			} elseif ($row["type"] === "banner") {
-				$y0   = $row["y_start"] / $canvasHeight;
-				$link = self::$styles["banner"]["link"] ?? "https://2do.directory/events/";
-				echo self::csv_line([0, $y0, 1, 1.0, "href:" . $link, "", "", "", "", ""]) . "\n";
+				$y0 = $row["y_start"] / $canvasHeight;
+				$link =
+					self::$styles["banner"]["link"] ??
+					"https://2do.directory/events/";
+				echo self::csv_line([
+					0,
+					$y0,
+					1,
+					1.0,
+					"href:" . $link,
+					"",
+					"",
+					"",
+					"",
+					"",
+				]) . "\n";
 			}
 		}
 	}
@@ -293,7 +327,10 @@ class Event
 	function output_json(): void
 	{
 		header("Content-Type: application/json; charset=utf-8");
-		echo json_encode(self::$events, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+		echo json_encode(
+			self::$events,
+			JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
+		);
 	}
 
 	/**
@@ -672,7 +709,7 @@ class Event
 						$y0,
 						self::$styles["separator"]["color"],
 					);
-					$imagePath = __DIR__ . "/2do-logo-trim.png";
+					$imagePath = __DIR__ . "/" . self::$config["logo"];
 					self::$canvas->addImageFromPath(
 						$imagePath,
 						$y0,

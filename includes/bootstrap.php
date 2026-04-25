@@ -9,6 +9,7 @@ $defaults = [
 	"not-before" => 7200,
 	"limit" => 100,
 	"ratio" => 1.0,
+	"logo" => "2do-logo.png",
 	"styles" => [
 		"main" => [
 			"font" => "Roboto",
@@ -41,7 +42,6 @@ $defaults = [
 			"color" => "#cccccc",
 		],
 		"banner" => [
-			"filename" => "2do-logo-trim.png",
 			"height" => 40,
 			"position" => "bottom",
 			"background" => "F8F9FA",
@@ -90,15 +90,16 @@ $_ENV["BASE_URL"] =
 // debug_log("BASE_URL: " . $_ENV["BASE_URL"] . PHP_EOL);
 
 $config = [
-	"theme"      => $_GET["theme"] ?? "default",
-	"api"        => $_GET["api"] ?? null,
-	"format"     => $_GET["format"] ?? null,
-	"renderer"   => $_GET["renderer"] ?? null,
-	"width"      => $_GET["width"] ?? $defaults["width"],
-	"height"     => $_GET["height"] ?? $defaults["height"],
+	"theme" => $_GET["theme"] ?? "default",
+	"api" => $_GET["api"] ?? null,
+	"format" => $_GET["format"] ?? null,
+	"renderer" => $_GET["renderer"] ?? null,
+	"width" => $_GET["width"] ?? $defaults["width"],
+	"height" => $_GET["height"] ?? $defaults["height"],
 	"not-before" => $_GET["not-before"] ?? $defaults["not-before"],
-	"limit"      => $_GET["limit"] ?? $defaults["limit"],
-	"ratio"      => max(
+	"limit" => $_GET["limit"] ?? $defaults["limit"],
+	"logo" => $_GET["logo"] ?? $defaults["logo"],
+	"ratio" => max(
 		0.25,
 		min(4.0, (float) ($_GET["ratio"] ?? $defaults["ratio"])),
 	),
