@@ -86,22 +86,34 @@ class EventsTest extends TestCase
 			"Response should have at least one event line",
 		);
 
+		// v3 format: x0,y0,x1,y1,destination,start_time,start_stamp,end_time,end_stamp,title
 		$timeRx = "[0-9]{2}:[0-9]{2}[AP]M";
-		$dateRx = "[0-9]{4}-[0-1][0-9]-[0-3][0-9]";
-		$tsRx = "[1-9][0-9]+";
-		$timespecRx = "/^$timeRx~$dateRx~$tsRx~$timeRx~$dateRx~$tsRx$/";
+		$tsRx   = "[1-9][0-9]+";
 
 		foreach ($lines as $i => $line) {
 			$parts = str_getcsv($line, ",", '"', "\\");
 			$this->assertGreaterThanOrEqual(
-				3,
+				10,
 				count($parts),
-				"Line $i should have at least 3 CSV fields: $line",
+				"Line $i should have 10 CSV fields: $line",
+			);
+			// Banner rows have "href:" destination and empty time fields — skip time checks
+			if (str_starts_with($parts[4], "href:")) {
+				$this->assertEmpty(
+					$parts[5],
+					"Banner line $i field 5 (start_time) should be empty",
+				);
+				continue;
+			}
+			$this->assertMatchesRegularExpression(
+				"/^$timeRx$/",
+				$parts[5],
+				"Line $i field 5 (start_time) should be a formatted time: {$parts[5]}",
 			);
 			$this->assertMatchesRegularExpression(
-				$timespecRx,
-				$parts[1],
-				"Line $i field 1 should be a timespec: {$parts[1]}",
+				"/^$tsRx$/",
+				$parts[6],
+				"Line $i field 6 (start_stamp) should be a unix timestamp: {$parts[6]}",
 			);
 		}
 	}
