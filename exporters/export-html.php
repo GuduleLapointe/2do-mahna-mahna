@@ -159,33 +159,26 @@ class HTML_Exporter {
         if($result !== false) Aggregator::notice("updated " . $this->output_dir . '/' . $file);
         else Aggregator::admin_notice("Error $result writing " . $this->output_dir . '/' . $file, 1, true);
 
-        // following is a repeat of the same code, use a for loop from an array with the file names
-        $files = array(
-            // 'index.html',
-            'styles.min.css',
-            'script.min.js',
-            '2do-logo-trim.png',
-        );
-        foreach($files as $file) {
+        // Copy compiled front-end assets
+        foreach (['styles.min.css', 'script.min.js'] as $file) {
             $result = copy(APP_DIR . '/src/' . $file, $this->output_dir . '/' . $file);
-            if($result !== false) Aggregator::notice("updated " . $this->output_dir . '/' . $file);
+            if ($result !== false) Aggregator::notice("updated " . $this->output_dir . '/' . $file);
             else Aggregator::admin_notice("Error $result writing " . $this->output_dir . '/' . $file, 1, true);
         }
-        // $result = copy(APP_DIR . '/src/index.html', $this->output_dir . '/index.html');
-        // if($result !== false) Aggregator::notice("updated " . $this->output_dir . '/index.html');
-        // else Aggregator::admin_notice("Error $result writing " . $this->output_dir . '/index.html', 1, true);
 
-        // // Copy minified files to output directory
-        // $result = copy(APP_DIR . '/src/styles.min.css', $this->output_dir . '/styles.min.css');
-        // if($result !== false) Aggregator::notice("updated " . $this->output_dir . '/styles.min.css');
-        // else Aggregator::admin_notice("Error $result writing " . $this->output_dir . '/styles.min.css', 1, true);
-
-        // $result = copy(APP_DIR . '/src/script.min.js', $this->output_dir . '/script.min.js');
-        // if($result !== false) Aggregator::notice("updated " . $this->output_dir . '/script.min.js');
-        // else Aggregator::admin_notice("Error $result writing " . $this->output_dir . '/script.min.js', 1, true);
-
-        // $result = copy(APP_DIR . '/src/2do-logo-trim.png', $this->output_dir . '/2do-logo-trim.png');
-        // if($result !== false) Aggregator::notice("updated " . $this->output_dir . '/2do-logo-trim.png');
-        // else Aggregator::admin_notice("Error $result writing " . $this->output_dir . '/2do-logo-trim.png', 1, true);
+        // Copy images from assets/images/ to public/
+        $imageFiles = array_merge(
+            glob(APP_DIR . '/assets/images/banner*.png') ?: [],
+            [
+                APP_DIR . '/assets/images/2do-logo.png',
+                APP_DIR . '/assets/images/2do-logo-square.png',
+            ]
+        );
+        foreach ($imageFiles as $src) {
+            $dest = $this->output_dir . '/' . basename($src);
+            $result = copy($src, $dest);
+            if ($result !== false) Aggregator::notice("updated " . $dest);
+            else Aggregator::admin_notice("Error $result writing " . $dest, 1, true);
+        }
     }
 }
