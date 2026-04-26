@@ -18,7 +18,10 @@ been audited against the old format documentation. Before the v2.0 release:
 
 ### REST API endpoints
 
-Introduce a front-controller router (`public/index.php`) and clean URL endpoints:
+Front-controller router  in `public/index.php` + `.htaccess`.
+Clean URLs served, headers `X-2do-Server-Version` and `X-2do-Api-Version` added.
+
+Direct access to `events.php` still works but is not advertised. Documented access is through the API endpoints.
 
 ```
 GET /api/v3/events          → v3 CSV event list (canvas params optional)
@@ -47,16 +50,6 @@ must still be generated for compatibility with setups where the web server alias
 (`events.lsl2` → `events.php?format=lsl2`) is not configured.
 
 Restore the static file generation in the aggregator's cron/export step.
-
-### Event deduplication
-
-Some events appear multiple times:
-- The source calendar lists the same event separately for each recurrence hour
-- The same event appears in multiple source calendars
-
-Merge rule: two or more events with the same teleport URL that start within 1 hour of each other are treated as one event. Keep the one with the earliest start time and the latest end time.
-
-This should happen in the aggregation/parsing step, before any output format is generated.
 
 ---
 

@@ -102,6 +102,9 @@ class Event
 		$format = self::$config["format"] ?? null;
 		$api = self::$config["api"] ?? null;
 
+		header("X-2do-Server-Version: " . BOARD_VER);
+		header("X-2do-Api-Version: " . (($format === "lsl2" || $api === "v2") ? "v2" : "v3"));
+
 		if ($format === "png") {
 			Event::outputBoardImage();
 		} elseif ($format === "json") {
