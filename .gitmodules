@@ -4,3 +4,6 @@
 [submodule "2do-server"]
 	path = dev/2do-server
 	url = https://github.com/GuduleLapointe/2do-server.git
+[submodule "src/bundle/lsl-board"]
+	path = src/bundle/lsl-board
+	url = https://github.com/GuduleLapointe/2do-board

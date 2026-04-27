@@ -8,7 +8,7 @@ config/*.csv
 node_modules/
 vendor/
 test/
-bundle/
+/bundle/
 src/bundle/standalone/css/*.min.css
 src/bundle/standalone/js/*.min.js
 composer.lock
