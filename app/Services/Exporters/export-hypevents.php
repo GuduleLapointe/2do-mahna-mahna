@@ -33,24 +33,8 @@ class HYPEvents_Exporter
 	public function export()
 	{
 		$this->deploy(
-			APP_DIR . "/src/bundle/standalone/index.php",
-			$this->output_dir . "/index.php",
-		);
-		$this->deploy(
 			APP_DIR . "/src/bundle/standalone/templates/events.lsl",
 			$this->output_dir . "/events.lsl",
-		);
-		$this->deploy(
-			APP_DIR . "/src/bundle/standalone/events.php",
-			$this->output_dir . "/events.php",
-		);
-		$this->deploy(
-			APP_DIR . "/src/bundle/standalone/bootstrap.php",
-			$this->output_dir . "/bootstrap.php",
-		);
-		$this->deploy(
-			APP_DIR . "/src/bundle/standalone/functions.php",
-			$this->output_dir . "/functions.php",
 		);
 
 		$output = BOARD_VER . "\n";

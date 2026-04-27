@@ -50,16 +50,21 @@ Console::notice("Output: " . Console::relpath($output_dir));
 
 new HTML_Exporter($output_dir);
 
-// Copy PHP runtime files
-$php_files = ["index.php", "events.php", "bootstrap.php", "functions.php"];
-foreach ($php_files as $file) {
-	$src = APP_DIR . "/src/bundle/standalone/$file";
-	$dest = "$output_dir/$file";
-	Console::detail("copy $file ← src/bundle/standalone/$file");
+// Copy PHP runtime files and static templates
+$static_files = [
+	"index.php"    => "src/bundle/standalone/index.php",
+	"events.php"   => "src/bundle/standalone/events.php",
+	"bootstrap.php" => "src/bundle/standalone/bootstrap.php",
+	"functions.php" => "src/bundle/standalone/functions.php",
+];
+foreach ($static_files as $dest_name => $src_rel) {
+	$src = APP_DIR . "/$src_rel";
+	$dest = "$output_dir/$dest_name";
+	Console::detail("copy $dest_name ← $src_rel");
 	if (copy($src, $dest)) {
 		touch($dest, filemtime($src));
 	} else {
-		Console::error("Failed to copy $file", 1);
+		Console::error("Failed to copy $dest_name", 1);
 	}
 }
 
