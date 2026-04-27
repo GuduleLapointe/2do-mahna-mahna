@@ -278,7 +278,7 @@ class Fetcher
 			);
 			return;
 		}
-		$source_events = json_decode($json, true);
+		$source_events = json_decode($json ?? '', true);
 
 		if (empty($source_events)) {
 			Aggregator::notice("$slug no events");
@@ -333,7 +333,7 @@ class Fetcher
 			);
 			return;
 		}
-		$source_events = json_decode($json, true);
+		$source_events = json_decode($json ?? '', true);
 
 		if (empty($source_events)) {
 			Aggregator::notice("$slug no events");
