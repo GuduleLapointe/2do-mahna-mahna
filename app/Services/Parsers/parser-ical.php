@@ -3,7 +3,7 @@
 // to stdout if a format that the parent script can use to fill an array of events
 
 if( ! defined('APP_DIR') ) {
-    define('APP_DIR', dirname(__DIR__));
+    define('APP_DIR', dirname(__DIR__, 2));
 }
 
 require_once APP_DIR . '/vendor/autoload.php';

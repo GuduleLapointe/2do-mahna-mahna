@@ -23,7 +23,7 @@ class HYPEvents_Exporter
 	public function export()
 	{
 		// Deploy PHP endpoint and its dependencies
-		copy(APP_DIR . "/src/index.php",             $this->output_dir . "/index.php");
+		copy(APP_DIR . "/src/bundle/standalone/index.php",           $this->output_dir . "/index.php");
 		copy(APP_DIR . "/src/bundle/standalone/templates/events.lsl", $this->output_dir . "/events.lsl");
 		copy(APP_DIR . "/src/bundle/standalone/events.php",         $this->output_dir . "/events.php");
 		copy(APP_DIR . "/src/bundle/standalone/bootstrap.php",      $this->output_dir . "/bootstrap.php");

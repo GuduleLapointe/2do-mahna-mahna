@@ -265,10 +265,10 @@ class Aggregator
 			});
 		}
 
-		// Fail if output directory does not exist
+		// Create output directory if it does not exist
 		if (!is_dir($output_dir)) {
-			Aggregator::admin_notice(
-				"Output directory $output_dir does not exist",
+			mkdir($output_dir, 0755, true) || Aggregator::admin_notice(
+				"Output directory $output_dir does not exist and could not be created",
 				1,
 				true,
 			);
