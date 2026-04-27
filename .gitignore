@@ -8,9 +8,9 @@ config/*.csv
 node_modules/
 vendor/
 test/
-public/
-src/*.min.js
-src/*.min.css
+bundle/
+src/bundle/standalone/css/*.min.css
+src/bundle/standalone/js/*.min.js
 composer.lock
 cache/*
 config/targets
