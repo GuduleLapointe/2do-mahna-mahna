@@ -32,7 +32,7 @@ jobs:
         run: php -S localhost:8000 -t public &
 
       - name: Wait for dev server
-        run: until curl -sf http://localhost:8000/ > /dev/null 2>&1; do sleep 0.2; done
+        run: until curl -s http://localhost:8000/ > /dev/null 2>&1; do sleep 0.2; done
 
       - name: Run tests
         run: tests/run-tests.sh
