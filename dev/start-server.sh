@@ -3,7 +3,7 @@
 set -euo pipefail
 
 BASEDIR=$(cd "$(dirname "$0")/.." && pwd)
-WEBROOT="$BASEDIR/public"
+WEBROOT="$BASEDIR/bundle/standalone"
 
 [ -f $BASEDIR/.env ] && source $BASEDIR/.env
 [ -f $BASEDIR/tests/.env ] && source $BASEDIR/tests/.env
@@ -20,12 +20,12 @@ echo "  Webroot: $WEBROOT"
 echo "  Magick font path: ${MAGICK_FONT_PATH:-}"
 
 updateFiles() {
-	rsync -a src/index.php src/events.php "$WEBROOT/"
-	echo "√ index.php, events.php → public/"
-	rsync -a includes/bootstrap.php includes/helpers.php "$WEBROOT/includes/"
-	echo "√ bootstrap.php, helpers.php → public/includes/"
+	rsync -a src/bundle/standalone/index.php src/bundle/standalone/events.php "$WEBROOT/"
+	echo "√ index.php, events.php → bundle/standalone/"
+	rsync -a src/bundle/standalone/bootstrap.php src/bundle/standalone/functions.php "$WEBROOT/"
+	echo "√ bootstrap.php, functions.php → bundle/standalone/"
 }
-# Initial sync of templates to public/
+# Initial sync of sources to bundle/standalone/
 updateFiles
 
 # Get local IP
@@ -53,7 +53,7 @@ echo ""
 # Auto-sync events.php on change (requires fswatch: brew install fswatch)
 if command -v fswatch >/dev/null 2>&1; then
     echo "Watching src/ for changes (fswatch)..."
-    fswatch -o "$BASEDIR/src/events.php" "$BASEDIR/includes/bootstrap.php" "$BASEDIR/includes/helpers.php" \
+    fswatch -o "$BASEDIR/src/bundle/standalone/events.php" "$BASEDIR/src/bundle/standalone/bootstrap.php" "$BASEDIR/src/bundle/standalone/functions.php" \
         | while read; do
         updateFiles
     done &
@@ -66,7 +66,7 @@ fi
 
 # Start server (symfony for HTTPS, php -S as fallback)
 if command -v symfony >/dev/null 2>&1; then
-    symfony serve --port=$DEV_PORT --dir=public --allow-all-ip "$@"
+    symfony serve --port=$DEV_PORT --dir=bundle/standalone --allow-all-ip "$@"
 else
     echo "Symfony CLI not found, using plain php -S (no HTTPS — Safari may complain)"
     php -S "$LISTEN_IP:$DEV_PORT" -t "$WEBROOT"

@@ -22,8 +22,8 @@ $path = '/' . trim($requestPath, '/');
 
 switch ($path) {
     case '/':
-        header('Location: index.html', true, 301);
-        exit;
+        include __DIR__ . '/templates/calendar.html';
+        break;
 
     case '/api/v3/events':
         unset($_GET['format']);

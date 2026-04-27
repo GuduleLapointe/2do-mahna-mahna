@@ -13,7 +13,7 @@
 
 set -euo pipefail
 
-BASEDIR=$(realpath $(dirname $0))
+BASEDIR=$(realpath $(dirname $0)/..)
 PGM=$(basename $0)
 TMP=/tmp/$PGM.$$
 LOG=$BASEDIR/logs/$PGM.log
@@ -21,7 +21,7 @@ OS=$(uname | tr [:upper:] [:lower:])
 DEBUG=${DEBUG:-}
 TRACE=${TRACE:-}
 
-builddir=$BASEDIR/public/
+builddir=$BASEDIR/bundle/standalone/
 
 mkdir -p $BASEDIR/logs
 
@@ -81,7 +81,7 @@ cd $BASEDIR || fail $? could not cd to $BASEDIR
 [ -d $builddir ] || mkdir -p $builddir || fail $? could not create $builddir
 
 log "starting aggregation"
-$BASEDIR/aggregator.php $varg $builddir/ >> $TMP.processing 2>&1 || fail $? error while executing aggregator.php
+$BASEDIR/bin/aggregator.php $varg $builddir/ >> $TMP.processing 2>&1 || fail $? error while executing aggregator.php
 
 errors=0
 [ -f $BASEDIR/config/targets ] && grep . $BASEDIR/config/targets | egrep -v "#|^\s*$" | while read target; do
