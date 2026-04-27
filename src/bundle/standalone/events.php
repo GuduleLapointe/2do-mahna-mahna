@@ -40,7 +40,6 @@ use Imagick, ImagickPixel, ImagickDraw;
 // ini_set("display_startup_errors", 1); # DEBUG
 // error_reporting(E_ALL); # DEBUG
 define("BOARD_VER", "1.6.0");
-define("EVENTS_JSON", __DIR__ . "/events.json");
 define("SLT_TIMEZONE", "America/Los_Angeles");
 
 class Event
@@ -62,6 +61,11 @@ class Event
 			return;
 		}
 		require_once __DIR__ . "/bootstrap.php";
+
+		if (!defined("EVENTS_JSON")) {
+			$data_dir = !empty($_ENV["DATA_DIR"]) ? rtrim($_ENV["DATA_DIR"], "/") : __DIR__;
+			define("EVENTS_JSON", $data_dir . "/events.json");
+		}
 
 		self::$config = $config ?? [];
 		if (empty(self::$config)) {

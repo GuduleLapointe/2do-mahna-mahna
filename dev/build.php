@@ -50,6 +50,19 @@ Console::notice("Output: " . Console::relpath($output_dir));
 
 new HTML_Exporter($output_dir);
 
+// Copy PHP runtime files
+$php_files = ["index.php", "events.php", "bootstrap.php", "functions.php"];
+foreach ($php_files as $file) {
+	$src = APP_DIR . "/src/bundle/standalone/$file";
+	$dest = "$output_dir/$file";
+	Console::detail("copy $file ← src/bundle/standalone/$file");
+	if (copy($src, $dest)) {
+		touch($dest, filemtime($src));
+	} else {
+		Console::error("Failed to copy $file", 1);
+	}
+}
+
 $code = Console::exitCode();
 $dest = Console::relpath($output_dir);
 Console::notice($code === 0 ? "Done — output in $dest" : "Finished with errors — output in $dest");
