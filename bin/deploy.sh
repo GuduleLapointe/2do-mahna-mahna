@@ -4,9 +4,8 @@
 # Syncs bundle/standalone/ to each target in config/targets.
 # Does NOT run the aggregator — use cron.sh or bin/aggregator.php for data refresh.
 #
-# Usage: deploy.sh [--with-data] [--clean] [-y]
+# Usage: deploy.sh [--with-data] [-y]
 #   --with-data   also include data/ files in the sync
-#   --clean       add --delete to rsync (removes files on target not in sources)
 #   -y            skip confirmation prompt
 
 set -euo pipefail
@@ -20,13 +19,11 @@ TMP=$(mktemp 2>/dev/null || echo /tmp/$PGM.$$)
 trap "rm -f $TMP" EXIT
 
 with_data=
-clean=
 yes=
 
 for arg in "$@"; do
     case "$arg" in
         --with-data) with_data=1 ;;
-        --clean)     clean=1 ;;
         -y)          yes=1 ;;
     esac
 done
@@ -52,8 +49,6 @@ echo "Sources:"
 echo "  $BUNDLE/"
 sources="$BUNDLE/"*
 [ "$with_data" ] && echo "  $DATA_DIR/" && sources="$sources $DATA_DIR/"*
-delete=
-[ "$clean" ] && delete="--delete"
 
 echo "Targets:"
 cat $TMP.targets | sed 's/^/  /; s:$:/:'
@@ -67,5 +62,5 @@ fi
 
 while read target; do
     echo "→ $target/"
-    rsync $delete -Wavz $sources "$target/"
+    rsync -Wavz $sources "$target/"
 done < $TMP.targets
