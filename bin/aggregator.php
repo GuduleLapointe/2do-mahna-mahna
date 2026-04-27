@@ -30,6 +30,7 @@ require_once dirname(__DIR__) . '/bootstrap.php';
 class Aggregator
 {
 	public $output_dir;
+	private $isTempDir = false;
 	private static $force;
 	public static $script;
 
@@ -39,7 +40,6 @@ class Aggregator
 
 		$this->load_args($argv);
 
-		session_start();
 		self::constants();
 		self::includes();
 
@@ -83,7 +83,7 @@ class Aggregator
 		new HTML_Exporter($fetcher->get_events(), $this->output_dir);
 
 		$code = Console::exitCode();
-		$dest = Console::relpath($this->output_dir);
+		$dest = $this->isTempDir ? "temp dir (see above)" : Console::relpath($this->output_dir);
 		if ($code === 0) {
 			Console::notice("Done — output in $dest");
 		} else {
@@ -219,6 +219,7 @@ class Aggregator
 			unlink($tempnam);
 			mkdir($tempnam);
 			$output_dir = $tempnam;
+			$this->isTempDir = true;
 			Console::notice("Temp dir: $tempnam");
 
 			register_shutdown_function(function () use ($tempnam) {
