@@ -141,9 +141,11 @@ class Fetcher
 
 	public function fetch()
 	{
+		Console::notice("Fetching opensimworld...");
 		$this->fetch_opensimworld();
 
 		foreach ($this->calendars as $slug => $calendar) {
+			Console::notice("Fetching $slug...");
 			if ($calendar["type"] == "ical") {
 				$this->fetch_ical($slug, $calendar);
 			} else {
@@ -260,7 +262,7 @@ class Fetcher
 		$source_events = json_decode($json ?? '', true);
 
 		if (empty($source_events)) {
-			Console::notice("$slug no events");
+			Console::detail("$slug: no events");
 			return;
 		}
 		if (!is_array($source_events)) {
@@ -276,7 +278,7 @@ class Fetcher
 			}
 			$events[$event->hash] = $event;
 		}
-		Console::notice("$slug " . count($events) . " events");
+		Console::detail("$slug: " . count($events) . " events");
 		$this->events = array_merge($this->events, $events);
 	}
 
@@ -299,7 +301,7 @@ class Fetcher
 		$source_events = json_decode($json ?? '', true);
 
 		if (empty($source_events)) {
-			Console::notice("$slug no events");
+			Console::detail("$slug: no events");
 			return;
 		}
 		if (!is_array($source_events)) {
@@ -315,7 +317,7 @@ class Fetcher
 			}
 			$events[$event->hash] = $event;
 		}
-		Console::notice("$slug " . count($events) . " events");
+		Console::detail("$slug: " . count($events) . " events");
 		$this->events = array_merge($this->events, $events);
 	}
 

@@ -15,6 +15,7 @@ class Console
     private static bool $quiet   = false;
     private static bool $verbose = false;
     private static ?string $outputDir = null;
+    private static int $exitCode = 0;
 
     public static function init(bool $quiet, bool $verbose): void
     {
@@ -64,6 +65,7 @@ class Console
      */
     public static function error(string $message, int $code = 1, bool $die = false): void
     {
+        self::$exitCode = max(self::$exitCode, $code);
         $trace  = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
         $frame  = $trace[1] ?? $trace[0];
         $location = basename($frame['file'] ?? '') . ':' . ($frame['line'] ?? 0);
@@ -71,6 +73,17 @@ class Console
         if ($die) {
             die($code);
         }
+    }
+
+    public static function exitCode(): int
+    {
+        return self::$exitCode;
+    }
+
+    /** Shorten a path for display (relative to APP_DIR or output_dir). */
+    public static function relpath(string $path): string
+    {
+        return self::shortenPaths($path);
     }
 
     // -------------------------------------------------------------------------

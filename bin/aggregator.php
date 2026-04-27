@@ -66,6 +66,7 @@ class Aggregator
 			(file_exists($config_file) && filemtime($config_file) > filemtime($cache_file));
 
 		if ($cache_stale) {
+			Console::notice("Fetching events...");
 			$fetcher = new Fetcher();
 			file_put_contents($cache_file, serialize($fetcher));
 			touch($cache_file);
@@ -75,10 +76,20 @@ class Aggregator
 			$fetcher = unserialize(file_get_contents($cache_file));
 		}
 
+		Console::notice("Exporting " . count($fetcher->get_events()) . " events...");
 		new HYPEvents_Exporter($fetcher->get_events(), $this->output_dir);
 		new JSON_Exporter($fetcher->get_events(), $this->output_dir);
 		new iCal_Exporter($fetcher->get_events(), $this->output_dir);
 		new HTML_Exporter($fetcher->get_events(), $this->output_dir);
+
+		$code = Console::exitCode();
+		$dest = Console::relpath($this->output_dir);
+		if ($code === 0) {
+			Console::notice("Done — output in $dest");
+		} else {
+			Console::notice("Finished with errors — output in $dest");
+		}
+		exit($code);
 	}
 
 	/**
@@ -208,6 +219,7 @@ class Aggregator
 			unlink($tempnam);
 			mkdir($tempnam);
 			$output_dir = $tempnam;
+			Console::notice("Temp dir: $tempnam");
 
 			register_shutdown_function(function () use ($tempnam) {
 				if (!is_dir($tempnam)) {
@@ -215,10 +227,8 @@ class Aggregator
 				}
 				$files = array_diff(scandir($tempnam), [".", ".."]);
 				if (empty($files)) {
-					Console::verbose("Deleting empty temp directory $tempnam");
+					Console::verbose("Removing empty temp dir: $tempnam");
 					rmdir($tempnam);
-				} else {
-					Console::notice("Results saved in $tempnam/");
 				}
 			});
 		}
