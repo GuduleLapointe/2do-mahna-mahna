@@ -284,13 +284,16 @@ class Fetcher
 		$source_events = json_decode($json ?? "", true);
 
 		if (empty($source_events)) {
-				return;
+			return;
 		}
 		if (!is_array($source_events)) {
 			Console::error("$slug $url error: wrong answer format", 1);
 			return;
 		}
 
+		Console::notice(
+			"Processing " . count($source_events) . " events from $slug",
+		);
 		$events = [];
 		foreach ($source_events as $source) {
 			$event = new Event($source, $calendar);
@@ -328,13 +331,16 @@ class Fetcher
 		$source_events = json_decode($json ?? "", true);
 
 		if (empty($source_events)) {
-				return;
+			return;
 		}
 		if (!is_array($source_events)) {
 			Console::error("$slug error: wrong answer format", 1);
 			return;
 		}
 
+		Console::notice(
+			"Processing " . count($source_events) . " events from $slug",
+		);
 		$events = [];
 		foreach ($source_events as $source) {
 			$event = new Event($source, $calendar);

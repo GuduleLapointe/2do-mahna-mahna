@@ -147,6 +147,22 @@ live in neither — it lives in `lib/`/`shared/` or it doesn't exist.
 
 ---
 
+### Fetcher source-agnostic refactor
+
+Today `Fetcher` has two code paths: `fetch_ical()` and `fetch_opensimworld()`, with
+source-specific logic baked in. The fetcher should be agnostic:
+
+- Each source type maps to a parser command; `ical` is the default.
+- The parser type is declared in `config/sources.csv` (new column, optional).
+- Fetcher always calls `fetch_source($slug, $calendar)` → spawns the right parser
+  subprocess → gets back the same normalised JSON → creates `Event` objects the same way.
+- No source-specific branches in the fetcher; new source types only need a new parser.
+
+`opensimworld` becomes a named parser (`parser-opensimworld.php`) that can be listed in
+`sources.csv` like any other source.
+
+---
+
 ### Verify legacy config parameters
 
 The LSL board notecard supports a set of configuration keys. Unknown keys now log a
