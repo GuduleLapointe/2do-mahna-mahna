@@ -87,7 +87,9 @@ class Fetcher
 		$exclusionsFile = APP_DIR . "/config/exclude.txt",
 	) {
 		if (!file_exists($exclusionsFile)) {
-			Console::notice("Exclusions file not found ($exclusionsFile), no filtering applied");
+			Console::notice(
+				"Exclusions file not found ($exclusionsFile), no filtering applied",
+			);
 			return;
 		}
 
@@ -147,7 +149,10 @@ class Fetcher
 			if ($calendar["type"] == "ical") {
 				$this->fetch_ical($slug, $calendar);
 			} else {
-				Console::error("$slug source type {$calendar['type']} not implemented", 1);
+				Console::error(
+					"$slug source type {$calendar["type"]} not implemented",
+					1,
+				);
 			}
 		}
 
@@ -189,10 +194,15 @@ class Fetcher
 
 		$after = count($this->events);
 		if ($after < $before) {
-			Console::notice(sprintf(
-				"Deduplication: %d → %d events (%d merged, %d cross-source duplicates removed)",
-				$before, $after, $before - $afterMerge, $afterMerge - $after,
-			));
+			Console::notice(
+				sprintf(
+					"Deduplication: %d → %d events (%d merged, %d cross-source duplicates removed)",
+					$before,
+					$after,
+					$before - $afterMerge,
+					$afterMerge - $after,
+				),
+			);
 		}
 	}
 
@@ -213,8 +223,12 @@ class Fetcher
 				$lastEnd = strtotime($last->dateUTC) + $last->duration * 60;
 				$nextStart = strtotime($event->dateUTC);
 				if ($nextStart <= $lastEnd + 3600) {
-					$eventEnd = strtotime($event->dateUTC) + $event->duration * 60;
-					$last->duration = (int) ((max($lastEnd, $eventEnd) - strtotime($last->dateUTC)) / 60);
+					$eventEnd =
+						strtotime($event->dateUTC) + $event->duration * 60;
+					$last->duration =
+						(int) ((max($lastEnd, $eventEnd) -
+							strtotime($last->dateUTC)) /
+							60);
 					continue;
 				}
 			}
@@ -232,7 +246,12 @@ class Fetcher
 		$seen = [];
 		$result = [];
 		foreach ($this->events as $event) {
-			$key = $event->dateUTC . "|" . $event->duration . "|" . $event->simname;
+			$key =
+				$event->dateUTC .
+				"|" .
+				$event->duration .
+				"|" .
+				$event->simname;
 			if (!isset($seen[$key])) {
 				$seen[$key] = true;
 				$result[] = $event;
@@ -244,7 +263,7 @@ class Fetcher
 	private function fetch_ical($slug, $calendar)
 	{
 		$url = $calendar["ical_url"];
-		Console::notice("Fetching $slug (parser-ical)...");
+		Console::notice("Fetching $slug...");
 
 		$command =
 			"php " .
@@ -254,14 +273,18 @@ class Fetcher
 		try {
 			$json = shell_exec($command);
 		} catch (Exception $e) {
-			Console::error("$slug parse error: " . $e->get_code() . ": " . $e->get_message());
+			Console::error(
+				"$slug parse error: " .
+					$e->get_code() .
+					": " .
+					$e->get_message(),
+			);
 			return;
 		}
-		$source_events = json_decode($json ?? '', true);
+		$source_events = json_decode($json ?? "", true);
 
 		if (empty($source_events)) {
-			Console::detail("$slug: no events");
-			return;
+				return;
 		}
 		if (!is_array($source_events)) {
 			Console::error("$slug $url error: wrong answer format", 1);
@@ -276,32 +299,36 @@ class Fetcher
 			}
 			$events[$event->hash] = $event;
 		}
-		Console::detail("$slug: " . count($events) . " events");
 		$this->events = array_merge($this->events, $events);
 	}
 
 	private function fetch_opensimworld()
 	{
 		$slug = "opensimworld";
-		Console::notice("Fetching $slug (parser-opensimworld)...");
+		Console::notice("Fetching $slug...");
 		$calendar = [
 			"slug" => $slug,
 			"grid_url" => null,
 			"type" => "crawler",
 		];
 
-		$command = "php " . APP_DIR . "/app/Services/Parsers/parser-opensimworld.php";
+		$command =
+			"php " . APP_DIR . "/app/Services/Parsers/parser-opensimworld.php";
 		try {
 			$json = shell_exec($command);
 		} catch (Exception $e) {
-			Console::error("$slug parse error: " . $e->get_code() . ": " . $e->get_message());
+			Console::error(
+				"$slug parse error: " .
+					$e->get_code() .
+					": " .
+					$e->get_message(),
+			);
 			return;
 		}
-		$source_events = json_decode($json ?? '', true);
+		$source_events = json_decode($json ?? "", true);
 
 		if (empty($source_events)) {
-			Console::detail("$slug: no events");
-			return;
+				return;
 		}
 		if (!is_array($source_events)) {
 			Console::error("$slug error: wrong answer format", 1);
@@ -316,7 +343,6 @@ class Fetcher
 			}
 			$events[$event->hash] = $event;
 		}
-		Console::detail("$slug: " . count($events) . " events");
 		$this->events = array_merge($this->events, $events);
 	}
 

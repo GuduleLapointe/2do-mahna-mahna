@@ -9,6 +9,8 @@ if (php_sapi_name() !== 'cli') {
 require_once dirname(__DIR__, 3) . '/bootstrap.php';
 require_once APP_DIR . '/lib/opensim-functions.php';
 
+Console::useStderr();
+
 use Symfony\Component\BrowserKit\HttpBrowser;
 use Symfony\Component\DomCrawler\Crawler;
 
@@ -42,6 +44,8 @@ function fetchHGUrl($event_page_url) {
     $url_cache[$event_page_url] = $hgurl;
     return $hgurl;
 }
+
+Console::notice("Fetching $source_url");
 
 $browser = new HttpBrowser();
 $crawler = $browser->request('GET', $source_url);
@@ -79,6 +83,8 @@ $events = $crawler->filter('div.container.wcont table.table.table-striped.table-
 
     return $event;
 });
+
+Console::detail("found " . count($events) . " events");
 
 echo json_encode($events);
 exit;

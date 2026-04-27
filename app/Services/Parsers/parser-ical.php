@@ -9,6 +9,8 @@ if (php_sapi_name() !== 'cli') {
 require_once dirname(__DIR__, 3) . '/bootstrap.php';
 require_once APP_DIR . '/lib/opensim-functions.php';
 
+Console::useStderr();
+
 use Kigkonsult\Icalcreator\Vcalendar;
 use Kigkonsult\Icalcreator\Vevent;
 
@@ -24,8 +26,7 @@ if( !isset($argv[1]) ) {
 
 $url = $argv[1];
 
-// error_reporting(0);
-// ini_set('display_errors', '0');
+Console::notice("Fetching $url");
 
 try {
     $ics_data = file_get_contents($url, false, stream_context_create(array(
@@ -159,6 +160,6 @@ foreach ($vevents as $yearlyEvents) {
         }
     }
 }
-// error_log("\nDEBUG: " . count($events) . "/$events_count events\n");
+Console::detail("found " . count($events) . " events");
 
 echo json_encode($events);

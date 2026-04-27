@@ -14,6 +14,7 @@ class Console
 {
     private static bool $quiet   = false;
     private static bool $verbose = false;
+    private static bool $stderr  = false;
     private static ?string $outputDir = null;
     private static int $exitCode = 0;
 
@@ -21,6 +22,15 @@ class Console
     {
         self::$quiet   = $quiet;
         self::$verbose = $verbose && !$quiet;
+    }
+
+    /**
+     * Route all output to STDERR instead of STDOUT.
+     * Use in subprocess scripts (parsers) so notices don't pollute captured stdout.
+     */
+    public static function useStderr(bool $use = true): void
+    {
+        self::$stderr = $use;
     }
 
     /**
@@ -38,7 +48,7 @@ class Console
         if (self::$quiet) {
             return;
         }
-        echo '[' . self::callerTag() . '] ' . $message . "\n";
+        self::out('[' . self::callerTag() . '] ' . $message);
     }
 
     /** File operations and secondary info — indented, paths shortened. */
@@ -47,7 +57,7 @@ class Console
         if (self::$quiet) {
             return;
         }
-        echo '  ' . self::shortenPaths($message) . "\n";
+        self::out('  ' . self::shortenPaths($message));
     }
 
     /** Debug info — only shown with -v. */
@@ -56,7 +66,16 @@ class Console
         if (!self::$verbose) {
             return;
         }
-        echo '[' . self::callerTag() . '] ' . $message . "\n";
+        self::out('[' . self::callerTag() . '] ' . $message);
+    }
+
+    private static function out(string $line): void
+    {
+        if (self::$stderr) {
+            fwrite(STDERR, $line . "\n");
+        } else {
+            echo $line . "\n";
+        }
     }
 
     /**
