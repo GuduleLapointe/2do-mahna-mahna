@@ -6,6 +6,23 @@ Ideas and planned improvements, roughly in order of priority. Not all of these w
 
 ## Near term
 
+### Version 3.0 release
+
+Both projects bump to **3.x** to align with the API v3 that ships with
+this release (aggregator was 0.3, lsl-board was 1.6 — versions are
+misleading and out of sync with each other and the API).
+
+- Bump aggregator to 3.0.0
+- Bump lsl-board (2do-board) to 3.0.0
+- Update version references in README, changelog, and API version header
+  (`X-2do-Api-Version`)
+- Tag both repos
+
+The build/refresh/deploy reorganization below is the last remaining task
+before cutting the release.
+
+---
+
 ### Build / refresh / deploy separation
 
 Today `dev/start-server.sh` and the cron entangle build, data refresh and
@@ -19,7 +36,7 @@ and each bundle gets its own subdirectory:
 ```
 bundle/
 ├── standalone/   ← current public/ (mini-site deployed to webroots)
-├── lsl-board/    ← current 2do-directory project (possibly a submodule)
+├── lsl-board/    ← current 2do-board project (submodule or subtree)
 └── wordpress/    ← future WordPress plugin
 ```
 
@@ -27,6 +44,19 @@ bundle/
 command and deploy target. Refresh writes data files into
 `bundle/standalone/` only (the LSL board fetches from the API, it does
 not get a local data copy).
+
+**2do-board integration**
+
+Currently `2do-board` lives as a sibling repo. As part of this
+reorganisation, move it under `bundle/lsl-board/`:
+- Option A: **git submodule** — keeps independent history and versioning,
+  clean for contributors who only work on one side.
+- Option B: **git subtree** — history merged, simpler for solo work,
+  harder to split back out.
+
+Either way, the LSL board's build step produces the distributable `.lsl`
+scripts into `bundle/lsl-board/`, documented and downloadable from the
+aggregator app.
 
 **Golden rules**
 - `src/` is the **only** place to edit. Everything that ends up on a deploy
