@@ -25,8 +25,8 @@ jobs:
 
       - name: Prepare CI deploy target
         run: |
-          mkdir -p public/standalone
-          echo "$GITHUB_WORKSPACE/public/standalone" > config/targets
+          mkdir -p public/ci-deploy-test
+          echo "$GITHUB_WORKSPACE/public/ci-deploy-test" > config/targets
 
       - name: Start dev server
         run: php -S localhost:8000 -t public &
