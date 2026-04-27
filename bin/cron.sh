@@ -20,8 +20,15 @@ LOG=$BASE_DIR/logs/$PGM.log
 OS=$(uname | tr [:upper:] [:lower:])
 DEBUG=${DEBUG:-}
 TRACE=${TRACE:-}
+DRY_RUN=${DRY_RUN:-}
 
 DATA_DIR=${DATA_DIR:-$BASE_DIR/data}
+
+for arg in "$@"; do
+    case "$arg" in
+        -n|--dry-run) DRY_RUN=1 ;;
+    esac
+done
 
 mkdir -p $BASE_DIR/logs
 
@@ -80,13 +87,20 @@ fi
 cd $BASE_DIR || fail $? could not cd to $BASE_DIR
 [ -d $DATA_DIR ] || mkdir -p $DATA_DIR || fail $? could not create $DATA_DIR
 
-log "starting aggregation"
-$BASE_DIR/bin/aggregator.php $varg $DATA_DIR/ >> $TMP.processing 2>&1 || fail $? error while executing aggregator.php
+if [ -z "$DRY_RUN" ]; then
+    log "starting aggregation"
+    $BASE_DIR/bin/aggregator.php $varg $DATA_DIR/ >> $TMP.processing 2>&1 || fail $? error while executing aggregator.php
+else
+    log "dry-run: skipping aggregation"
+fi
+
+rsync_opts="-Waz"
+[ "$DRY_RUN" ] && rsync_opts="$rsync_opts --dry-run"
 
 errors=0
 [ -f $BASE_DIR/config/targets ] && grep . $BASE_DIR/config/targets | egrep -v "#|^\s*$" | while read target; do
     log updating $target/
-    rsync -Waz $DATA_DIR/ $target/ && continue
+    rsync $rsync_opts $DATA_DIR/ $target/ && continue
     log $? rsync to target $target failed
     errors=$((errors+1))
 done
