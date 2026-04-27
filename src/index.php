@@ -13,7 +13,12 @@
  * GET /events.lsl            → 410 Gone (obsolete format)
  */
 
-$path = '/' . trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
+$scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? '/'), '/');
+$requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+if ($scriptDir && str_starts_with($requestPath, $scriptDir)) {
+    $requestPath = substr($requestPath, strlen($scriptDir));
+}
+$path = '/' . trim($requestPath, '/');
 
 switch ($path) {
     case '/':
