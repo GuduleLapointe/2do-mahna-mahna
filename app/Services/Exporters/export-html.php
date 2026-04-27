@@ -22,17 +22,12 @@ class HTML_Exporter {
     }
 
     public function export() {
-        // DEBUG copy original styles and js to output
-        // copy(APP_DIR . '/src/styles.css', $this->output_dir . '/styles.css'); 
-        // copy(APP_DIR . '/src/script.js', $this->output_dir . '/script.js');
+        // Minify CSS and JS directly into output
+        $css = new Minify\CSS(APP_DIR . '/src/bundle/standalone/css/styles.css');
+        $css->minify($this->output_dir . '/styles.min.css');
 
-        // Minify CSS
-        $css = new Minify\CSS(APP_DIR . '/src/styles.css');
-        $css->minify(APP_DIR . '/src/styles.min.css');
-
-        // Minify JS
-        $js = new Minify\JS(APP_DIR . '/src/script.js');
-        $js->minify(APP_DIR . '/src/script.min.js');
+        $js = new Minify\JS(APP_DIR . '/src/bundle/standalone/js/script.js');
+        $js->minify($this->output_dir . '/script.min.js');
 
         // Fill sections in index.html
 
@@ -41,7 +36,7 @@ class HTML_Exporter {
         // Lire et convertir le contenu du README
         
         // Charger le modèle de la page HTML
-        $page = file_get_contents(APP_DIR . '/src/index.html');
+        $page = file_get_contents(APP_DIR . '/src/bundle/standalone/templates/calendar.html');
         
         // Remplacer le contenu de la section 'readme' par le contenu du README
         // $page = str_replace('<section id="readme"></section>', '<section id="readme">' . $html . '</section>', $page);
@@ -109,7 +104,7 @@ class HTML_Exporter {
         // Inject boards.html into the boards section
         $boardsSection = $dom->getElementById('boards');
         if ($boardsSection) {
-            $boardsHtml = file_get_contents(APP_DIR . '/src/boards.html');
+            $boardsHtml = file_get_contents(APP_DIR . '/src/bundle/standalone/templates/boards.html');
             $boardsDom  = new DOMDocument();
             libxml_use_internal_errors(true);
             $boardsDom->loadHTML('<?xml encoding="UTF-8">' . $boardsHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
@@ -159,11 +154,11 @@ class HTML_Exporter {
         if($result !== false) Aggregator::notice("updated " . $this->output_dir . '/' . $file);
         else Aggregator::admin_notice("Error $result writing " . $this->output_dir . '/' . $file, 1, true);
 
-        // Copy compiled front-end assets
-        foreach (['styles.min.css', 'script.min.js'] as $file) {
-            $result = copy(APP_DIR . '/src/' . $file, $this->output_dir . '/' . $file);
-            if ($result !== false) Aggregator::notice("updated " . $this->output_dir . '/' . $file);
-            else Aggregator::admin_notice("Error $result writing " . $this->output_dir . '/' . $file, 1, true);
+        // Copy CSS and JS source files for dev/debug access
+        foreach (['css/styles.css' => 'styles.css', 'js/script.js' => 'script.js'] as $src => $dest) {
+            $result = copy(APP_DIR . '/src/bundle/standalone/' . $src, $this->output_dir . '/' . $dest);
+            if ($result !== false) Aggregator::notice("updated " . $this->output_dir . '/' . $dest);
+            else Aggregator::admin_notice("Error $result writing " . $this->output_dir . '/' . $dest, 1, true);
         }
 
         // Copy images from assets/images/ to public/

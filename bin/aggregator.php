@@ -124,7 +124,7 @@ class Aggregator
 		define("AGGREGATOR_VERSION", "0.3.0");
 		define("BOARD_VER", "1.6.0");
 
-		define("APP_DIR", __DIR__);
+		define("APP_DIR", dirname(__DIR__));
 		self::admin_notice("APP_DIR: " . APP_DIR);
 
 		define("IS_AGGR", true);
