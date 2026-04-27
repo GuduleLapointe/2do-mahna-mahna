@@ -89,6 +89,16 @@ $_ENV["BASE_URL"] =
 	$_SERVER["HTTP_HOST"];
 // debug_log("BASE_URL: " . $_ENV["BASE_URL"] . PHP_EOL);
 
+if (!defined("DATA_DIR")) {
+	define(
+		"DATA_DIR",
+		rtrim($_ENV["DATA_DIR"] ?? getenv("DATA_DIR") ?: __DIR__, "/"),
+	);
+}
+if (!defined("EVENTS_JSON")) {
+	define("EVENTS_JSON", DATA_DIR . "/events.json");
+}
+
 $config = [
 	"theme" => $_GET["theme"] ?? "default",
 	"api" => $_GET["api"] ?? null,

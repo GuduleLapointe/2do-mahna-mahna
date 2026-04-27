@@ -41,9 +41,15 @@ bundle/
 ```
 
 `bundle/` as a whole is gitignored. Each subdirectory has its own build
-command and deploy target. Refresh writes data files into
-`bundle/standalone/` only (the LSL board fetches from the API, it does
-not get a local data copy).
+command and deploy target.
+
+Data files (events.json, events.lsl*, events.ics) live in `data/`,
+**not** inside any bundle subdirectory. The aggregator writes only to
+`data/`; it never touches `bundle/standalone/` or any other bundle.
+The standalone site reads data from a configured `data/` path at runtime.
+Deploy rsync both `bundle/standalone/` and `data/` to their respective
+target locations. The LSL board fetches from the API directly — it does
+not get a local data copy.
 
 **2do-board integration**
 
@@ -81,13 +87,14 @@ aggregator app.
    - Copy runtime includes: `src/includes/*.php` → `bundle/standalone/includes/`
    - Copy static assets (`src/templates/events.lsl`, images, fonts, …)
 
-2. **refresh** (cron + on demand) — fetch upstream → `bundle/standalone/`
+2. **refresh** (cron + on demand) — fetch upstream → `data/`
    - Pull from configured event sources
-   - Generate `bundle/standalone/events.json` and `events.lsl*` static fallbacks
-   - Never touches code, only data files
+   - Generate `data/events.json`, `events.lsl*`, `events.ics`
+   - Never touches `bundle/standalone/` or any site code
 
-3. **deploy** (cron + on demand) — `bundle/standalone/` → target(s)
-   - rsync `bundle/standalone/` to local and/or remote webroots
+3. **deploy** (cron + on demand) — `bundle/` → target(s)
+   - rsync `bundle/standalone/` to the webroot
+   - rsync `data/` to the data path the site reads from
    - No transformation, just transport
 
 Cron runs **refresh + deploy** only — never `build` (build is a developer

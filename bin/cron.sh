@@ -13,17 +13,17 @@
 
 set -euo pipefail
 
-BASEDIR=$(realpath $(dirname $0)/..)
+BASE_DIR=$(realpath $(dirname $0)/..)
 PGM=$(basename $0)
 TMP=/tmp/$PGM.$$
-LOG=$BASEDIR/logs/$PGM.log
+LOG=$BASE_DIR/logs/$PGM.log
 OS=$(uname | tr [:upper:] [:lower:])
 DEBUG=${DEBUG:-}
 TRACE=${TRACE:-}
 
-builddir=$BASEDIR/bundle/standalone/
+DATA_DIR=${DATA_DIR:-$BASE_DIR/data}
 
-mkdir -p $BASEDIR/logs
+mkdir -p $BASE_DIR/logs
 
 log() {
     echo "$@" >> $TMP.processing
@@ -77,16 +77,16 @@ fi
 [ "$TRACE" = "yes" -o "$TRACE" = "true" -o "$TRACE" = "1" ] && TRACE=1 && DEBUG=1 || TRACE=
 [ "$TRACE" ] && set -x
 
-cd $BASEDIR || fail $? could not cd to $BASEDIR
-[ -d $builddir ] || mkdir -p $builddir || fail $? could not create $builddir
+cd $BASE_DIR || fail $? could not cd to $BASE_DIR
+[ -d $DATA_DIR ] || mkdir -p $DATA_DIR || fail $? could not create $DATA_DIR
 
 log "starting aggregation"
-$BASEDIR/bin/aggregator.php $varg $builddir/ >> $TMP.processing 2>&1 || fail $? error while executing aggregator.php
+$BASE_DIR/bin/aggregator.php $varg $DATA_DIR/ >> $TMP.processing 2>&1 || fail $? error while executing aggregator.php
 
 errors=0
-[ -f $BASEDIR/config/targets ] && grep . $BASEDIR/config/targets | egrep -v "#|^\s*$" | while read target; do
+[ -f $BASE_DIR/config/targets ] && grep . $BASE_DIR/config/targets | egrep -v "#|^\s*$" | while read target; do
     log updating $target/
-    rsync -Waz $builddir/ $target/ && continue
+    rsync -Waz $DATA_DIR/ $target/ && continue
     log $? rsync to target $target failed
     errors=$((errors+1))
 done

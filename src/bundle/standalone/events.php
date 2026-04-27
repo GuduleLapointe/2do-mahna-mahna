@@ -62,10 +62,15 @@ class Event
 		}
 		require_once __DIR__ . "/bootstrap.php";
 
-		if (!defined("EVENTS_JSON")) {
-			$data_dir = !empty($_ENV["DATA_DIR"]) ? rtrim($_ENV["DATA_DIR"], "/") : __DIR__;
-			define("EVENTS_JSON", $data_dir . "/events.json");
-		}
+		// if (!defined("DATA_DIR")) {
+		// 	define(
+		// 		"DATA_DIR",
+		// 		rtrim($_ENV["DATA_DIR"] ?? getenv("DATA_DIR", __DIR__), "/"),
+		// 	);
+		// }
+		// if (!defined("EVENTS_JSON")) {
+		// 	define("EVENTS_JSON", DATA_DIR . "/events.json");
+		// }
 
 		self::$config = $config ?? [];
 		if (empty(self::$config)) {
@@ -107,7 +112,10 @@ class Event
 		$api = self::$config["api"] ?? null;
 
 		header("X-2do-Server-Version: " . BOARD_VER);
-		header("X-2do-Api-Version: " . (($format === "lsl2" || $api === "v2") ? "v2" : "v3"));
+		header(
+			"X-2do-Api-Version: " .
+				($format === "lsl2" || $api === "v2" ? "v2" : "v3"),
+		);
 
 		if ($format === "png") {
 			Event::outputBoardImage();

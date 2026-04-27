@@ -2,11 +2,11 @@
 
 # Script to run all tests for the 2do-aggregator project
 
-BASEDIR=$(cd "$(dirname "$0")/.." && pwd)
-WEBROOT="$BASEDIR/public"
+BASE_DIR=$(cd "$(dirname "$0")/.." && pwd)
+WEBROOT="$BASE_DIR/public"
 
-[ -f $BASEDIR/.env ] && source $BASEDIR/.env
-[ -f $BASEDIR/tests/.env ] && source $BASEDIR/tests/.env
+[ -f $BASE_DIR/.env ] && source $BASE_DIR/.env
+[ -f $BASE_DIR/tests/.env ] && source $BASE_DIR/tests/.env
 
 DEV_PORT=${DEV_PORT:-8000}
 DEV_HOST=${DEV_HOST:-localhost}

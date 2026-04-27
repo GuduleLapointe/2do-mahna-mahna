@@ -2,21 +2,24 @@
 
 set -euo pipefail
 
-BASEDIR=$(cd "$(dirname "$0")/.." && pwd)
-WEBROOT="$BASEDIR/bundle/standalone"
+BASE_DIR=$(cd "$(dirname "$0")/.." && pwd)
 
-[ -f $BASEDIR/.env ] && source $BASEDIR/.env
-[ -f $BASEDIR/tests/.env ] && source $BASEDIR/tests/.env
+[ -f $BASE_DIR/.env ] && source $BASE_DIR/.env
+[ -f $BASE_DIR/tests/.env ] && source $BASE_DIR/tests/.env
 
 DEV_PORT=${DEV_PORT:-8000}
 DEV_HOST=${DEV_HOST:-localhost}
 LISTEN_IP=${LISTEN_IP:-0.0.0.0}
 
+WEBROOT="${WEBROOT:-$BASE_DIR/bundle/standalone}"
+DATA_DIR="${DATA_DIR:-$BASE_DIR/data}"
+
 [ -n "$MAGICK_FONT_PATH" ] && export MAGICK_FONT_PATH
 
 echo "Starting 2do-aggregator dev server..."
-echo "  Project: $BASEDIR"
+echo "  Project: $BASE_DIR"
 echo "  Webroot: $WEBROOT"
+echo "  Datadir: $DATA_DIR"
 echo "  Magick font path: ${MAGICK_FONT_PATH:-}"
 
 updateFiles() {
@@ -53,7 +56,7 @@ echo ""
 # Auto-sync events.php on change (requires fswatch: brew install fswatch)
 if command -v fswatch >/dev/null 2>&1; then
     echo "Watching src/ for changes (fswatch)..."
-    fswatch -o "$BASEDIR/src/bundle/standalone/events.php" "$BASEDIR/src/bundle/standalone/bootstrap.php" "$BASEDIR/src/bundle/standalone/functions.php" \
+    fswatch -o "$BASE_DIR/src/bundle/standalone/events.php" "$BASE_DIR/src/bundle/standalone/bootstrap.php" "$BASE_DIR/src/bundle/standalone/functions.php" \
         | while read; do
         updateFiles
     done &
@@ -64,6 +67,7 @@ else
     echo "      (brew install fswatch for auto-sync)"
 fi
 
+export DATA_DIR
 # Start server (symfony for HTTPS, php -S as fallback)
 if command -v symfony >/dev/null 2>&1; then
     symfony serve --port=$DEV_PORT --dir=bundle/standalone --allow-all-ip "$@"
