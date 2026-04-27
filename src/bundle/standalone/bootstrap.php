@@ -67,7 +67,7 @@ $themes = [
 	],
 ];
 
-require_once __DIR__ . "/helpers.php";
+require_once __DIR__ . "/functions.php";
 
 define("BASE_DIR", dirname(__DIR__, 2));
 // debug_log("BASE_DIR: " . BASE_DIR . PHP_EOL);

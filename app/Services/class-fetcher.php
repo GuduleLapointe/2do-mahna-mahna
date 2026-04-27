@@ -264,7 +264,7 @@ class Fetcher
 		$command =
 			"php " .
 			APP_DIR .
-			"/parsers/parser-ical.php " .
+			"/app/Services/Parsers/parser-ical.php " .
 			escapeshellarg($url);
 		try {
 			$json = shell_exec($command);
@@ -320,7 +320,7 @@ class Fetcher
 			"type" => "crawler",
 		];
 
-		$command = "php " . APP_DIR . "/parsers/parser-opensimworld.php";
+		$command = "php " . APP_DIR . "/app/Services/Parsers/parser-opensimworld.php";
 		try {
 			$json = shell_exec($command);
 		} catch (Exception $e) {

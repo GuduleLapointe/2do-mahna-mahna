@@ -25,11 +25,11 @@ exporters/export-hypevents.php -> app/Services/Exporters/export-hypevents.php
 exporters/export-ical.php -> app/Services/Exporters/export-ical.php
 exporters/export-json.php -> app/Services/Exporters/export-json.php
 includes -> (keep partially)
-includes/bootstrap.php -> src/includes/bootstrap.php
+includes/bootstrap.php -> src/bundle/standalone/bootstrap.php
 includes/class-event.php -> app/Models/class-event.php
 includes/class-fetcher.php -> app/Services/class-fetcher.php
-includes/functions.php -> app/Helpers/functions.php
-includes/helpers.php -> src/includes/helpers.php
+includes/functions.php -> lib/opensim-functions.php
+includes/helpers.php -> src/bundle/standalone/functions.php
 includes/library-xmlrpc.php -> lib/library-xmlrpc.php
 logs -> (keep)
 package-lock.json -> (keep)

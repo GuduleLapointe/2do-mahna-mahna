@@ -100,18 +100,18 @@ class Aggregator
 		require_once APP_DIR . "/vendor/autoload.php";
 
 		// OpenSimulator functions
-		require_once APP_DIR . "/includes/functions.php";
+		require_once APP_DIR . "/lib/opensim-functions.php";
 		// require_once 'vendor/magicoli/opensim-helpers/includes/opensim-helpers.php';
 
 		// Classes
-		require_once APP_DIR . "/includes/class-fetcher.php";
-		require_once APP_DIR . "/includes/class-event.php";
+		require_once APP_DIR . "/app/Services/class-fetcher.php";
+		require_once APP_DIR . "/app/Models/class-event.php";
 
 		// Exporters
-		require_once APP_DIR . "/exporters/export-hypevents.php";
-		require_once APP_DIR . "/exporters/export-json.php";
-		require_once APP_DIR . "/exporters/export-ical.php";
-		require_once APP_DIR . "/exporters/export-html.php";
+		require_once APP_DIR . "/app/Services/Exporters/export-hypevents.php";
+		require_once APP_DIR . "/app/Services/Exporters/export-json.php";
+		require_once APP_DIR . "/app/Services/Exporters/export-ical.php";
+		require_once APP_DIR . "/app/Services/Exporters/export-html.php";
 	}
 
 	/**

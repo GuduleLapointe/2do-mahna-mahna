@@ -61,7 +61,7 @@ class Event
 		if (self::$config) {
 			return;
 		}
-		require_once __DIR__ . "/includes/bootstrap.php";
+		require_once __DIR__ . "/bootstrap.php";
 
 		self::$config = $config ?? [];
 		if (empty(self::$config)) {

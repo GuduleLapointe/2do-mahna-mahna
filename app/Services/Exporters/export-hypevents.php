@@ -24,11 +24,10 @@ class HYPEvents_Exporter
 	{
 		// Deploy PHP endpoint and its dependencies
 		copy(APP_DIR . "/src/index.php",             $this->output_dir . "/index.php");
-		copy(APP_DIR . "/src/events.lsl",            $this->output_dir . "/events.lsl");
-		copy(APP_DIR . "/src/events.php",            $this->output_dir . "/events.php");
-		@mkdir($this->output_dir . "/includes", 0755, true);
-		copy(APP_DIR . "/includes/bootstrap.php",   $this->output_dir . "/includes/bootstrap.php");
-		copy(APP_DIR . "/includes/helpers.php",     $this->output_dir . "/includes/helpers.php");
+		copy(APP_DIR . "/src/bundle/standalone/templates/events.lsl", $this->output_dir . "/events.lsl");
+		copy(APP_DIR . "/src/bundle/standalone/events.php",         $this->output_dir . "/events.php");
+		copy(APP_DIR . "/src/bundle/standalone/bootstrap.php",      $this->output_dir . "/bootstrap.php");
+		copy(APP_DIR . "/src/bundle/standalone/functions.php",      $this->output_dir . "/functions.php");
 
 		$output = BOARD_VER . "\n";
 
