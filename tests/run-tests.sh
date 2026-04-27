@@ -23,7 +23,7 @@ if ! curl -s "$DEV_URL" > /dev/null; then
 fi
 
 # Run tests with Pest
-php vendor/bin/pest tests/ $*
+php vendor/bin/pest tests/ --testsuite Requirements,Features,Units $*
 
 # Exit with the status of the last command
 exit $?

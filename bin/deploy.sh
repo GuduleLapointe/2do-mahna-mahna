@@ -4,9 +4,10 @@
 # Syncs bundle/standalone/ to each target in config/targets.
 # Does NOT run the aggregator — use cron.sh or bin/aggregator.php for data refresh.
 #
-# Usage: deploy.sh [--with-data] [-y]
-#   --with-data   also include data/ files in the sync
-#   -y            skip confirmation prompt
+# Usage: deploy.sh [--with-data] [-n|--dry-run] [-y]
+#   --with-data      also include data/ files in the sync
+#   -n, --dry-run    show what would be transferred, without making changes
+#   -y               skip confirmation prompt
 
 set -euo pipefail
 
@@ -19,12 +20,14 @@ TMP=$(mktemp 2>/dev/null || echo /tmp/$PGM.$$)
 trap "rm -f $TMP" EXIT
 
 with_data=
+dry_run=
 yes=
 
 for arg in "$@"; do
     case "$arg" in
-        --with-data) with_data=1 ;;
-        -y)          yes=1 ;;
+        --with-data)       with_data=1 ;;
+        -n|--dry-run)      dry_run=1 ;;
+        -y)                yes=1 ;;
     esac
 done
 
@@ -60,7 +63,10 @@ if [ -z "$yes" ]; then
 fi
 
 
+rsync_opts="-Wavz"
+[ "$dry_run" ] && rsync_opts="$rsync_opts --dry-run"
+
 while read target; do
     echo "→ $target/"
-    rsync -Wavz $sources "$target/"
+    rsync $rsync_opts $sources "$target/"
 done < $TMP.targets
