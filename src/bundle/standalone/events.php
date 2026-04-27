@@ -62,16 +62,6 @@ class Event
 		}
 		require_once __DIR__ . "/bootstrap.php";
 
-		// if (!defined("DATA_DIR")) {
-		// 	define(
-		// 		"DATA_DIR",
-		// 		rtrim($_ENV["DATA_DIR"] ?? getenv("DATA_DIR", __DIR__), "/"),
-		// 	);
-		// }
-		// if (!defined("EVENTS_JSON")) {
-		// 	define("EVENTS_JSON", DATA_DIR . "/events.json");
-		// }
-
 		self::$config = $config ?? [];
 		if (empty(self::$config)) {
 			todo_die("Config is empty", 500);
