@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <phpunit bootstrap="tests/bootstrap.php" beStrictAboutOutputDuringTests="true">
     <testsuites>
-        <testsuite name="2do-aggregator Tests">
-            <directory>tests</directory>
+        <testsuite name="Requirements">
+            <directory>tests/Requirements</directory>
+        </testsuite>
+        <testsuite name="Features">
+            <directory>tests/Features</directory>
+        </testsuite>
+        <testsuite name="Units">
+            <directory>tests/Units</directory>
         </testsuite>
     </testsuites>
 </phpunit>
