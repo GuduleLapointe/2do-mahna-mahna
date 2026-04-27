@@ -147,19 +147,37 @@ live in neither — it lives in `lib/`/`shared/` or it doesn't exist.
 
 ---
 
-### Fetcher source-agnostic refactor
+### Fetcher source-agnostic refactor + PHAR build
+
+These two tasks are linked: converting parsers from `shell_exec` subprocesses to PHP
+includes is a prerequisite for PHAR compilation.
+
+**Fetcher refactor**
 
 Today `Fetcher` has two code paths: `fetch_ical()` and `fetch_opensimworld()`, with
 source-specific logic baked in. The fetcher should be agnostic:
 
-- Each source type maps to a parser command; `ical` is the default.
+- Parsers become classes in `app/Services/Parsers/`, loaded via autoloader, not spawned subprocesses.
+- Each source type maps to a parser class; `ical` is the default.
 - The parser type is declared in `config/sources.csv` (new column, optional).
-- Fetcher always calls `fetch_source($slug, $calendar)` → spawns the right parser
-  subprocess → gets back the same normalised JSON → creates `Event` objects the same way.
-- No source-specific branches in the fetcher; new source types only need a new parser.
+- Fetcher always calls `fetch_source($slug, $calendar)` → instantiates the right parser
+  → gets back the same normalised array → creates `Event` objects the same way.
+- No source-specific branches in the fetcher; new source types only need a new parser class.
 
-`opensimworld` becomes a named parser (`parser-opensimworld.php`) that can be listed in
-`sources.csv` like any other source.
+`opensimworld` becomes a named parser that can be listed in `sources.csv` like any other
+source. Future parsers (including ports of legacy Python parsers) follow the same interface.
+
+**PHAR build**
+
+Once parsers are includes (no subprocess calls), the aggregator can be compiled to a
+standalone PHAR:
+
+- Source: `src/bin/aggregator.php` (entry point) + all `app/` classes + `vendor/`
+- Output: `bin/aggregator` (executable PHAR, produced by the build script)
+- Config files (`sources.csv`, `exclude.txt`, etc.) remain external, read from CWD or a
+  configurable path — standard PHAR behaviour.
+- Goal: distributable single-file tool for anyone who wants just the aggregator, without
+  the full app. Also the right foundation for future Laravel integration.
 
 ---
 
