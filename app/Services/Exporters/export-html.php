@@ -37,7 +37,7 @@ class HTML_Exporter
 		copy($cssSrc, $cssDest) && touch($cssDest, filemtime($cssSrc));
 
 		$source = "src/bundle/standalone/js/script.js";
-		$target = "styles.min.css";
+		$target = "script.min.js";
 		Console::detail("minify $target ← $source");
 		$jsSrc = APP_DIR . "/$source";
 		$js = new Minify\JS($jsSrc);

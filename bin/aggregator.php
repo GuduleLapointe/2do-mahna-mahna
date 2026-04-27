@@ -50,6 +50,8 @@ class Aggregator
 	 */
 	public function run()
 	{
+		Console::notice("Output: " . Console::relpath($this->output_dir));
+
 		$cache_file = APP_DIR . "/cache/cache_fetcher.json";
 		$cache_time = 55 * 60; // 55 minutes, to accommodate for 1-hour cron job
 		$config_file = APP_DIR . "/config/aggregator.json";
