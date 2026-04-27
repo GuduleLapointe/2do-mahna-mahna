@@ -30,7 +30,6 @@ require_once dirname(__DIR__) . '/bootstrap.php';
 class Aggregator
 {
 	public $output_dir;
-	private $isTempDir = false;
 	private static $force;
 	public static $script;
 
@@ -83,7 +82,7 @@ class Aggregator
 		new HTML_Exporter($fetcher->get_events(), $this->output_dir);
 
 		$code = Console::exitCode();
-		$dest = $this->isTempDir ? "temp dir (see above)" : Console::relpath($this->output_dir);
+		$dest = Console::relpath($this->output_dir);
 		if ($code === 0) {
 			Console::notice("Done — output in $dest");
 		} else {
@@ -201,7 +200,7 @@ class Aggregator
 			echo "  -f|--force|--clear-cache  clear cache before running\n";
 			echo "  -h|--help  show help and die\n";
 			echo "  --version  show version and die\n";
-			echo "If output_dir is not set a temporary directory will be created\n";
+			echo "If output_dir is not set, defaults to bundle/standalone/\n";
 			die();
 		}
 		if (isset($opts["version"])) {
@@ -212,26 +211,7 @@ class Aggregator
 		if (isset($pos_args[0])) {
 			$output_dir = $pos_args[0];
 		} else {
-			$tempnam = tempnam(sys_get_temp_dir(), basename(self::$script) . ".");
-			if ($tempnam === false) {
-				Console::error("Could not create temporary file", 1, true);
-			}
-			unlink($tempnam);
-			mkdir($tempnam);
-			$output_dir = $tempnam;
-			$this->isTempDir = true;
-			Console::notice("Temp dir: $tempnam");
-
-			register_shutdown_function(function () use ($tempnam) {
-				if (!is_dir($tempnam)) {
-					return;
-				}
-				$files = array_diff(scandir($tempnam), [".", ".."]);
-				if (empty($files)) {
-					Console::verbose("Removing empty temp dir: $tempnam");
-					rmdir($tempnam);
-				}
-			});
+			$output_dir = APP_DIR . '/bundle/standalone';
 		}
 
 		if (!is_dir($output_dir)) {

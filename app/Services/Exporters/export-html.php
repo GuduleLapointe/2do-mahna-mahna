@@ -25,9 +25,11 @@ class HTML_Exporter {
         // Minify CSS and JS directly into output
         $css = new Minify\CSS(APP_DIR . '/src/bundle/standalone/css/styles.css');
         $css->minify($this->output_dir . '/styles.min.css');
+        Console::detail("minified " . $this->output_dir . '/styles.min.css');
 
         $js = new Minify\JS(APP_DIR . '/src/bundle/standalone/js/script.js');
         $js->minify($this->output_dir . '/script.min.js');
+        Console::detail("minified " . $this->output_dir . '/script.min.js');
 
         // Fill sections in index.html
 
