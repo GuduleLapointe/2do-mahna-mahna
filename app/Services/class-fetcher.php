@@ -30,15 +30,10 @@ class Fetcher
 
 	private function read_config_ical($config = APP_DIR . "/config/sources.csv")
 	{
-		Aggregator::admin_notice("Reading $config");
+		Console::verbose("Reading $config");
 		if (!file_exists($config)) {
-			// throw new Exception('sources.csv not found');
 			echo "Copy config/sources.csv.example as $config and adjust to your taste before running this script.\n\n";
-			Aggregator::admin_notice(
-				"sources.csv not found, aborting.",
-				1,
-				true,
-			);
+			Console::error("sources.csv not found, aborting.", 1, true);
 		}
 
 		$csv = file($config);
@@ -70,7 +65,7 @@ class Fetcher
 					$slug = $line;
 					$grid_url = "";
 				}
-				Aggregator::admin_notice("Custom calendar $slug $grid_url");
+				Console::verbose("Custom calendar $slug $grid_url");
 				$this->custom[$slug] = $line;
 				continue;
 			}
@@ -92,9 +87,7 @@ class Fetcher
 		$exclusionsFile = APP_DIR . "/config/exclude.txt",
 	) {
 		if (!file_exists($exclusionsFile)) {
-			Aggregator::notice(
-				"Exclusions file $exclusionsFile not found, it's open bar",
-			);
+			Console::notice("Exclusions file not found ($exclusionsFile), no filtering applied");
 			return;
 		}
 
@@ -154,10 +147,7 @@ class Fetcher
 			if ($calendar["type"] == "ical") {
 				$this->fetch_ical($slug, $calendar);
 			} else {
-				Aggregator::admin_notice(
-					"$slug source type {$calendar["type"]} not implemented",
-					1,
-				);
+				Console::error("$slug source type {$calendar['type']} not implemented", 1);
 			}
 		}
 
@@ -167,7 +157,7 @@ class Fetcher
 
 		$this->deduplicate();
 
-		Aggregator::notice(count($this->events) . " events fetched");
+		Console::notice(count($this->events) . " events fetched");
 	}
 
 	/**
@@ -199,15 +189,10 @@ class Fetcher
 
 		$after = count($this->events);
 		if ($after < $before) {
-			Aggregator::notice(
-				sprintf(
-					"Deduplication: %d → %d events (%d merged, %d cross-source duplicates removed)",
-					$before,
-					$after,
-					$before - $afterMerge,
-					$afterMerge - $after,
-				),
-			);
+			Console::notice(sprintf(
+				"Deduplication: %d → %d events (%d merged, %d cross-source duplicates removed)",
+				$before, $after, $before - $afterMerge, $afterMerge - $after,
+			));
 		}
 	}
 
@@ -269,45 +254,29 @@ class Fetcher
 		try {
 			$json = shell_exec($command);
 		} catch (Exception $e) {
-			Aggregator::admin_notice(
-				"$slug $url parse error " .
-					" " .
-					$e->get_code() .
-					": " .
-					$e->get_message(),
-			);
+			Console::error("$slug parse error: " . $e->get_code() . ": " . $e->get_message());
 			return;
 		}
 		$source_events = json_decode($json ?? '', true);
 
 		if (empty($source_events)) {
-			Aggregator::notice("$slug no events");
+			Console::notice("$slug no events");
 			return;
 		}
 		if (!is_array($source_events)) {
-			Aggregator::admin_notice(
-				"$slug $url error: wrong answer format",
-				1,
-			);
+			Console::error("$slug $url error: wrong answer format", 1);
 			return;
 		}
 
 		$events = [];
 		foreach ($source_events as $source) {
-			// Aggregator::admin_notice("source " . print_r($source, true) );
-
 			$event = new Event($source, $calendar);
 			if ($event === false) {
 				continue;
 			}
-			// Don't override if already fetched, it might be a later date for repeating events
-			// TODO: check if repeating events share the same uid
-			// TODO: generate uid if not present (should not happen wih iCal though)
-			// if(empty($events[$event->uid]) && empty($this->events[$event->uid])) {
 			$events[$event->hash] = $event;
-			// }
 		}
-		Aggregator::notice("$slug " . count($events) . " events");
+		Console::notice("$slug " . count($events) . " events");
 		$this->events = array_merge($this->events, $events);
 	}
 
@@ -324,45 +293,29 @@ class Fetcher
 		try {
 			$json = shell_exec($command);
 		} catch (Exception $e) {
-			Aggregator::admin_notice(
-				"$slug $url parse error " .
-					" " .
-					$e->get_code() .
-					": " .
-					$e->get_message(),
-			);
+			Console::error("$slug parse error: " . $e->get_code() . ": " . $e->get_message());
 			return;
 		}
 		$source_events = json_decode($json ?? '', true);
 
 		if (empty($source_events)) {
-			Aggregator::notice("$slug no events");
+			Console::notice("$slug no events");
 			return;
 		}
 		if (!is_array($source_events)) {
-			Aggregator::admin_notice(
-				"$slug $url error: wrong answer format",
-				1,
-			);
+			Console::error("$slug error: wrong answer format", 1);
 			return;
 		}
 
 		$events = [];
 		foreach ($source_events as $source) {
-			// Aggregator::admin_notice("source " . print_r($source, true) );
-
 			$event = new Event($source, $calendar);
 			if ($event === false) {
 				continue;
 			}
-			// Don't override if already fetched, it might be a later date for repeating events
-			// TODO: check if repeating events share the same uid
-			// TODO: generate uid if not present (should not happen wih iCal though)
-			// if(empty($events[$event->uid]) && empty($this->events[$event->uid])) {
 			$events[$event->hash] = $event;
-			// }
 		}
-		Aggregator::notice("$slug " . count($events) . " events");
+		Console::notice("$slug " . count($events) . " events");
 		$this->events = array_merge($this->events, $events);
 	}
 

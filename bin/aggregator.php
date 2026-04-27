@@ -6,7 +6,7 @@
  * Main script, use from terminal or cron task.
  * DO NOT PUBLISH THIS FILE IN A WEB SERVER.
  *
- * Usage: php aggregator.php [-q] [-v] [output_dir]
+ * Usage: php aggregator.php [-q] [-v] [-f] [output_dir]
  *
  * See README.md for more information.
  *
@@ -16,12 +16,6 @@
  * Plugin Name: (not a plugin, but keep this line, needed by bumping tool)
  **/
 
-// Make sure we are called from command line, not from a web server
-// TODO: control procedures before allowing web access, to avoid
-// - accidental exposure (config file path)
-// - overload (maximum requests per day/hour/minute)
-// - abuse
-// ...
 if (php_sapi_name() != "cli") {
 	die("This script can only be run from the command line." . PHP_EOL);
 }
@@ -36,8 +30,6 @@ require_once dirname(__DIR__) . '/bootstrap.php';
 class Aggregator
 {
 	public $output_dir;
-	private static $quiet;
-	private static $verbose;
 	private static $force;
 	public static $script;
 
@@ -55,22 +47,17 @@ class Aggregator
 	}
 
 	/**
-	 * Run
-	 *
 	 * Run aggregator processes
 	 */
 	public function run()
 	{
-		// Collect and process events
-
-		// Rough cache system, mostly to ease development without affecting production
 		$cache_file = APP_DIR . "/cache/cache_fetcher.json";
-		$cache_time = 55 * 60; // 55 minutes, to accomodate for 1 hour cron job
+		$cache_time = 55 * 60; // 55 minutes, to accommodate for 1-hour cron job
 		$config_file = APP_DIR . "/config/aggregator.json";
 
 		if (self::$force && file_exists($cache_file)) {
 			unlink($cache_file);
-			Aggregator::notice("Cache cleared: $cache_file");
+			Console::notice("Cache cleared");
 		}
 
 		$cache_stale =
@@ -81,14 +68,13 @@ class Aggregator
 		if ($cache_stale) {
 			$fetcher = new Fetcher();
 			file_put_contents($cache_file, serialize($fetcher));
-			touch($cache_file); // Met à jour l'heure de modification du fichier
-			Aggregator::notice("Cache file created: $cache_file");
+			touch($cache_file);
+			Console::verbose("Cache saved: " . $cache_file);
 		} else {
-			Aggregator::notice("Using cache file: $cache_file");
+			Console::verbose("Using cache: " . $cache_file);
 			$fetcher = unserialize(file_get_contents($cache_file));
 		}
 
-		// Write events to file
 		new HYPEvents_Exporter($fetcher->get_events(), $this->output_dir);
 		new JSON_Exporter($fetcher->get_events(), $this->output_dir);
 		new iCal_Exporter($fetcher->get_events(), $this->output_dir);
@@ -96,23 +82,15 @@ class Aggregator
 	}
 
 	/**
-	 * Includes
-	 *
-	 * Include needed files
-	 *
-	 * @return void
+	 * Include application files
 	 */
 	private static function includes()
 	{
-		// OpenSimulator functions
 		require_once APP_DIR . "/lib/opensim-functions.php";
-		// require_once 'vendor/magicoli/opensim-helpers/includes/opensim-helpers.php';
 
-		// Classes
 		require_once APP_DIR . "/app/Services/class-fetcher.php";
 		require_once APP_DIR . "/app/Models/class-event.php";
 
-		// Exporters
 		require_once APP_DIR . "/app/Services/Exporters/export-hypevents.php";
 		require_once APP_DIR . "/app/Services/Exporters/export-json.php";
 		require_once APP_DIR . "/app/Services/Exporters/export-ical.php";
@@ -120,16 +98,14 @@ class Aggregator
 	}
 
 	/**
-	 * Define constants
-	 *
-	 * Define constants for the application
+	 * Define application constants
 	 */
 	private static function constants()
 	{
 		define("AGGREGATOR_VERSION", "0.3.0");
 		define("BOARD_VER", "1.6.0");
 
-		self::admin_notice("APP_DIR: " . APP_DIR);
+		Console::verbose("APP_DIR: " . APP_DIR);
 
 		define("IS_AGGR", true);
 
@@ -190,9 +166,7 @@ class Aggregator
 	}
 
 	/**
-	 * Load arguments
-	 *
-	 * Load arguments and set session parameters
+	 * Parse CLI arguments and initialize Console
 	 */
 	private function load_args($args = [])
 	{
@@ -203,111 +177,65 @@ class Aggregator
 		$opts = getopt("qvhf", ["help", "version", "force", "clear-cache"], $rest_index);
 		$pos_args = array_slice($argv, $rest_index);
 
-		if (isset($opts["q"])) {
-			self::$quiet = true;
-		}
-		if (isset($opts["v"])) {
-			self::$verbose = true;
-		}
-		if (isset($opts["f"]) || isset($opts["force"]) || isset($opts["clear-cache"])) {
-			self::$force = true;
-		}
+		$quiet   = isset($opts["q"]);
+		$verbose = isset($opts["v"]);
+		self::$force = isset($opts["f"]) || isset($opts["force"]) || isset($opts["clear-cache"]);
+
+		Console::init($quiet, $verbose);
+
 		if (isset($opts["h"]) || isset($opts["help"])) {
 			echo "Usage: php " . self::$script . " [-q] [-v] [-f] [output_dir]\n";
 			echo "  -q  quiet mode\n";
-			echo "  -v  verbose mode (overriden if -q is set)\n";
+			echo "  -v  verbose mode (overridden if -q is set)\n";
 			echo "  -f|--force|--clear-cache  clear cache before running\n";
 			echo "  -h|--help  show help and die\n";
 			echo "  --version  show version and die\n";
-			echo "If output dir is not set a temporary directory will be created\n";
+			echo "If output_dir is not set a temporary directory will be created\n";
 			die();
 		}
 		if (isset($opts["version"])) {
-			echo "Aggregator version " . AGGREGATOR_VERSION . "\n";
+			echo "Aggregator version 0.3.0\n";
 			die();
 		}
 
 		if (isset($pos_args[0])) {
-			// use output directory from command line
 			$output_dir = $pos_args[0];
 		} else {
-			// make temp directory for output
-
-			$tempnam = tempnam(
-				sys_get_temp_dir(),
-				basename(self::$script) . ".",
-			);
+			$tempnam = tempnam(sys_get_temp_dir(), basename(self::$script) . ".");
 			if ($tempnam === false) {
-				Aggregator::admin_notice(
-					"Could not create temporary file",
-					1,
-					true,
-				);
+				Console::error("Could not create temporary file", 1, true);
 			}
 			unlink($tempnam);
 			mkdir($tempnam);
 			$output_dir = $tempnam;
 
-			// trap exit and delete temp directory
 			register_shutdown_function(function () use ($tempnam) {
-				if (is_dir($tempnam)) {
-					$files = scandir($tempnam);
-					$files = array_diff($files, [".", ".."]);
-					// We don't delete temp directory unless it's empty
-					if (empty($files)) {
-						Aggregator::admin_notice(
-							"Deleting empty temp directory $tempnam",
-						);
-						rmdir($tempnam);
-					} else {
-						echo "Results saved in directory $tempnam/\n";
-					}
-					// foreach ($files as $file) {
-					//     if ($file == '.' || $file == '..') {
-					//         continue;
-					//     }
-					//     echo "unlink($tempnam . '/' . $file)";
-					// }
-					// echo "rmdir($tempnam)";
+				if (!is_dir($tempnam)) {
+					return;
+				}
+				$files = array_diff(scandir($tempnam), [".", ".."]);
+				if (empty($files)) {
+					Console::verbose("Deleting empty temp directory $tempnam");
+					rmdir($tempnam);
+				} else {
+					Console::notice("Results saved in $tempnam/");
 				}
 			});
 		}
 
-		// Create output directory if it does not exist
 		if (!is_dir($output_dir)) {
-			mkdir($output_dir, 0755, true) || Aggregator::admin_notice(
-				"Output directory $output_dir does not exist and could not be created",
-				1,
-				true,
-			);
+			mkdir($output_dir, 0755, true) ||
+				Console::error("Output directory $output_dir could not be created", 1, true);
 		}
 
 		$this->output_dir = realpath(rtrim($output_dir, "/"));
-		self::admin_notice("Output directory: " . $this->output_dir);
+		Console::setOutputDir($this->output_dir);
+		Console::verbose("Output directory: " . $this->output_dir);
 	}
 
-	public static function quiet()
-	{
-		return self::$quiet;
-	}
 	public static function force()
 	{
 		return self::$force;
-	}
-	public static function verbose()
-	{
-		if (self::$quiet) {
-			return false;
-		}
-		return self::$verbose;
-	}
-
-	public static function notice($message)
-	{
-		if (Aggregator::quiet()) {
-			return;
-		}
-		echo $message . "\n";
 	}
 
 	public static function remove_emoji($string)
@@ -315,54 +243,14 @@ class Aggregator
 		$symbols =
 			"\x{1F100}-\x{1F1FF}" . // Enclosed Alphanumeric Supplement
 			"\x{1F300}-\x{1F5FF}" . // Miscellaneous Symbols and Pictographs
-			"\x{1F600}-\x{1F64F}" . //Emoticons
+			"\x{1F600}-\x{1F64F}" . // Emoticons
 			"\x{1F680}-\x{1F6FF}" . // Transport And Map Symbols
 			"\x{1F900}-\x{1F9FF}" . // Supplemental Symbols and Pictographs
-			"\x{2600}-\x{26FF}" . // Miscellaneous Symbols
-			"\x{2700}-\x{27BF}"; // Dingbats
+			"\x{2600}-\x{26FF}" .   // Miscellaneous Symbols
+			"\x{2700}-\x{27BF}";    // Dingbats
 
 		return preg_replace("/[" . $symbols . "]+/u", "", (string) $string);
 	}
-
-	public static function admin_notice($message, $error_code = 0, $die = false)
-	{
-		if (!Aggregator::verbose() && $error_code == 0) {
-			return;
-		}
-		// get calling function and file
-		$trace = debug_backtrace();
-
-		if (isset($trace[1])) {
-			$caller = $trace[1];
-		} else {
-			$caller = $trace[0];
-		}
-		$file = empty($caller["file"]) ? "" : $caller["file"];
-		$function = $caller["function"] . "()" ?? "main";
-		$line = $caller["line"] ?? 0;
-		$class = $caller["class"] ?? "main";
-		$type = $caller["type"] ?? "::";
-		if ($class != "main") {
-			$function = $class . $type . $function;
-		}
-		$file = $file . ":" . $line;
-		$message = sprintf(
-			"%s%s: %s in %s",
-			$function,
-			empty($error_code) ? "" : " Error $error_code",
-			$message,
-			$file,
-		);
-		error_log($message);
-		if ($die == true) {
-			die($error_code);
-		}
-	}
-
-	// public function __destruct() {
-	//     error_log("Aggregator::__destruct");
-	// }
 }
 
 new Aggregator();
-

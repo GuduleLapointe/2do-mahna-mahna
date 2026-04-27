@@ -63,13 +63,7 @@ class Event
 		$data = array_merge(EVENT_STRUCTURE, $data);
 
 		if (Fetcher::isExcluded($calendar["slug"], $data["name"])) {
-			Aggregator::admin_notice(
-				"[" .
-					$calendar["slug"] .
-					"] " .
-					$data["name"] .
-					" is in exclusion list",
-			);
+			Console::verbose("[{$calendar["slug"]}] {$data["name"]} is in exclusion list");
 			return false;
 		}
 
@@ -94,28 +88,19 @@ class Event
 			$calendar["grid_url"],
 		);
 		if ($sanitized_url === false) {
-			Aggregator::admin_notice(
-				sprintf(
-					"%s event %s error checking sanitize_hgurl(%s, %s)",
-					$calendar["slug"],
-					$data["uid"],
-					$data["simname"] ?? "",
-					$calendar["grid_url"],
-				),
-			);
+			Console::verbose(sprintf(
+				"%s event %s error checking sanitize_hgurl(%s, %s)",
+				$calendar["slug"], $data["uid"],
+				$data["simname"] ?? "", $calendar["grid_url"],
+			));
 			return false;
 		}
 		if (empty($sanitized_url)) {
-			Aggregator::admin_notice(
-				sprintf(
-					"%s event %s has no location %s",
-					$calendar["slug"],
-					$data["uid"],
-					empty($data["simname"])
-						? $calendar["grid_url"]
-						: $data["simname"],
-				),
-			);
+			Console::verbose(sprintf(
+				"%s event %s has no location %s",
+				$calendar["slug"], $data["uid"],
+				empty($data["simname"]) ? $calendar["grid_url"] : $data["simname"],
+			));
 			return false;
 		}
 		$data["simname"] = $sanitized_url;
@@ -183,10 +168,10 @@ class Event
 				case "empty":
 					return;
 				case "offline":
-					Aggregator::admin_notice("cached region $url is offline");
+					Console::verbose("cached region $url is offline");
 					return false;
 				case "invalid":
-					Aggregator::admin_notice("cached region $url is invalid");
+					Console::verbose("cached region $url is invalid");
 					return false;
 			}
 			return $sanitize_hgurl_cache[$url];
@@ -199,9 +184,7 @@ class Event
 		$region_data = opensim_get_region($tmpurl);
 
 		if (empty($region_data)) {
-			Aggregator::admin_notice(
-				"region $tmpurl data could not be fetched (empty)",
-			);
+			Console::verbose("region $tmpurl data could not be fetched (empty)");
 
 			$sanitize_hgurl_cache[$url] = "invalid";
 			return false;
@@ -211,7 +194,7 @@ class Event
 				? $region_data["region_name"]
 				: $region["region"];
 		if (!opensim_region_is_online($region)) {
-			Aggregator::admin_notice("region $tmpurl is offline");
+			Console::verbose("region $tmpurl is offline");
 
 			$sanitize_hgurl_cache[$url] = "offline";
 			return false;

@@ -78,10 +78,10 @@ class JSON_Exporter {
         $output = json_encode($events_array);
 
         $result = file_put_contents($this->output_dir . '/events.json', $output);
-        if( $result != false ) {
-            Aggregator::notice("exported " . $this->output_dir . '/events.json');
+        if ($result != false) {
+            Console::detail("exported " . $this->output_dir . '/events.json');
         } else {
-            Aggregator::admin_notice("Error writing " . $this->output_dir . '/events.json', 1, true);
+            Console::error("Error writing " . $this->output_dir . '/events.json', 1, true);
         }
     }
 }

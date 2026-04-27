@@ -95,9 +95,9 @@ class HTML_Exporter {
             // Ajouter le wrapper à la section
             $section->appendChild($wrapper);
 
-            Aggregator::notice("section $sectionId updated with $md_file");
+            Console::detail("section $sectionId ← $md_file");
         } else {
-            Aggregator::admin_notice("section $sectionId not found for $md_file", 1);
+            Console::error("section $sectionId not found for $md_file", 1);
         }
         }
 
@@ -135,9 +135,9 @@ class HTML_Exporter {
                 $wrapper->appendChild($content);
                 $boardsSection->appendChild($wrapper);
             }
-            Aggregator::notice("section boards updated with boards.html");
+            Console::detail("section boards ← boards.html");
         } else {
-            Aggregator::admin_notice("section boards not found", 1);
+            Console::error("section boards not found", 1);
         }
 
         $page = $dom->saveHTML();
@@ -151,14 +151,14 @@ class HTML_Exporter {
         $file = 'index.html';
         // Sauvegarder la page dans le répertoire de sortie
         $result = file_put_contents($this->output_dir . '/' . $file, $page);
-        if($result !== false) Aggregator::notice("updated " . $this->output_dir . '/' . $file);
-        else Aggregator::admin_notice("Error $result writing " . $this->output_dir . '/' . $file, 1, true);
+        if ($result !== false) Console::detail("updated " . $this->output_dir . '/' . $file);
+        else Console::error("Error writing " . $this->output_dir . '/' . $file, 1, true);
 
         // Copy CSS and JS source files for dev/debug access
         foreach (['css/styles.css' => 'styles.css', 'js/script.js' => 'script.js'] as $src => $dest) {
             $result = copy(APP_DIR . '/src/bundle/standalone/' . $src, $this->output_dir . '/' . $dest);
-            if ($result !== false) Aggregator::notice("updated " . $this->output_dir . '/' . $dest);
-            else Aggregator::admin_notice("Error $result writing " . $this->output_dir . '/' . $dest, 1, true);
+            if ($result !== false) Console::detail("updated " . $this->output_dir . '/' . $dest);
+            else Console::error("Error writing " . $this->output_dir . '/' . $dest, 1, true);
         }
 
         // Copy images from assets/images/ to public/
@@ -172,8 +172,8 @@ class HTML_Exporter {
         foreach ($imageFiles as $src) {
             $dest = $this->output_dir . '/' . basename($src);
             $result = copy($src, $dest);
-            if ($result !== false) Aggregator::notice("updated " . $dest);
-            else Aggregator::admin_notice("Error $result writing " . $dest, 1, true);
+            if ($result !== false) Console::detail("updated " . $dest);
+            else Console::error("Error writing " . $dest, 1, true);
         }
     }
 }

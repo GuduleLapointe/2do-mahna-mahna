@@ -81,15 +81,9 @@ class HYPEvents_Exporter
 			$output,
 		);
 		if ($result != false) {
-			Aggregator::notice(
-				"exported " . $this->output_dir . "/events.lsl2",
-			);
+			Console::detail("exported " . $this->output_dir . "/events.lsl2");
 		} else {
-			Aggregator::admin_notice(
-				"Error writing " . $this->output_dir . "/events.lsl2",
-				1,
-				true,
-			);
+			Console::error("Error writing " . $this->output_dir . "/events.lsl2", 1, true);
 		}
 	}
 }
