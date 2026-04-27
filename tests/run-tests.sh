@@ -22,8 +22,8 @@ if ! curl -s "$DEV_URL" > /dev/null; then
     exit 1
 fi
 
-# Run PHPUnit tests
-php vendor/bin/phpunit --testdox --testdox-summary tests/
+# Run tests with Pest
+php vendor/bin/pest tests/ $*
 
 # Exit with the status of the last command
 exit $?

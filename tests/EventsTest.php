@@ -1,185 +1,238 @@
 <?php
-
-use PHPUnit\Framework\TestCase;
-// use Imagick;
-
-class EventsTest extends TestCase
-{
-	private static bool $envSet = false;
-
-	protected function setUp(): void
-	{
-		require_once __DIR__ . "/bootstrap.php";
-		if (defined("TEST_URL")) {
-			self::$envSet = true;
-		}
-	}
-
-	public function testEnv(): void
-	{
-		$this->assertTrue(
-			self::$envSet, // DEBUG, trigger false to test dependency // defined("TEST_URL"),
-			"DEV_HOSTS and DEV_PORT must be properly set in tests/.env" .
-				PHP_EOL,
+describe("Requirements", function () {
+	test("Test URL", function () {
+		expect(defined("TEST_URL"))->toBeTrue(
+			"DEV_HOST and DEV_PORT must be set in tests/.env",
 		);
+		passed("Test URL");
+	});
 
-		if (
-			!$this->assertTrue(
-				extension_loaded("imagick"),
-				"Imagick extension must be installed and loaded",
-			)
-		) {
-			self::$envSet = false;
-		}
-	}
-
-	public function testApi_v2(): void
-	{
-		if (!self::$envSet) {
-			$this->markTestSkipped("Environment not set");
-		}
-		$response = file_get_contents(TEST_URL . "/events.php?api=v2");
-		$this->assertNotEmpty($response, "Response should not be empty");
-
-		$version_regex =
-			"/" . (defined("BOARD_VER") ? BOARD_VER : "[0-9]+\.[0-9]+") . "/";
-		$this->assertMatchesRegularExpression(
-			$version_regex,
-			$response,
-			"Response should contain version $version_regex",
+	test("imagick", function () {
+		expect(extension_loaded("imagick"))->toBeTrue(
+			"Imagick extension must be installed and loaded",
 		);
+		passed("imagick");
+	});
+});
 
+describe("v2 API", function () {
+	beforeEach(function () {
+		requires("Test URL");
+	});
+	$apiRoute = "/api/v2/events";
+	test("endpoint", function () use ($apiRoute) {
+		$url = TEST_URL . $apiRoute;
+		expectValidHttpStatus($url);
+		$response = file_get_contents($url);
+		expect($response)->not->toBeEmpty(
+			"$apiRoute response should not be empty",
+		);
+		return $response;
+	});
+
+	$versionRegexp =
+		"/" . (defined("BOARD_VER") ? BOARD_VER : "[0-9]+\.[0-9]+") . "/";
+	test("valid API", function ($response) use ($versionRegexp) {
+		expect($response)->toMatch(
+			$versionRegexp,
+			"Response should contain version {$versionRegexp}",
+		);
+		return $response; // repeat endpoint return to avoid multiple depends below
+	})->depends("endpoint");
+
+	test("proper v2 formatting", function ($response) {
 		$lines = explode("\n", trim($response));
 		$count = count($lines);
-		$this->assertTrue(
-			$count % 3 === 1,
-			"Response should have 1 + a multiple of 3 lines, got $count",
+		expect($count % 3)->toBe(
+			1,
+			"Response should have 1 + a multiple of 3 lines, got {$count}",
 		);
-
-		// Line index 2 = timespec of first event
-		if (isset($lines[2])) {
-			$time = "[0-9]{2}:[0-9]{2}[AP]M";
-			$date = "[0-9]{4}-[0-1][0-9]-[0-3][0-9]";
-			$ts = "[1-9][0-9]+";
-			$this->assertMatchesRegularExpression(
-				"/^$time~$date~$ts~$time~$date~$ts$/",
-				$lines[2],
-				"Line 3 should be a timespec",
-			);
+		if ($count < 4) {
+			test()->markTestSkipped("Empty list, skipped events validation");
 		}
-	}
 
-	public function testApi_v3(): void
-	{
-		if (!self::$envSet) {
-			$this->markTestSkipped("Environment not set");
+		$timeRegexp = "[0-9]{2}:[0-9]{2}[AP]M";
+		$dateRegexp = "[0-9]{4}-[0-1][0-9]-[0-3][0-9]";
+		$tsRegexp = "[1-9][0-9]+";
+		$timespecRegexp = "/^{$timeRegexp}~{$dateRegexp}~{$tsRegexp}~{$timeRegexp}~{$dateRegexp}~{$tsRegexp}$/";
+
+		// TODO: validate first line version number and optional notification message
+		// ext. "1.6.0 Strongly recommended update;1"
+		$i = 0;
+		while ($i <= min($count, 100)) {
+			$title = $lines[$i + 1]; // No title validation
+			$time = $lines[$i + 2];
+			$dest = $lines[$i + 3];
+			expect($time)->toMatch($timespecRegexp, "invalid time");
+			expectValidHypergridUri($dest, "v2 API: $title - $time - $dest");
+			$i = $i + 3;
 		}
-		$response = file_get_contents(TEST_URL . "/events.php?api=v3");
-		$this->assertNotEmpty($response, "Response should not be empty");
+	})->depends("valid API");
 
-		$lines = array_filter(
-			explode("\n", trim($response)),
-			fn($l) => $l !== "",
+	test("events.php?api=v2 mirrors $apiRoute", function ($response) {
+		$legacyResponse = file_get_contents(TEST_URL . "/events.php?api=v2");
+		expect($legacyResponse)->toBe(
+			$response,
+			"Legacy and v2 endpoints should return the same response",
 		);
-		$this->assertNotEmpty(
-			$lines,
+	})->depends("endpoint");
+
+	$legacyURL = "events.lsl2";
+	test("$legacyURL (legacy) processed by API", function () use ($legacyURL) {
+		// TODO: match api endpoint response, but it does not work as is
+		// in test environment because Symfony ignores .htaccess rules and serves
+		// events.lsl2 directly despites the rewriting rule, although apache2 does
+		// it properly in live environment.
+		//
+		// Workaround: temporarily rename events.lsl2 if present and move it back after check
+		$legacyResponse = file_get_contents(TEST_URL . "/$legacyURL");
+		expect($legacyResponse)->not->toBeEmpty(
+			"Legacy url " . TEST_URL . "/$legacyURL should return results",
+		);
+	});
+});
+
+describe("v3 API", function () {
+	beforeEach(function () {
+		requires("Test URL");
+	});
+
+	$apiRoute = "/api/v3/events";
+	test("endpoint", function () use ($apiRoute) {
+		$url = TEST_URL . $apiRoute;
+		expectValidHttpStatus($url);
+		$response = file_get_contents($url);
+		expect($response)->not->toBeEmpty(
+			"$apiRoute response should not be empty",
+		);
+		return $response;
+	});
+
+	test("valid API", function ($response) {
+		$lines = array_values(array_filter(explode("\n", trim($response))));
+		if (count($lines) < 1) {
+			test()->markTestSkipped("Empty list, skipped events validation");
+		}
+		expect($lines)->not->toBeEmpty(
 			"Response should have at least one event line",
 		);
 
-		// v3 format: x0,y0,x1,y1,destination,start_time,start_stamp,end_time,end_stamp,title
-		$timeRx = "[0-9]{2}:[0-9]{2}[AP]M";
-		$tsRx   = "[1-9][0-9]+";
+		$numRegexp = "-?[0-9]+(?:\.[0-9]+)?";
+		$timeRegexp = "[0-9]{2}:[0-9]{2}[AP]M";
+		$tsRegexp = "[1-9][0-9]+";
+		$destRegexp = "[^,]+";
+		$csvSpecRegexp = "#^{$numRegexp},{$numRegexp},{$numRegexp},{$numRegexp},{$destRegexp},{$timeRegexp},{$tsRegexp},{$timeRegexp},{$tsRegexp},#";
 
-		foreach ($lines as $i => $line) {
+		$max = min(count($lines), 100);
+		for ($i = 0; $i < $max; $i++) {
+			$line = $lines[$i];
+			$n = $i + 1;
 			$parts = str_getcsv($line, ",", '"', "\\");
-			$this->assertGreaterThanOrEqual(
+			expect(count($parts))->toBeGreaterThanOrEqual(
 				10,
-				count($parts),
-				"Line $i should have 10 CSV fields: $line",
+				"Line {$n} should have at least 10 fields",
 			);
-			// Banner rows have "href:" destination and empty time fields — skip time checks
+
 			if (str_starts_with($parts[4], "href:")) {
-				$this->assertEmpty(
-					$parts[5],
-					"Banner line $i field 5 (start_time) should be empty",
-				);
+				$link = str_replace("href:", "", $parts[4]);
+				expect($link)->toBeUrl();
+				// Skip remaining fields, we do not care about extra data, we only care about wrong or missing data
+				continue;
+			} else {
+				expectValidHypergridUri($parts[4], "v3 API: $line");
+			}
+
+			if (preg_match($csvSpecRegexp, $line)) {
 				continue;
 			}
-			$this->assertMatchesRegularExpression(
-				"/^$timeRx$/",
-				$parts[5],
-				"Line $i field 5 (start_time) should be a formatted time: {$parts[5]}",
-			);
-			$this->assertMatchesRegularExpression(
-				"/^$tsRx$/",
-				$parts[6],
-				"Line $i field 6 (start_stamp) should be a unix timestamp: {$parts[6]}",
-			);
-		}
-	}
 
-	public function testApiDefault(): void
-	{
-		if (!self::$envSet) {
-			$this->markTestSkipped("Environment not set");
+			// Fallback: identify which field is wrong with clear messages
+			foreach ([0, 1, 2, 3] as $idx) {
+				expect($parts[$idx])->toMatch(
+					"/^{$numRegexp}$/",
+					"fields 1 to 4 must be numbers",
+				);
+			}
+			expect($parts[5])->toMatch(
+				"/^{$timeRegexp}$/",
+				"Field 6 must be a valid time HH:MM:[AM|PM]",
+			);
+			expect($parts[6])->toMatch(
+				"/^{$tsRegexp}$/",
+				"Field 7 must be a timestamp",
+			);
+			expect($parts[7])->toMatch(
+				"/^{$timeRegexp}$/",
+				"Field 8 must be a valid time HH:MM:[AM|PM]",
+			);
+			expect($parts[8])->toMatch(
+				"/^{$tsRegexp}$/",
+				"Field 9 must be a timestamp",
+			);
 		}
+	})->depends("endpoint");
+
+	test("events.php?api=v3 mirrors $apiRoute", function ($response) {
+		$direct = file_get_contents(TEST_URL . "/events.php?api=v3");
+		expect($direct)->toBe(
+			$response,
+			"Direct v3 endpoint should return the same response",
+		);
+	})->depends("endpoint");
+
+	test("events.php defaults to v3 api", function ($response) {
 		$default = file_get_contents(TEST_URL . "/events.php");
-		$v3 = file_get_contents(TEST_URL . "/events.php?api=v3");
-		$this->assertEquals(
-			$v3,
-			$default,
+		expect($default)->toBe(
+			$response,
 			"Default response should match api=v3",
 		);
-	}
+	})->depends("endpoint");
+});
 
-	public function testPngFormat(): void
-	{
-		if (!self::$envSet) {
-			$this->markTestSkipped("Environment not set");
-		}
-		$response = file_get_contents(TEST_URL . "/events.php?format=png");
-		// Check if the response is not empty
-		$this->assertNotEmpty($response, "Image should not be empty");
+describe("image API", function () {
+	beforeEach(function () {
+		requires("Test URL", "imagick");
+	});
 
-		// Check Content-Type header
-		$contentType = "";
-		foreach ($http_response_header ?? [] as $header) {
-			if (stripos($header, "Content-Type:") === 0) {
-				$contentType = $header;
-				break;
-			}
-		}
-		$this->assertStringContainsString(
-			"image/png",
-			$contentType,
-			"Content-Type header should specify image/png",
+	$apiRoute = "/events.php?format=png";
+	test("endpoint", function () use ($apiRoute) {
+		$url = TEST_URL . $apiRoute;
+		expectValidHttpStatus($url);
+		$response = file_get_contents($url);
+		expect($response)->not->toBeEmpty(
+			"$apiRoute response should not be empty",
 		);
-		// Check if the file is a valid PNG using Imagick
-		try {
-			$imagick = new Imagick();
-			$imagick->readImageBlob($response);
-			$format = $imagick->getImageFormat();
-			$this->assertEquals("PNG", $format, "File should be a valid PNG");
-			$width = $imagick->getImageWidth();
-			$height = $imagick->getImageHeight();
-			$this->assertGreaterThan(
-				0,
-				$width,
-				"PNG width should be greater than 0",
-			);
-			$this->assertGreaterThan(
-				0,
-				$height,
-				"PNG height should be greater than 0",
-			);
-			// Use Imagick::identifyImage for detailed info
-			$identifyInfo = $imagick->identifyImage(true);
-			$this->assertNotEmpty(
-				$identifyInfo,
-				"Imagick should provide detailed image info",
-			);
-		} catch (Exception $e) {
-			$this->fail("Imagick failed to read the file: " . $e->getMessage());
-		}
-	}
-}
+		return $response;
+	});
+
+	test("valid PNG image", function ($response) use ($apiRoute) {
+		$headers = get_headers(TEST_URL . $apiRoute, associative: true);
+		expect($headers["Content-Type"] ?? "")->toContain("image/png");
+
+		$imagick = new Imagick();
+		$imagick->readImageBlob($response);
+		expect($imagick->getImageFormat())->toBe(
+			"PNG",
+			"File should be a valid PNG",
+		);
+		return $imagick;
+	})->depends("endpoint");
+
+	test("proper width and height", function ($imagick) {
+		expect($imagick->getImageWidth())->toBeGreaterThan(
+			0,
+			"PNG width should be greater than 0",
+		);
+		expect($imagick->getImageHeight())->toBeGreaterThan(
+			0,
+			"PNG height should be greater than 0",
+		);
+		return $imagick;
+	})->depends("valid PNG image");
+
+	test("detailed image info available", function ($imagick) {
+		expect($imagick->identifyImage(true))->not->toBeEmpty(
+			"Imagick should provide detailed image info",
+		);
+	})->depends("valid PNG image");
+});

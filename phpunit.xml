@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<phpunit bootstrap="bootstrap.php">
+<?xml version="1.0" encoding="UTF-8" ?>
+<phpunit bootstrap="tests/bootstrap.php" beStrictAboutOutputDuringTests="true">
     <testsuites>
         <testsuite name="2do-aggregator Tests">
             <directory>tests</directory>

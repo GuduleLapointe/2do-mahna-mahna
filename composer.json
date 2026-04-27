@@ -26,12 +26,18 @@
 	},
 	"require-dev": {
 		"magicoli/php-bump-library": "^1.0",
-		"phpunit/phpunit": "^13.1"
+		"phpunit/phpunit": "^10.1",
+		"pestphp/pest": "^2.0"
 	},
 	"scripts": {
 		"bump-version": "vendor/magicoli/php-bump-library/vendor/bin/robo --load-from=vendor/magicoli/php-bump-library/RoboFile.php bump:version"
 	},
 	"extra": {
 		"public-dir": "output"
+	},
+	"config": {
+		"allow-plugins": {
+			"pestphp/pest-plugin": true
+		}
 	}
 }
