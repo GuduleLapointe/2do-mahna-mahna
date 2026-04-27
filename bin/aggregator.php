@@ -81,7 +81,6 @@ class Aggregator
 		new HYPEvents_Exporter($fetcher->get_events(), $this->output_dir);
 		new JSON_Exporter($fetcher->get_events(), $this->output_dir);
 		new iCal_Exporter($fetcher->get_events(), $this->output_dir);
-		new HTML_Exporter($fetcher->get_events(), $this->output_dir);
 
 		$code = Console::exitCode();
 		$dest = Console::relpath($this->output_dir);
@@ -106,7 +105,6 @@ class Aggregator
 		require_once APP_DIR . "/app/Services/Exporters/export-hypevents.php";
 		require_once APP_DIR . "/app/Services/Exporters/export-json.php";
 		require_once APP_DIR . "/app/Services/Exporters/export-ical.php";
-		require_once APP_DIR . "/app/Services/Exporters/export-html.php";
 	}
 
 	/**
@@ -202,7 +200,7 @@ class Aggregator
 			echo "  -f|--force|--clear-cache  clear cache before running\n";
 			echo "  -h|--help  show help and die\n";
 			echo "  --version  show version and die\n";
-			echo "If output_dir is not set, defaults to bundle/standalone/\n";
+			echo "If output_dir is not set, defaults to data/\n";
 			die();
 		}
 		if (isset($opts["version"])) {
@@ -213,7 +211,7 @@ class Aggregator
 		if (isset($pos_args[0])) {
 			$output_dir = $pos_args[0];
 		} else {
-			$output_dir = APP_DIR . '/bundle/standalone';
+			$output_dir = APP_DIR . '/data';
 		}
 
 		if (!is_dir($output_dir)) {

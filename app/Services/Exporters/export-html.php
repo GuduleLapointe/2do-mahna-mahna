@@ -16,7 +16,7 @@ class HTML_Exporter
 	private $events = [];
 	private $output_dir;
 
-	public function __construct($events, $output_dir)
+	public function __construct($output_dir, $events = [])
 	{
 		$this->events = $events;
 		$this->output_dir = $output_dir;
