@@ -20,22 +20,45 @@ class HYPEvents_Exporter
 		$this->export();
 	}
 
+	private function deploy(string $src, string $dest): void
+	{
+		Console::detail("copy " . basename($dest) . " ← $src");
+		if (copy($src, $dest)) {
+			touch($dest, filemtime($src));
+		} else {
+			Console::error("Failed to copy $src → $dest", 1);
+		}
+	}
+
 	public function export()
 	{
-		// Deploy PHP endpoint and its dependencies
-		copy(APP_DIR . "/src/bundle/standalone/index.php",           $this->output_dir . "/index.php");
-		copy(APP_DIR . "/src/bundle/standalone/templates/events.lsl", $this->output_dir . "/events.lsl");
-		copy(APP_DIR . "/src/bundle/standalone/events.php",         $this->output_dir . "/events.php");
-		copy(APP_DIR . "/src/bundle/standalone/bootstrap.php",      $this->output_dir . "/bootstrap.php");
-		copy(APP_DIR . "/src/bundle/standalone/functions.php",      $this->output_dir . "/functions.php");
+		$this->deploy(
+			APP_DIR . "/src/bundle/standalone/index.php",
+			$this->output_dir . "/index.php",
+		);
+		$this->deploy(
+			APP_DIR . "/src/bundle/standalone/templates/events.lsl",
+			$this->output_dir . "/events.lsl",
+		);
+		$this->deploy(
+			APP_DIR . "/src/bundle/standalone/events.php",
+			$this->output_dir . "/events.php",
+		);
+		$this->deploy(
+			APP_DIR . "/src/bundle/standalone/bootstrap.php",
+			$this->output_dir . "/bootstrap.php",
+		);
+		$this->deploy(
+			APP_DIR . "/src/bundle/standalone/functions.php",
+			$this->output_dir . "/functions.php",
+		);
 
 		$output = BOARD_VER . "\n";
 
+		Console::detail("build events.lsl2");
 		$prev_day = "";
 		$today = date("l F j");
-
 		foreach ($this->events as $event) {
-
 			$name = $event->name;
 			// make sure name is converted to utf8 if not already
 			if (!mb_detect_encoding((string) $name, "UTF-8", true)) {
@@ -80,10 +103,8 @@ class HYPEvents_Exporter
 			$this->output_dir . "/events.lsl2",
 			$output,
 		);
-		if ($result != false) {
-			Console::detail("exported " . $this->output_dir . "/events.lsl2");
-		} else {
-			Console::error("Error writing " . $this->output_dir . "/events.lsl2", 1, true);
+		if ($result === false) {
+			Console::error("Failed to write events.lsl2", 1, true);
 		}
 	}
 }

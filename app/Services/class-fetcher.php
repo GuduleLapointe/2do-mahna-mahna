@@ -141,11 +141,9 @@ class Fetcher
 
 	public function fetch()
 	{
-		Console::notice("Fetching opensimworld...");
 		$this->fetch_opensimworld();
 
 		foreach ($this->calendars as $slug => $calendar) {
-			Console::notice("Fetching $slug...");
 			if ($calendar["type"] == "ical") {
 				$this->fetch_ical($slug, $calendar);
 			} else {
@@ -245,8 +243,8 @@ class Fetcher
 
 	private function fetch_ical($slug, $calendar)
 	{
-		# get ical url with a timeout of 5 seconds
 		$url = $calendar["ical_url"];
+		Console::notice("Fetching $slug (parser-ical)...");
 
 		$command =
 			"php " .
@@ -285,6 +283,7 @@ class Fetcher
 	private function fetch_opensimworld()
 	{
 		$slug = "opensimworld";
+		Console::notice("Fetching $slug (parser-opensimworld)...");
 		$calendar = [
 			"slug" => $slug,
 			"grid_url" => null,

@@ -31,6 +31,7 @@ class iCal_Exporter
 
 	public function export()
 	{
+		Console::detail("build events.ics");
 		// $this->events is an array of Event objects
 		// Export to iCal format
 		$vcalendar = Vcalendar::factory();
@@ -75,10 +76,8 @@ class iCal_Exporter
 		$output = $vcalendar->createCalendar();
 
 		$result = file_put_contents($this->output_dir . "/events.ics", $output);
-		if ($result != false) {
-			Console::detail("exported " . $this->output_dir . "/events.ics");
-		} else {
-			Console::error("Error writing " . $this->output_dir . "/events.ics", 1, true);
+		if ($result === false) {
+			Console::error("Failed to write events.ics", 1, true);
 		}
 	}
 }
