@@ -131,6 +131,45 @@ For automatic LSL script update.
 - events.php should provide additional methods to advertise and serve script updates.
 - When the full app is implemented, this would happen through API endpoint(s)
 
+### Analytics / observability
+
+Long-deferred but increasingly useful. Two distinct angles, often
+confused:
+
+**Usage analytics — who consumes the server**
+- Number of distinct boards (UUID from board self-identification)
+- Number of distinct regions
+- Number of distinct grids
+- Request volume per API version (v2/v3) and per format (lsl2/png/json)
+- Error count and breakdown on the serving side (HTTP 4xx/5xx)
+
+  Where to read from: the `sendSimInfo` hook already pushes
+  board/region/grid info on each request — log it instead of discarding.
+  Webserver access logs for raw volume.
+
+  Privacy note: in OpenSim nothing is really anonymous (grid URIs,
+  region names, board UUIDs are all public on the wire), but
+  anonymising or aggregating before storage is cheap and worth doing —
+  no reason to keep more than we need.
+
+**Calendar source health — what we ingest**
+
+The aggregator pulls from the sources listed in `config/sources.csv`.
+We currently throw away everything we learn about them. Worth tracking:
+- Fetch success / failure per source, with last-seen-good timestamp
+- Number of events returned per fetch, and how it drifts over time
+- Frequency of changes (sources that never update vs. constantly churn)
+- Parse errors and format anomalies
+
+This is what tells us when a feed silently dies or a grid stops
+publishing — currently invisible.
+
+**Open questions (apply to both)**
+- Storage: flat log + periodic aggregation, SQLite, or defer to a real
+  DB once we move to Laravel?
+- Surface: admin-only dashboard, public stats page, or both? Some grid
+  admins may want their own slice (see `Grid filtering` below).
+
 ### Additional themes
 
 A few radically different themes beyond color variations. Implemented the same way as `dark` (overrides in `$themes[]` in `bootstrap.php`), but with more personality.
