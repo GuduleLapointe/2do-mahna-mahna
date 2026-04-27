@@ -2,11 +2,11 @@
 // Independant process to fetch ical data from url given as argument and output it
 // to stdout if a format that the parent script can use to fill an array of events
 
-if( ! defined('APP_DIR') ) {
-    define('APP_DIR', dirname(__DIR__, 2));
+if (php_sapi_name() !== 'cli') {
+    die('This script can only be run from the command line.' . PHP_EOL);
 }
 
-require_once APP_DIR . '/vendor/autoload.php';
+require_once dirname(__DIR__, 3) . '/bootstrap.php';
 require_once APP_DIR . '/lib/opensim-functions.php';
 
 use Symfony\Component\BrowserKit\HttpBrowser;

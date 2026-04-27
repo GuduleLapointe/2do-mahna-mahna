@@ -26,6 +26,8 @@ if (php_sapi_name() != "cli") {
 	die("This script can only be run from the command line." . PHP_EOL);
 }
 
+require_once dirname(__DIR__) . '/bootstrap.php';
+
 /**
  * Aggregator class
  *
@@ -36,6 +38,7 @@ class Aggregator
 	public $output_dir;
 	private static $quiet;
 	private static $verbose;
+	private static $force;
 	public static $script;
 
 	public function __construct()
@@ -64,6 +67,11 @@ class Aggregator
 		$cache_file = APP_DIR . "/cache/cache_fetcher.json";
 		$cache_time = 55 * 60; // 55 minutes, to accomodate for 1 hour cron job
 		$config_file = APP_DIR . "/config/aggregator.json";
+
+		if (self::$force && file_exists($cache_file)) {
+			unlink($cache_file);
+			Aggregator::notice("Cache cleared: $cache_file");
+		}
 
 		$cache_stale =
 			!file_exists($cache_file) ||
@@ -96,9 +104,6 @@ class Aggregator
 	 */
 	private static function includes()
 	{
-		// Composer dependencies
-		require_once APP_DIR . "/vendor/autoload.php";
-
 		// OpenSimulator functions
 		require_once APP_DIR . "/lib/opensim-functions.php";
 		// require_once 'vendor/magicoli/opensim-helpers/includes/opensim-helpers.php';
@@ -124,7 +129,6 @@ class Aggregator
 		define("AGGREGATOR_VERSION", "0.3.0");
 		define("BOARD_VER", "1.6.0");
 
-		define("APP_DIR", dirname(__DIR__));
 		self::admin_notice("APP_DIR: " . APP_DIR);
 
 		define("IS_AGGR", true);
@@ -196,7 +200,7 @@ class Aggregator
 
 		self::$script = basename($argv[0]);
 		$rest_index = null;
-		$opts = getopt("qvh", ["help", "version"], $rest_index);
+		$opts = getopt("qvhf", ["help", "version", "force", "clear-cache"], $rest_index);
 		$pos_args = array_slice($argv, $rest_index);
 
 		if (isset($opts["q"])) {
@@ -205,10 +209,14 @@ class Aggregator
 		if (isset($opts["v"])) {
 			self::$verbose = true;
 		}
+		if (isset($opts["f"]) || isset($opts["force"]) || isset($opts["clear-cache"])) {
+			self::$force = true;
+		}
 		if (isset($opts["h"]) || isset($opts["help"])) {
-			echo "Usage: php " . self::$script . " [-q] [-v] [output_dir]\n";
+			echo "Usage: php " . self::$script . " [-q] [-v] [-f] [output_dir]\n";
 			echo "  -q  quiet mode\n";
 			echo "  -v  verbose mode (overriden if -q is set)\n";
+			echo "  -f|--force|--clear-cache  clear cache before running\n";
 			echo "  -h|--help  show help and die\n";
 			echo "  --version  show version and die\n";
 			echo "If output dir is not set a temporary directory will be created\n";
@@ -281,6 +289,10 @@ class Aggregator
 	public static function quiet()
 	{
 		return self::$quiet;
+	}
+	public static function force()
+	{
+		return self::$force;
 	}
 	public static function verbose()
 	{
