@@ -1,6 +1,58 @@
 <?php
+use PHPUnit\Framework\TestCase;
 
-uses()->in(__DIR__);
+uses()
+	->beforeAll(function () {
+		testNotice("Set up test environment");
+		$project = basename(APP_DIR);
+		if (!defined("TEST_DIRECTORY")) {
+			define(
+				"TEST_DIRECTORY",
+				sys_get_temp_dir() . "/$project-" . uniqid(),
+			);
+		}
+		testNotice("Test directory: " . TEST_DIRECTORY);
+
+		if (!defined("TEST_DIRS")) {
+			define("TEST_DIRS", ["Data", "Build"]);
+		}
+		foreach (TEST_DIRS as $dir_type) {
+			$DIR_CONST = "TEST_" . strtoupper($dir_type) . "_DIR";
+			$folder = strtolower($dir_type);
+			$dir = TEST_DIRECTORY . "/$folder";
+			if (!defined($DIR_CONST)) {
+				define($DIR_CONST, $dir);
+			}
+			mkdir($dir, 0755, true);
+			// } else {
+			// 	testNotice(
+			// 		"TEST_DATA_DIR was already set outside prior lanching test environment" .
+			// 			PHP_EOL .
+			// 			"Aborting to prevent destroying external data",
+			// 	);
+			// 	die();
+			testDetail($dir);
+		}
+		testNotice("Testing environment ready" . PHP_EOL);
+	})
+	->beforeEach(function () use (&$describeSection) {
+		// $class = get_class($this);
+		// if (empty($describeSection) || $describeSection != $class) {
+		// 	$describeSection = $class;
+		// 	testNotice(PHP_EOL . "Class " . $describeSection);
+		// }
+		testDetail(testName($this->name()));
+		return $describeSection;
+	})
+	->afterEach(function () {
+		testDetail(testName($this->name()) . " (end processing)");
+	})
+	->afterAll(function () {
+		testNotice(PHP_EOL . "Clean test environment");
+		testDetail("Delete " . TEST_DIRECTORY);
+		exec("rm -rf " . escapeshellarg(TEST_DIRECTORY));
+	})
+	->in(__DIR__);
 
 class TestRegistry
 {
@@ -95,4 +147,34 @@ function expectValidHttpStatus(string $url)
 			PHP_EOL;
 	}
 	return expect($status)->toBeIn([200, 301, 302, 307, 308]);
+}
+
+function testName(string $string)
+{
+	$string = preg_replace("/__(.*)__(.*)__→_/", '\\2 → ', $string);
+	$string = preg_replace("/^__pest_evaluable_/", "", $string);
+	return preg_replace("/_/", " ", $string);
+}
+
+function testSection(string $string)
+{
+	$testName = testName($string);
+	return preg_match("/ →/", $testName)
+		? preg_replace("/ →./", "", testName($string))
+		: "";
+}
+
+function testNotice(string $string)
+{
+	if (empty($string)) {
+		return;
+	}
+	fwrite(STDERR, $string . PHP_EOL);
+}
+function testDetail(string $string)
+{
+	if (empty($string)) {
+		return;
+	}
+	testNotice("   $string");
 }

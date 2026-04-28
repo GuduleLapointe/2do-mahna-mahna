@@ -1,34 +1,40 @@
 <?php
-$appDir = dirname(__DIR__, 2);
 
-fwrite(STDERR, "\nRunning build (may take a moment)...\n");
-$buildTmp = sys_get_temp_dir() . '/2do-build-' . uniqid();
-mkdir($buildTmp, 0755, true);
-exec("php $appDir/dev/build.php $buildTmp 2>&1", $buildOut, $buildCode);
-register_shutdown_function(fn() => exec("rm -rf " . escapeshellarg($buildTmp)));
-
-describe("Build", function () use ($buildTmp, $buildCode) {
-	test("runs without error", function () use ($buildCode, $buildTmp) {
-		expect($buildCode)->toBe(0, "Build failed — check logs");
+describe("Build", function () {
+	test("execute dev/build.php", function () {
+		// TEST_BUILD_DIR = sys_get_temp_dir() . "/2do-build-" . uniqid();
+		// mkdir(TEST_BUILD_DIR, 0755, true);
+		exec(
+			"php " . APP_DIR . "/dev/build.php TEST_BUILD_DIR 2>&1",
+			$out,
+			$code,
+		);
+		// register_shutdown_function(fn() => exec("rm -rf " . escapeshellarg(TEST_BUILD_DIR)));
+		expect($code)->toBe(0, "Build failed — check logs");
 		passed("Build");
-		return $buildTmp;
 	});
 
-	test("index.html", fn(string $tmp) => expect("$tmp/index.html")->toBeFile())
-		->depends("runs without error");
+	test("index.html", function () {
+		expect(TEST_BUILD_DIR . "/index.html")->toBeFile();
+	})->depends("execute dev/build.php");
 
-	test("styles.min.css", fn(string $tmp) => expect("$tmp/styles.min.css")->toBeFile())
-		->depends("runs without error");
+	test("styles.min.css", function () {
+		expect(TEST_BUILD_DIR . "/styles.min.css")->toBeFile();
+	})->depends("execute dev/build.php");
 
-	test("script.min.js", fn(string $tmp) => expect("$tmp/script.min.js")->toBeFile())
-		->depends("runs without error");
+	test("script.min.js", function () {
+		expect(TEST_BUILD_DIR . "/script.min.js")->toBeFile();
+	})->depends("execute dev/build.php");
 
-	test("events.php", fn(string $tmp) => expect("$tmp/events.php")->toBeFile())
-		->depends("runs without error");
+	test("events.php", function () {
+		expect(TEST_BUILD_DIR . "/events.php")->toBeFile();
+	})->depends("execute dev/build.php");
 
-	test("bootstrap.php", fn(string $tmp) => expect("$tmp/bootstrap.php")->toBeFile())
-		->depends("runs without error");
+	test("bootstrap.php", function () {
+		expect(TEST_BUILD_DIR . "/bootstrap.php")->toBeFile();
+	})->depends("execute dev/build.php");
 
-	test("index.php", fn(string $tmp) => expect("$tmp/index.php")->toBeFile())
-		->depends("runs without error");
+	test("index.php", function () {
+		expect(TEST_BUILD_DIR . "/index.php")->toBeFile();
+	})->depends("execute dev/build.php");
 });
