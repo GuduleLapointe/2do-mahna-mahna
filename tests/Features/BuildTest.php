@@ -2,14 +2,11 @@
 
 describe("Build", function () {
 	test("execute dev/build.php", function () {
-		// TEST_BUILD_DIR = sys_get_temp_dir() . "/2do-build-" . uniqid();
-		// mkdir(TEST_BUILD_DIR, 0755, true);
 		exec(
-			"php " . APP_DIR . "/dev/build.php TEST_BUILD_DIR 2>&1",
+			"php " . APP_DIR . "/dev/build.php " . TEST_BUILD_DIR . " 2>&1",
 			$out,
 			$code,
 		);
-		// register_shutdown_function(fn() => exec("rm -rf " . escapeshellarg(TEST_BUILD_DIR)));
 		expect($code)->toBe(0, "Build failed — check logs");
 		passed("Build");
 	});

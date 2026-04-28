@@ -6,17 +6,13 @@
 
 describe("Aggregator", function () {
 	test("execute bin/aggregator.php", function () {
-		// TEST_DATA_DIR = sys_get_temp_dir() . "/2do-aggr-" . uniqid();
-		// mkdir(TEST_DATA_DIR, 0755, true);
 		exec(
 			"php " . APP_DIR . "/bin/aggregator.php " . TEST_DATA_DIR . " 2>&1",
 			$out,
 			$code,
 		);
-		// register_shutdown_function(fn() => exec("rm -rf " . escapeshellarg(" . TEST_DATA_DIR . ")));
 		expect($code)->toBe(0, "Aggregator failed — check logs");
 		passed("Aggregator");
-		return TEST_DATA_DIR;
 	});
 
 	test("events.json is valid JSON", function () {

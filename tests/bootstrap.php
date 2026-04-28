@@ -1,7 +1,7 @@
 <?php
 
 // Bootstrap file for PHPUnit tests
-echo "Bootstrapping tests...\n";
+testNotice("Setting test environment");
 
 require_once dirname(__DIR__) . "/bootstrap.php";
 $appDir = APP_DIR;
@@ -35,9 +35,9 @@ if (empty($_ENV["DEV_HOST"]) || empty($_ENV["DEV_PORT"])) {
 
 // Read Aggregator version from ../.version file
 if (file_exists(__DIR__ . "/../.version")) {
-	define("VERSION", trim(file_get_contents(__DIR__ . "/../.version")));
+	define("APP_VERSION", trim(file_get_contents(__DIR__ . "/../.version")));
 } else {
-	define("VERSION", "unknown");
+	define("APP_VERSION", "unknown");
 }
 
 // Read Board version from BROAD_VER
@@ -47,10 +47,35 @@ if (isset($_ENV["BOARD_VER"])) {
 	define("BOARD_VER", "unknown");
 }
 
-echo "Test environment set: " . TEST_URL . "\n";
-echo "Version: " . VERSION . "\n";
-echo "Board version: " . BOARD_VER . "\n";
+// Shared test directories — created once, deleted at process end
+define(
+	"TEST_DIRECTORY",
+	sys_get_temp_dir() . "/" . basename(APP_DIR) . "-" . uniqid(),
+);
 
-// We do not need to load the php files yet, we currently only test the API endpoints
-// require_once __DIR__ . "/../templates/events.php";
-// require_once __DIR__ . "/../includes/bootstrap.php";
+foreach (
+	["TEST_URL", "APP_VERSION", "BOARD_VER", "APP_DIR", "TEST_DIRECTORY"]
+	as $const
+) {
+	testDetail("$const: " . constant($const));
+}
+
+foreach (["Data", "Build"] as $dir_type) {
+	$DIR_CONST = "TEST_" . strtoupper($dir_type) . "_DIR";
+	$folder = strtolower($dir_type);
+	$dir = TEST_DIRECTORY . "/$folder";
+	if (!defined($DIR_CONST)) {
+		define($DIR_CONST, $dir);
+	}
+	mkdir($dir, 0755, true);
+	testDetail("$DIR_CONST: TEST_DIRECTORY/$folder");
+}
+
+register_shutdown_function(function () {
+	testNotice("Cleaning test environment");
+	testDetail("Delete " . TEST_DIRECTORY);
+
+	exec("rm -rf " . escapeshellarg(TEST_DIRECTORY));
+});
+
+echo "Testing environment ready";
