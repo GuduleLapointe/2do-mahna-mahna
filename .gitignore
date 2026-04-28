@@ -12,7 +12,7 @@ test/
 /bundle/
 src/bundle/standalone/css/*.min.css
 src/bundle/standalone/js/*.min.js
-composer.lock
+# composer.lock is committed to pin dependency versions across environments
 cache/*
 config/targets
 tmp/
