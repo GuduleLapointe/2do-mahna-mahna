@@ -44,10 +44,11 @@ File execution order within each suite is alphabetical. Name files so prerequisi
 
 `tests/Pest.php` configures global hooks via `uses()->in(__DIR__)`:
 
-- `beforeAll` / `afterAll` — log test class start/end (runs once per test file).
-- `beforeEach` / `afterEach` — log individual test start/end.
+- `beforeEach` — emits a "Starting testClass" notice when the test class changes. This is the correct place to detect class transitions: `beforeAll` fires before the class is instantiated, so `static::class` would still reflect the *previous* class rather than the current one.
+- `afterEach` — available for per-test teardown (currently unused).
+- `beforeAll` / `afterAll` — defined but intentionally left empty; kept as extension points.
 
-Use `uses()` in `Pest.php` for suite-wide hooks. `beforeAll`/`afterAll` are global and defined excusively in Pest.php through `use()`.
+Use `uses()` in `Pest.php` for suite-wide hooks. `beforeAll`/`afterAll` are global and defined exclusively in `Pest.php` through `uses()`.
 
 ## Dependency system
 

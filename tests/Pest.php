@@ -3,16 +3,24 @@ use PHPUnit\Framework\TestCase;
 
 uses()
 	->beforeAll(function () {
-		testNotice(PHP_EOL . "Start " . static::class); // phpcs:ignore PHPCompatibility.Classes.NewLateStaticBinding
+		// Fires before instantiating the next test.
+		// Do not use static::class here, as it would return the previous value
+		// instead of the expected current one.
 	})
 	->beforeEach(function () {
-		testDetail(testName($this->name()));
+		global $currentTestClass;
+		$testClass = static::class; // phpcs:ignore PHPCompatibility.Classes.NewLateStaticBinding
+		if ($currentTestClass != $testClass) {
+			$currentTestClass = $testClass;
+			testNotice(PHP_EOL . "Starting testClass $currentTestClass");
+		}
+		// testDetail(testName($this->name()));
 	})
 	->afterEach(function () {
-		testDetail(testName($this->name()) . " (end processing)");
+		// testDetail(testName($this->name()) . " (end processing)");
 	})
 	->afterAll(function () {
-		testNotice("End " . static::class); // phpcs:ignore PHPCompatibility.Classes.NewLateStaticBinding
+		// Fires after the tests are executed, before the report output
 	})
 	->in(__DIR__);
 
