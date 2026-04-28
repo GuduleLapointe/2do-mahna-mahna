@@ -28,7 +28,9 @@
 	"require-dev": {
 		"magicoli/php-bump-library": "^1.0",
 		"phpunit/phpunit": "^10.1",
-		"pestphp/pest": "^2.0"
+		"pestphp/pest": "^2.0",
+		"squizlabs/php_codesniffer": "^3.13",
+		"phpcompatibility/php-compatibility": "^9.3"
 	},
 	"scripts": {
 		"bump-version": "vendor/magicoli/php-bump-library/vendor/bin/robo --load-from=vendor/magicoli/php-bump-library/RoboFile.php bump:version"
