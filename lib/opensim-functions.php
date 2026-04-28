@@ -363,7 +363,7 @@ function opensim_user_alert($agentID, $message, $secureID = null)
 		$secureID = $avatarSession["secureID"];
 	}
 
-	$request = xmlrpc_encode_request("UserAlert", [
+	$request = xmlrpc_encode_request("UserAlert", [ // phpcs:ignore PHPCompatibility.FunctionUse.RemovedFunctions
 		[
 			"clientUUID" => $agentID,
 			"clientSessionID" => $sessionID,
@@ -391,7 +391,7 @@ function opensim_user_alert($agentID, $message, $secureID = null)
  */
 function oxXmlRequest($gatekeeper, $method, $request)
 {
-	$xml_request = xmlrpc_encode_request($method, [$request]);
+	$xml_request = xmlrpc_encode_request($method, [$request]); // phpcs:ignore PHPCompatibility.FunctionUse.RemovedFunctions
 
 	$context = stream_context_create([
 		"http" => [
@@ -446,7 +446,7 @@ function oxXmlRequest($gatekeeper, $method, $request)
 	if (empty($xml_array) || !is_array($xml_array)) {
 		return false;
 	}
-	if (xmlrpc_is_fault($xml_array)) {
+	if (xmlrpc_is_fault($xml_array)) { // phpcs:ignore PHPCompatibility.FunctionUse.RemovedFunctions
 		return false;
 	}
 	return $xml_array;
@@ -463,7 +463,7 @@ function osXmlResponse($success = true, $errorMessage = false, $data = false)
 			$array["data"] = $data;
 		}
 		array_filter($array);
-		$response_xml = xmlrpc_encode($array);
+		$response_xml = xmlrpc_encode($array); // phpcs:ignore PHPCompatibility.FunctionUse.RemovedFunctions
 		echo $response_xml;
 		return;
 	}
