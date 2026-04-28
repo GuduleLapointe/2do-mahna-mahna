@@ -4,11 +4,11 @@
         <testsuite name="Requirements">
             <directory>tests/Requirements</directory>
         </testsuite>
-        <testsuite name="Features">
-            <directory>tests/Features</directory>
-        </testsuite>
         <testsuite name="Units">
             <directory>tests/Units</directory>
+        </testsuite>
+        <testsuite name="Features">
+            <directory>tests/Features</directory>
         </testsuite>
     </testsuites>
 </phpunit>
