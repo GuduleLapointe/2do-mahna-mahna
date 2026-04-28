@@ -3,6 +3,9 @@
 // Bootstrap file for PHPUnit tests
 echo "Bootstrapping tests...\n";
 
+require_once dirname(__DIR__) . "/bootstrap.php";
+$appDir = APP_DIR;
+
 // Load environment variables
 $env_files = [
 	dirname(__DIR__) . "/.env", // project root

@@ -8,38 +8,27 @@ exec("php $appDir/dev/build.php $buildTmp 2>&1", $buildOut, $buildCode);
 register_shutdown_function(fn() => exec("rm -rf " . escapeshellarg($buildTmp)));
 
 describe("Build", function () use ($buildTmp, $buildCode) {
-	test("runs without error", function () use ($buildCode) {
+	test("runs without error", function () use ($buildCode, $buildTmp) {
 		expect($buildCode)->toBe(0, "Build failed — check logs");
 		passed("Build");
+		return $buildTmp;
 	});
 
-	test("index.html", function () use ($buildTmp) {
-		requires("Build");
-		expect("$buildTmp/index.html")->toBeFile();
-	});
+	test("index.html", fn(string $tmp) => expect("$tmp/index.html")->toBeFile())
+		->depends("runs without error");
 
-	test("styles.min.css", function () use ($buildTmp) {
-		requires("Build");
-		expect("$buildTmp/styles.min.css")->toBeFile();
-	});
+	test("styles.min.css", fn(string $tmp) => expect("$tmp/styles.min.css")->toBeFile())
+		->depends("runs without error");
 
-	test("script.min.js", function () use ($buildTmp) {
-		requires("Build");
-		expect("$buildTmp/script.min.js")->toBeFile();
-	});
+	test("script.min.js", fn(string $tmp) => expect("$tmp/script.min.js")->toBeFile())
+		->depends("runs without error");
 
-	test("events.php", function () use ($buildTmp) {
-		requires("Build");
-		expect("$buildTmp/events.php")->toBeFile();
-	});
+	test("events.php", fn(string $tmp) => expect("$tmp/events.php")->toBeFile())
+		->depends("runs without error");
 
-	test("bootstrap.php", function () use ($buildTmp) {
-		requires("Build");
-		expect("$buildTmp/bootstrap.php")->toBeFile();
-	});
+	test("bootstrap.php", fn(string $tmp) => expect("$tmp/bootstrap.php")->toBeFile())
+		->depends("runs without error");
 
-	test("index.php", function () use ($buildTmp) {
-		requires("Build");
-		expect("$buildTmp/index.php")->toBeFile();
-	});
+	test("index.php", fn(string $tmp) => expect("$tmp/index.php")->toBeFile())
+		->depends("runs without error");
 });
