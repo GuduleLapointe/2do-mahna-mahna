@@ -10,17 +10,14 @@ describe("Deploy", function () use ($appDir) {
 	});
 
 	test("dry-run completes without error", function () use ($appDir) {
-		requires("Build");
-		requires("Deploy targets");
+		requires("Build", "Deploy targets");
 		exec("$appDir/bin/deploy.sh -n -y 2>&1", $output, $code);
-		expect($code)->toBe(0, implode("\n", $output));
+		expect($code)->toBe(0, "Deploy dry-run failed");
 	});
 
 	test("dry-run with data completes without error", function () use ($appDir) {
-		requires("Build");
-		requires("Data");
-		requires("Deploy targets");
+		requires("Build", "Data", "Deploy targets");
 		exec("$appDir/bin/deploy.sh -n -y --with-data 2>&1", $output, $code);
-		expect($code)->toBe(0, implode("\n", $output));
+		expect($code)->toBe(0, "Deploy dry-run with data failed");
 	});
 });

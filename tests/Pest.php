@@ -15,7 +15,7 @@ class TestRegistry
 	{
 		foreach ($names as $name) {
 			if (empty(self::$passed[$name])) {
-				test()->skip("Requires '{$name}' to pass");
+				test()->markTestSkipped("Prerequisite not satisfied");
 			}
 		}
 	}
