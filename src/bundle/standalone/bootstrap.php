@@ -72,10 +72,11 @@ require_once __DIR__ . "/Config.php";
 
 // Inside a PHAR, __DIR__ is phar://... — use the real filesystem path instead
 $_pharPath = Phar::running(false);
+define("BUNDLE_DIR", $_pharPath ? dirname($_pharPath) : __DIR__);
 define("BASE_DIR", $_pharPath ? dirname($_pharPath) : dirname(__DIR__, 2));
 
 Config::load(
-	defaults: ['data_dir' => __DIR__],
+	defaults: ['data_dir' => BUNDLE_DIR],
 	jsonFile: BASE_DIR . "/config/config.json",
 	envFiles: [BASE_DIR . "/.env"],
 	withQueryParams: false,

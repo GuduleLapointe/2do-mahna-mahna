@@ -714,7 +714,7 @@ class Event
 						$y0,
 						self::$styles["separator"]["color"],
 					);
-					$imagePath = __DIR__ . "/" . self::$config["logo"];
+					$imagePath = (defined('BUNDLE_DIR') ? BUNDLE_DIR : __DIR__) . "/" . self::$config["logo"];
 					self::$canvas->addImageFromPath(
 						$imagePath,
 						$y0,
