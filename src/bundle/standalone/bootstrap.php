@@ -68,32 +68,24 @@ $themes = [
 ];
 
 require_once __DIR__ . "/functions.php";
+require_once __DIR__ . "/Config.php";
 
 define("BASE_DIR", dirname(__DIR__, 2));
-// debug_log("BASE_DIR: " . BASE_DIR . PHP_EOL);
 
-// Load environment variables
-if (file_exists(BASE_DIR . "/.env")) {
-	// debug_log("Loading .env file " . BASE_DIR . "/.env");
-	try {
-		$env = parse_ini_file(BASE_DIR . "/.env");
-		$_ENV = array_merge_recursive($_ENV, $env);
-	} catch (Exception $e) {
-		error_log("Failed to load .env file: " . $e->getMessage());
-	}
-}
+Config::load(
+	defaults: ['data_dir' => __DIR__],
+	jsonFile: BASE_DIR . "/config/config.json",
+	envFiles: [BASE_DIR . "/.env"],
+	withQueryParams: false,
+);
 
 $_ENV["BASE_URL"] =
 	($_SERVER["HTTPS"] === "On" ? "https" : "http") .
 	"://" .
 	$_SERVER["HTTP_HOST"];
-// debug_log("BASE_URL: " . $_ENV["BASE_URL"] . PHP_EOL);
 
 if (!defined("DATA_DIR")) {
-	define(
-		"DATA_DIR",
-		rtrim($_ENV["DATA_DIR"] ?? getenv("DATA_DIR") ?: __DIR__, "/"),
-	);
+	define("DATA_DIR", rtrim(Config::get('data_dir'), "/"));
 }
 if (!defined("EVENTS_JSON")) {
 	define("EVENTS_JSON", DATA_DIR . "/events.json");

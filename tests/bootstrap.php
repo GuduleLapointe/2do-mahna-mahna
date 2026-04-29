@@ -4,34 +4,22 @@
 testNotice("Setting test environment");
 
 require_once dirname(__DIR__) . "/bootstrap.php";
-$appDir = APP_DIR;
 
-// Load environment variables
-$env_files = [
-	dirname(__DIR__) . "/.env", // project root
-	__DIR__ . "/.env", // tests/.env
-];
+Config::load(
+	defaults: ['dev_scheme' => 'http'],
+	jsonFile: APP_DIR . "/config/config.json",
+	envFiles: [APP_DIR . "/.env", __DIR__ . "/.env"],
+);
 
-foreach ($env_files as $file) {
-	if (file_exists($file)) {
-		$env = parse_ini_file($file);
-		foreach ($env as $key => $value) {
-			$_ENV[$key] = $value;
-		}
-	}
-}
-
-if (empty($_ENV["DEV_HOST"]) || empty($_ENV["DEV_PORT"])) {
+$devHost = Config::get('dev_host');
+$devPort = Config::get('dev_port');
+if (empty($devHost) || empty($devPort)) {
 	error_log(
 		"Test environment not set, define DEV_HOST and DEV_PORT in tests/.env",
 	);
 	die(1);
-} else {
-	define(
-		"TEST_URL",
-		"{$_ENV["DEV_SCHEME"]}://{$_ENV["DEV_HOST"]}:{$_ENV["DEV_PORT"]}",
-	);
 }
+define("TEST_URL", Config::get('dev_scheme') . "://$devHost:$devPort");
 
 // Read Aggregator version from ../.version file
 if (file_exists(__DIR__ . "/../.version")) {

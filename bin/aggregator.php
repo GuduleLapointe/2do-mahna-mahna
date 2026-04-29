@@ -54,7 +54,13 @@ class Aggregator
 
 		$cache_file = APP_DIR . "/cache/cache_fetcher.json";
 		$cache_time = 55 * 60; // 55 minutes, to accommodate for 1-hour cron job
-		$config_file = APP_DIR . "/config/aggregator.json";
+		$config_file = APP_DIR . "/config/config.json";
+
+		Config::load(
+			defaults: ['dedup_cross_source' => true],
+			jsonFile: $config_file,
+			envFiles: [APP_DIR . "/.env"],
+		);
 
 		if (self::$force && file_exists($cache_file)) {
 			unlink($cache_file);

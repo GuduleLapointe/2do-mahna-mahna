@@ -11,3 +11,4 @@ if (!defined('APP_DIR')) {
 
 require_once APP_DIR . '/vendor/autoload.php';
 require_once APP_DIR . '/app/Helpers/Console.php';
+require_once APP_DIR . '/app/Shared/Config.php';

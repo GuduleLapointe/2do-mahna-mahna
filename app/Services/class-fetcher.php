@@ -179,14 +179,7 @@ class Fetcher
 		$this->mergeConsecutive();
 		$afterMerge = count($this->events);
 
-		$dedupCrossSource = true;
-		$jsonFile = APP_DIR . "/config/aggregator.json";
-		if (file_exists($jsonFile)) {
-			$cfg = json_decode(file_get_contents($jsonFile), true);
-			if (isset($cfg["dedup_cross_source"])) {
-				$dedupCrossSource = (bool) $cfg["dedup_cross_source"];
-			}
-		}
+		$dedupCrossSource = (bool) Config::get('dedup_cross_source', true);
 
 		if ($dedupCrossSource) {
 			$this->deduplicateSameSlot();

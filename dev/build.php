@@ -52,8 +52,9 @@ new HTML_Exporter($output_dir);
 
 // Copy PHP runtime files and static templates
 $static_files = [
-	"index.php"    => "src/bundle/standalone/index.php",
-	"events.php"   => "src/bundle/standalone/events.php",
+	"Config.php"    => "app/Shared/Config.php",
+	"index.php"     => "src/bundle/standalone/index.php",
+	"events.php"    => "src/bundle/standalone/events.php",
 	"bootstrap.php" => "src/bundle/standalone/bootstrap.php",
 	"functions.php" => "src/bundle/standalone/functions.php",
 ];
