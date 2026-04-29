@@ -4,13 +4,16 @@
  *
  * Routes clean API URLs to events.php with the appropriate parameters.
  *
- * GET /api/v3/events         → v3 CSV event list (canvas params forwarded)
- * GET /api/v3/events.png     → PNG board image
- * GET /api/v3/events.json    → full JSON event list
- * GET /api/v2/events         → legacy lsl2 plain-text format
- * GET /events.lsl2           → alias for /api/v2/events (backward compat)
- * GET /events.lsl3           → alias for /api/v2/events (backward compat)
- * GET /events.lsl            → 410 Gone (obsolete format)
+ * GET /api/v2/events              → legacy lsl2 plain-text format (frozen)
+ * GET /events.lsl2                → alias for /api/v2/events (backward compat)
+ * GET /events.lsl3                → alias for /api/v2/events (backward compat)
+ * GET /events.lsl                 → 410 Gone (obsolete format)
+ *
+ * GET /api/v3/events              → 501 Not Implemented (reserved for REST)
+ * GET /api/v3/events/lsl          → v3 CSV event list for LSL scripts
+ * GET /api/v3/events/json         → full JSON event list
+ * GET /api/v3/events/ics          → 501 Not Implemented (iCal, planned)
+ * GET /api/v3/events/board.png    → PNG board image
  */
 
 $scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? '/'), '/');
@@ -26,20 +29,32 @@ switch ($path) {
         break;
 
     case '/api/v3/events':
+        http_response_code(501);
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Not Implemented', 'message' => 'Use /api/v3/events/lsl, /api/v3/events/json or /api/v3/events/board.png']);
+        break;
+
+    case '/api/v3/events/lsl':
         unset($_GET['format']);
         $_GET['api'] = 'v3';
         require __DIR__ . '/events.php';
         break;
 
-    case '/api/v3/events.png':
+    case '/api/v3/events/json':
         unset($_GET['api']);
-        $_GET['format'] = 'png';
+        $_GET['format'] = 'json';
         require __DIR__ . '/events.php';
         break;
 
-    case '/api/v3/events.json':
+    case '/api/v3/events/ics':
+        http_response_code(501);
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Not Implemented', 'message' => 'iCal export via API is planned but not yet available']);
+        break;
+
+    case '/api/v3/events/board.png':
         unset($_GET['api']);
-        $_GET['format'] = 'json';
+        $_GET['format'] = 'png';
         require __DIR__ . '/events.php';
         break;
 
