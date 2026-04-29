@@ -45,6 +45,28 @@ if [ -z "$skip_deploy" ]; then
 	done < config/targets
 fi
 
+# ---- Confirm ----
+echo ""
+echo "This will DELETE and rebuild:"
+for folder in $PWD/data $PWD/bundle/standalone; do
+   	echo "- $folder:"
+        ls "$folder" 2>/dev/null || echo "(already empty)"
+    # (
+    #     ls "$folder" 2>/dev/null || echo "(already empty)"
+    # ) | sed "s/^/  → /"
+done
+if [ -z "$skip_deploy" ] && [ -f "$TMP.urls" ]; then
+	echo "- remotes:"
+    while IFS= read -r line; do
+        [ "$line" = "$DEV_BASE" ] && continue
+        echo "  → $line (remote deploy)"
+    done < "$TMP.urls"
+fi
+echo ""
+read -n1 -p "Proceed? [Y/n] " answer
+echo
+[[ "$answer" =~ ^[Nn]$ ]] && exit 0
+
 # ---- Rebuild ----
 echo "# delete current build and data"
 rm -rf data/* bundle/standalone/*
