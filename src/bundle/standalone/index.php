@@ -4,16 +4,22 @@
  *
  * Routes clean API URLs to events.php with the appropriate parameters.
  *
- * GET /api/v2/events              → legacy lsl2 plain-text format (frozen)
- * GET /events.lsl2                → alias for /api/v2/events (backward compat)
- * GET /events.lsl3                → alias for /api/v2/events (backward compat)
- * GET /events.lsl                 → 410 Gone (obsolete format)
- *
  * GET /api/v3/events              → 501 Not Implemented (reserved for REST)
  * GET /api/v3/events/lsl          → v3 CSV event list for LSL scripts
  * GET /api/v3/events/json         → full JSON event list
  * GET /api/v3/events/ics          → 501 Not Implemented (iCal, planned)
  * GET /api/v3/events/board.png    → PNG board image
+ *
+ * GET /api/v2/events              → legacy lsl2 plain-text format (frozen)
+ * GET /events.lsl2                → alias for /api/v2/events (backward compat)
+ * GET /events.lsl3                → alias for /api/v2/events (backward compat)
+ * GET /events.lsl                 → 410 Gone (obsolete format)
+ *
+ * Fallback routes (no URL rewriting — direct script access):
+ * GET /?api=v3                    → alias for /api/v3/events/lsl
+ * GET /?api=v3&format=png         → alias for /api/v3/events/board.png
+ * GET /events.php                 → alias for /api/v3/events/lsl
+ * GET /events.php?format=png      → alias for /api/v3/events/board.png
  */
 
 $scriptDir = rtrim(dirname($_SERVER["SCRIPT_NAME"] ?? "/"), "/");
@@ -26,7 +32,17 @@ $path = "/" . trim($requestPath, "/");
 switch ($path) {
 	case "/":
 	case "/index.php":
-		readfile(dirname($_SERVER["SCRIPT_FILENAME"]) . "/static.html");
+		if (($_GET["format"] ?? null) === "png") {
+			unset($_GET["api"]);
+			$_GET["format"] = "png";
+			require __DIR__ . "/events.php";
+		} elseif (($_GET["api"] ?? null) === "v3") {
+			unset($_GET["format"]);
+			$_GET["api"] = "v3";
+			require __DIR__ . "/events.php";
+		} else {
+			readfile(dirname($_SERVER["SCRIPT_FILENAME"]) . "/static.html");
+		}
 		break;
 
 	case "/api/v3/events":
@@ -40,8 +56,14 @@ switch ($path) {
 		break;
 
 	case "/api/v3/events/lsl":
-		unset($_GET["format"]);
-		$_GET["api"] = "v3";
+	case "/events.php":
+		if (($_GET["format"] ?? null) === "png") {
+			unset($_GET["api"]);
+			$_GET["format"] = "png";
+		} else {
+			unset($_GET["format"]);
+			$_GET["api"] = "v3";
+		}
 		require __DIR__ . "/events.php";
 		break;
 
@@ -66,7 +88,9 @@ switch ($path) {
 		require __DIR__ . "/events.php";
 		break;
 
+	// Support for legacy v2 API endpoints
 	case "/api/v2/events":
+	case "/api/v2/events/lsl":
 	case "/events.lsl2":
 	case "/events.lsl3":
 		unset($_GET["format"]);
@@ -74,10 +98,14 @@ switch ($path) {
 		require __DIR__ . "/events.php";
 		break;
 
+	// EOL v1 API endpoints
+	// Output error message formatted as a v1 events list
 	case "/events.lsl":
 		http_response_code(410);
 		header("Content-Type: text/plain; charset=utf-8");
-		echo "This endpoint is no longer supported. Please update your board script.\n";
+		// echo "This endpoint is no longer supported. Please update your board script.\n";
+		readfile(dirname($_SERVER["SCRIPT_FILENAME"]) . "/events.lsl");
+
 		break;
 
 	default:

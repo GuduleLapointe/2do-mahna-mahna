@@ -4,7 +4,7 @@ describe("v3 API", function () {
 		requires("Test URL");
 	});
 
-	$apiRoute = "/api/v3/events";
+	$apiRoute = "/api/v3/events/lsl";
 	test("endpoint", function () use ($apiRoute) {
 		$url = TEST_URL . $apiRoute;
 		expectValidHttpStatus($url);
@@ -79,19 +79,19 @@ describe("v3 API", function () {
 		}
 	})->depends("endpoint");
 
-	test("events.php?api=v3 mirrors $apiRoute", function ($response) {
-		$direct = file_get_contents(TEST_URL . "/events.php?api=v3");
-		expect($direct)->toBe(
+	test("/?api=v3 mirrors $apiRoute", function ($response) {
+		$fallback = file_get_contents(TEST_URL . "/?api=v3");
+		expect($fallback)->toBe(
 			$response,
-			"Direct v3 endpoint should return the same response",
+			"/?api=v3 fallback should return the same response",
 		);
 	})->depends("endpoint");
 
-	test("events.php defaults to v3 api", function ($response) {
-		$default = file_get_contents(TEST_URL . "/events.php");
-		expect($default)->toBe(
+	test("/events.php mirrors $apiRoute", function ($response) {
+		$direct = file_get_contents(TEST_URL . "/events.php");
+		expect($direct)->toBe(
 			$response,
-			"Default response should match api=v3",
+			"/events.php should return the same response as $apiRoute",
 		);
 	})->depends("endpoint");
 });

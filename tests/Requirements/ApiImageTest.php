@@ -4,7 +4,7 @@ describe("image API", function () {
 		requires("Test URL", "imagick");
 	});
 
-	$apiRoute = "/events.php?format=png";
+	$apiRoute = "/api/v3/events/board.png";
 	test("endpoint", function () use ($apiRoute) {
 		$url = TEST_URL . $apiRoute;
 		expectValidHttpStatus($url);
@@ -45,4 +45,20 @@ describe("image API", function () {
 			"Imagick should provide detailed image info",
 		);
 	})->depends("valid PNG image");
+
+	test("/?api=v3&format=png mirrors $apiRoute", function ($response) use ($apiRoute) {
+		$fallback = file_get_contents(TEST_URL . "/?api=v3&format=png");
+		expect($fallback)->toBe(
+			$response,
+			"/?api=v3&format=png fallback should return the same response",
+		);
+	})->depends("endpoint");
+
+	test("/events.php?format=png mirrors $apiRoute", function ($response) use ($apiRoute) {
+		$direct = file_get_contents(TEST_URL . "/events.php?format=png");
+		expect($direct)->toBe(
+			$response,
+			"/events.php?format=png should return the same response as $apiRoute",
+		);
+	})->depends("endpoint");
 });

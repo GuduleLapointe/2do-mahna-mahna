@@ -97,12 +97,19 @@ echo ""
 echo "## endpoint checks"
 while IFS= read -r index_url; do
     api_url="$(sed -E 's|(//[^/]+)/.*|\1|' <<< "$index_url")"
+    echo ""
+    echo "# ${api_url}/api/v3/events (expect 501)"
+    curl -sk -o /dev/null -w "%{http_code}" "${api_url}/api/v3/events" || true
+    echo ""
+
     for url in \
         "${index_url}" \
-        "${index_url}/?api=v2" \
-        "${index_url}/?api=v3" \
         "${api_url}/api/v2/events" \
-        "${api_url}/api/v3/events"
+        "${api_url}/api/v3/events/lsl" \
+        "${api_url}/api/v3/events/json" \
+        "${api_url}/events.lsl2" \
+        "${api_url}/?api=v3" \
+        "${api_url}/events.php"
     do
         echo ""
     	echo "# $url"
@@ -113,4 +120,8 @@ while IFS= read -r index_url; do
     echo "# ${api_url}/api/v3/events/board.png"
     curl -sk -o $TMP.board.png "${api_url}/api/v3/events/board.png" \
         && identify $TMP.board.png
+    echo ""
+    echo "# ${api_url}/?api=v3&format=png"
+    curl -sk -o $TMP.board2.png "${api_url}/?api=v3&format=png" \
+        && identify $TMP.board2.png
 done < $TMP.urls
