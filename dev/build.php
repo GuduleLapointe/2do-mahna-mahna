@@ -50,24 +50,34 @@ Console::notice("Output: " . Console::relpath($output_dir));
 
 new HTML_Exporter($output_dir);
 
-// Copy PHP runtime files and static templates
-$static_files = [
-	"Config.php"    => "app/Shared/Config.php",
-	"index.php"     => "src/bundle/standalone/index.php",
-	"events.php"    => "src/bundle/standalone/events.php",
-	"bootstrap.php" => "src/bundle/standalone/bootstrap.php",
-	"functions.php" => "src/bundle/standalone/functions.php",
-];
-foreach ($static_files as $dest_name => $src_rel) {
-	$src = APP_DIR . "/$src_rel";
-	$dest = "$output_dir/$dest_name";
-	Console::detail("copy $dest_name ← $src_rel");
-	if (copy($src, $dest)) {
-		touch($dest, filemtime($src));
-	} else {
-		Console::error("Failed to copy $dest_name", 1);
-	}
+// Compile PHP runtime into a single PHAR (index.php)
+$phar_file = $output_dir . '/index.php';
+$phar_tmp  = $output_dir . '/index.phar';
+foreach ([$phar_file, $phar_tmp] as $f) {
+	if (file_exists($f)) unlink($f);
 }
+try {
+	$phar = new Phar($phar_tmp);
+} catch (UnexpectedValueException $e) {
+	Console::error("Cannot create PHAR — set phar.readonly=0 in php.ini: " . $e->getMessage(), 1, true);
+}
+$phar->startBuffering();
+$phar_sources = [
+	'index.php'            => 'src/bundle/standalone/index.php',
+	'events.php'           => 'src/bundle/standalone/events.php',
+	'bootstrap.php'        => 'src/bundle/standalone/bootstrap.php',
+	'functions.php'        => 'src/bundle/standalone/functions.php',
+	'Config.php'           => 'app/Shared/Config.php',
+	'templates/events.lsl' => 'src/bundle/standalone/templates/events.lsl',
+];
+foreach ($phar_sources as $internal => $src_rel) {
+	Console::detail("pack $internal ← $src_rel");
+	$phar->addFile(APP_DIR . "/$src_rel", $internal);
+}
+$phar->setStub('<?php Phar::mapPhar(); require "phar://" . __FILE__ . "/index.php"; __HALT_COMPILER(); ?>');
+$phar->stopBuffering();
+rename($phar_tmp, $phar_file);
+Console::detail("write index.php ← PHAR (" . count($phar_sources) . " files)");
 
 $code = Console::exitCode();
 $dest = Console::relpath($output_dir);
