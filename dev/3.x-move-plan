@@ -46,7 +46,7 @@ src/board.css -> src/bundle/standalone/css/board.css
 src/boards.html -> src/bundle/standalone/templates/boards.html
 src/events.lsl -> src/bundle/standalone/templates/events.lsl
 src/events.php -> src/bundle/standalone/events.php
-src/index.html -> src/bundle/standalone/templates/calendar.html
+src/static.html -> src/bundle/standalone/templates/calendar.html
 src/index.php -> src/bundle/standalone/index.php
 src/script.js -> src/bundle/standalone/js/script.js
 src/script.min.js -> (delete)

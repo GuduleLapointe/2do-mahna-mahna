@@ -45,7 +45,7 @@ class HTML_Exporter
 		$jsDest = $this->output_dir . "/" . basename($source);
 		copy($jsSrc, $jsDest) && touch($jsDest, filemtime($jsSrc));
 
-		// Fill sections in index.html
+		// Fill sections in static.html
 
 		$Parsedown = new Parsedown();
 
@@ -68,7 +68,7 @@ class HTML_Exporter
 			LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD,
 		);
 
-		Console::detail("build index.html");
+		Console::detail("build static.html");
 		foreach ($md_files as $md_file) {
 			$sectionId = strtolower(basename($md_file, ".md"));
 			Console::detail("  inject $sectionId ← $md_file");
@@ -180,10 +180,10 @@ class HTML_Exporter
 			$page,
 		);
 
-		Console::detail("write index.html");
-		$result = file_put_contents($this->output_dir . "/index.html", $page);
+		Console::detail("write static.html");
+		$result = file_put_contents($this->output_dir . "/static.html", $page);
 		if ($result === false) {
-			Console::error("Failed to write index.html", 1, true);
+			Console::error("Failed to write static.html", 1, true);
 		}
 
 		// Copy images from assets/images/

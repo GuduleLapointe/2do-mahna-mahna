@@ -99,9 +99,8 @@ while IFS= read -r index_url; do
     api_url="$(sed -E 's|(//[^/]+)/.*|\1|' <<< "$index_url")"
     for url in \
         "${index_url}" \
-        "${index_url}/events.php" \
-        "${index_url}/events.php?api=v2" \
-        "${index_url}/events.php?api=v3" \
+        "${index_url}/?api=v2" \
+        "${index_url}/?api=v3" \
         "${api_url}/api/v2/events" \
         "${api_url}/api/v3/events"
     do
@@ -110,7 +109,8 @@ while IFS= read -r index_url; do
         curl -sk $url | head -5 ||true
     done
     echo ""
-    echo "# ${api_url}/api/v3/events.png"
-    curl -sk -o $TMP.board.png "${api_url}/api/v3/events.png" \
+    echo ""
+    echo "# ${api_url}/api/v3/events/board.png"
+    curl -sk -o $TMP.board.png "${api_url}/api/v3/events/board.png" \
         && identify $TMP.board.png
 done < $TMP.urls

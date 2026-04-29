@@ -11,8 +11,8 @@ describe("Build", function () {
 		passed("Build");
 	});
 
-	test("index.html", function () {
-		expect(TEST_BUILD_DIR . "/index.html")->toBeFile();
+	test("static.html", function () {
+		expect(TEST_BUILD_DIR . "/static.html")->toBeFile();
 	})->depends("execute dev/build.php");
 
 	test("styles.min.css", function () {

@@ -105,7 +105,7 @@ action).
   `includes/helpers.php` → `src/includes/`
 - Audit remaining files at repo root: anything used only by aggregator/
   refresh/build belongs in `app/` (or `lib/`/`bin/`), not `src/`
-- Create `src/templates/` and move into it: `src/index.html` → 
+- Create `src/templates/` and move into it: `src/static.html` → 
   `src/templates/calendar.html` (rename avoids confusion with the
   `index.php` front controller), `src/boards.html`, `src/events.lsl`
 

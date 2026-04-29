@@ -26,7 +26,7 @@ $path = "/" . trim($requestPath, "/");
 switch ($path) {
 	case "/":
 	case "/index.php":
-		readfile(dirname($_SERVER['SCRIPT_FILENAME']) . '/static.html');
+		readfile(dirname($_SERVER["SCRIPT_FILENAME"]) . "/static.html");
 		break;
 
 	case "/api/v3/events":

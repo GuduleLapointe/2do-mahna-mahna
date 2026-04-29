@@ -68,12 +68,11 @@ $themes = [
 ];
 
 require_once __DIR__ . "/functions.php";
-// Config.php is copied here by build.php; fall back to source in dev context
-require_once file_exists(__DIR__ . "/Config.php")
-    ? __DIR__ . "/Config.php"
-    : dirname(__DIR__, 2) . "/app/Shared/Config.php";
+require_once __DIR__ . "/Config.php";
 
-define("BASE_DIR", dirname(__DIR__, 2));
+// Inside a PHAR, __DIR__ is phar://... — use the real filesystem path instead
+$_pharPath = Phar::running(false);
+define("BASE_DIR", $_pharPath ? dirname($_pharPath) : dirname(__DIR__, 2));
 
 Config::load(
 	defaults: ['data_dir' => __DIR__],

@@ -80,7 +80,7 @@ composer install --no-dev
 | Extension | Required by | Notes |
 |-----------|-------------|-------|
 | **php-mbstring** | `export-html.php`, `export-hypevents.php`, `functions.php`, `events.php` | UTF-8 string handling |
-| **php-xml** / **php-dom** | `export-html.php` | DOM manipulation to build `index.html` |
+| **php-xml** / **php-dom** | `export-html.php` | DOM manipulation to build `static.html` |
 | **php-curl** | Symfony HTTP client (Composer) | Fetching remote calendars and web sources |
 | **php-imagick** | `events.php` (PNG board image) | Font rendering via system fontconfig; no TTF path needed |
 | **php-iconv** | `export-hypevents.php`, `events.php` | Character set conversion to ASCII |
