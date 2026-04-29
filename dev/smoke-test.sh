@@ -102,26 +102,31 @@ while IFS= read -r index_url; do
     curl -sk -o /dev/null -w "%{http_code}" "${api_url}/api/v3/events" || true
     echo ""
 
+	# Expect text output
     for url in \
         "${index_url}" \
         "${api_url}/api/v2/events" \
         "${api_url}/api/v3/events/lsl" \
         "${api_url}/api/v3/events/json" \
-        "${api_url}/events.lsl2" \
-        "${api_url}/?api=v3" \
-        "${api_url}/events.php"
+        "${index_url}/?api=v3" \
+        "${index_url}/events.php?api=v2" \
+        "${index_url}/events.lsl2"
     do
         echo ""
     	echo "# $url"
         curl -sk $url | head -5 ||true
+        # add line if $url ends with json
     done
-    echo ""
-    echo ""
-    echo "# ${api_url}/api/v3/events/board.png"
-    curl -sk -o $TMP.board.png "${api_url}/api/v3/events/board.png" \
-        && identify $TMP.board.png
-    echo ""
-    echo "# ${api_url}/?api=v3&format=png"
-    curl -sk -o $TMP.board2.png "${api_url}/?api=v3&format=png" \
-        && identify $TMP.board2.png
+
+	# Expect image output
+    for url in \
+        "${api_url}/api/v3/events/board.png" \
+        "${index_url}/?format=png" \
+        "${index_url}/events.php?format=png"
+    do
+        echo ""
+    	echo "# $url"
+     	curl -sk -o $TMP.board2.png "$url" \
+      	&& identify $TMP.board2.png
+    done
 done < $TMP.urls
