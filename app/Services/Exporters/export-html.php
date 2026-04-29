@@ -186,6 +186,15 @@ class HTML_Exporter
 			Console::error("Failed to write static.html", 1, true);
 		}
 
+		// Copy .htaccess
+		$htaccess = "src/bundle/standalone/htaccess";
+		if (file_exists($htaccess)) {
+			$dest = $this->output_dir . "/.htaccess";
+			Console::detail("copy .htaccess ← $htaccess");
+			copy(APP_DIR . "/$htaccess", $dest) &&
+				touch($dest, filemtime($htaccess));
+		}
+
 		// Copy images from assets/images/
 		$imageFiles = array_merge(
 			glob(APP_DIR . "/assets/images/banner*.png") ?: [],

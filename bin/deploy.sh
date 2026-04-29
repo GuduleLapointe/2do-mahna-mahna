@@ -50,7 +50,7 @@ fi
 
 echo "Sources:"
 echo "  $BUNDLE/"
-sources="$BUNDLE/"*
+sources="$BUNDLE/.htaccess $BUNDLE/"*
 [ "$with_data" ] && echo "  $DATA_DIR/" && sources="$sources $DATA_DIR/"*
 
 echo "Targets:"

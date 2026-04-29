@@ -25,7 +25,11 @@
 $scriptDir = rtrim(dirname($_SERVER["SCRIPT_NAME"] ?? "/"), "/");
 $requestPath = parse_url($_SERVER["REQUEST_URI"] ?? "/", PHP_URL_PATH);
 if ($scriptDir && str_starts_with($requestPath, $scriptDir)) {
-	$requestPath = substr($requestPath, strlen($scriptDir));
+	$strippedPath = substr($requestPath, strlen($scriptDir));
+	// Set $requestPath to stripped only if stripped does not start with /api/
+	if (!preg_match("~^/api/~", $strippedPath)) {
+		$requestPath = $strippedPath;
+	}
 }
 $path = "/" . trim($requestPath, "/");
 
@@ -103,12 +107,11 @@ switch ($path) {
 	case "/events.lsl":
 		http_response_code(410);
 		header("Content-Type: text/plain; charset=utf-8");
-		// echo "This endpoint is no longer supported. Please update your board script.\n";
-		readfile(dirname($_SERVER["SCRIPT_FILENAME"]) . "/events.lsl");
-
+		include __DIR__ . "/templates/events.lsl";
 		break;
 
 	default:
 		http_response_code(404);
+		include __DIR__ . "/templates/404.html";
 		break;
 }
