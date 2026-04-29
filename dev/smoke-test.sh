@@ -6,8 +6,15 @@
 
 set -euo pipefail
 
+PGM=$(basename "$0")
+TMP=$(mktemp -t "$PGM" || echo /tmp/$PGM.$$)
+
+trap 'rm -rf "$TMP"' EXIT
+echo "TMP $TMP $TMP.*"
+
 APP_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$APP_DIR"
+echo "APP_DIR $APP_DIR"
 
 skip_deploy=
 for arg in "$@"; do
@@ -20,18 +27,23 @@ done
 # shellcheck source=../tests/.env
 [[ -f "$APP_DIR/tests/.env" ]] && source "$APP_DIR/tests/.env"
 DEV_BASE="${DEV_SCHEME:-http}://${DEV_HOST:-localhost}:${DEV_PORT:-8000}"
+echo "DEV_BASE $DEV_BASE"
+echo $DEV_BASE > $TMP.urls
 
-# ---- Parse first target from config/targets ----
-REMOTE_TARGET=""
-while IFS= read -r line; do
-    [[ "$line" =~ ^[[:space:]]*[#;] || -z "${line// /}" ]] && continue
-    REMOTE_TARGET="$line"
-    break
-done < config/targets
-REMOTE_SSH_HOST="${REMOTE_TARGET%%:*}"
-REMOTE_PATH="$(sed 's|/$||' <<< "${REMOTE_TARGET#*:}")"
-REMOTE_WEB_PATH="$(sed 's|.*/www/||' <<< "$REMOTE_PATH")"
-REMOTE_BASE="https://${REMOTE_SSH_HOST}/${REMOTE_WEB_PATH}"
+# ---- Parse targets from config/targets ----
+if [ -z "$skip_deploy" ]; then
+	REMOTE_TARGET=""
+	while IFS= read -r line; do
+	    # [[ "$line" =~ ^[[:space:]]*[#;] || -z "${line// /}" ]] && continue
+	    REMOTE_TARGET="$line"
+		REMOTE_SSH_HOST="${REMOTE_TARGET%%:*}"
+		REMOTE_PATH="$(sed 's|/$||' <<< "${REMOTE_TARGET#*:}")"
+		REMOTE_WEB_PATH="$(sed 's|.*/www/||' <<< "$REMOTE_PATH")"
+		REMOTE_BASE="https://${REMOTE_SSH_HOST}/${REMOTE_WEB_PATH}"
+		echo "Remote: $REMOTE_BASE"
+		echo $REMOTE_BASE >> $TMP.urls
+	done < config/targets
+fi
 
 # ---- Rebuild ----
 echo "# delete current build and data"
@@ -59,19 +71,20 @@ if [ -z "$skip_deploy" ]; then
 fi
 
 # ---- URL smoke test ----
-check_url() {
-    local label="$1" url="$2"
-    echo ""
-    echo "# $label"
-    echo "  $url"
-    curl -sk "$url" | head -5
-}
-
 echo ""
-echo "# endpoint checks"
-check_url "dev bundle"    "${DEV_BASE}/"
-check_url "dev api v2"    "${DEV_BASE}/api/v2/events"
-check_url "dev api v3"    "${DEV_BASE}/api/v3/events"
-check_url "remote bundle" "${REMOTE_BASE}/"
-check_url "remote api v2" "https://${REMOTE_SSH_HOST}/api/v2/events"
-check_url "remote api v3" "https://${REMOTE_SSH_HOST}/api/v3/events"
+echo "## endpoint checks"
+while IFS= read -r index_url; do
+    api_url="$(sed -E 's|(//[^/]+)/.*|\1|' <<< "$index_url")"
+    for url in \
+        "${index_url}" \
+        "${index_url}/events.php" \
+        "${index_url}/events.php?api=v2" \
+        "${index_url}/events.php?api=v3" \
+        "${api_url}/api/v2/events" \
+        "${api_url}/api/v3/events"
+    do
+        echo ""
+    	echo "# $url"
+        curl -sk $url | head -5 ||true
+    done
+done < $TMP.urls
