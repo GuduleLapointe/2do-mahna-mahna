@@ -68,7 +68,10 @@ $themes = [
 ];
 
 require_once __DIR__ . "/functions.php";
-require_once __DIR__ . "/Config.php";
+// Config.php is copied here by build.php; fall back to source in dev context
+require_once file_exists(__DIR__ . "/Config.php")
+    ? __DIR__ . "/Config.php"
+    : dirname(__DIR__, 2) . "/app/Shared/Config.php";
 
 define("BASE_DIR", dirname(__DIR__, 2));
 

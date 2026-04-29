@@ -28,12 +28,7 @@ if (file_exists(__DIR__ . "/../.version")) {
 	define("APP_VERSION", "unknown");
 }
 
-// Read Board version from BROAD_VER
-if (isset($_ENV["BOARD_VER"])) {
-	define("BOARD_VER", $_ENV["BOARD_VER"]);
-} else {
-	define("BOARD_VER", "unknown");
-}
+define("BOARD_VER", Config::get('board_ver', 'unknown'));
 
 // Shared test directories — created once, deleted at process end
 define(
