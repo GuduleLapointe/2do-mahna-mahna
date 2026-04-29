@@ -109,4 +109,8 @@ while IFS= read -r index_url; do
     	echo "# $url"
         curl -sk $url | head -5 ||true
     done
+    echo ""
+    echo "# ${api_url}/api/v3/events.png"
+    curl -sk -o $TMP.board.png "${api_url}/api/v3/events.png" \
+        && identify $TMP.board.png
 done < $TMP.urls
