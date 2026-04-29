@@ -18,143 +18,9 @@ misleading and out of sync with each other and the API).
   (`X-2do-Api-Version`)
 - Tag both repos
 
-The build/refresh/deploy reorganization below is the last remaining task
-before cutting the release.
-
 ---
 
-### Build / refresh / deploy separation
-
-Today `dev/start-server.sh` and the cron entangle build, data refresh and
-deployment. Untangle them so each step has one job and a single owner.
-
-**Naming**: rename `bundles/standalone/` → `bundle/standalone/` as part of this work.
-Multiple distributable bundles are planned (standalone mini-site, LSL
-board script, future WordPress plugin), so `bundle/` is the shared root
-and each bundle gets its own subdirectory:
-
-```
-bundle/
-├── standalone/   ← current bundles/standalone/ (mini-site deployed to webroots)
-├── lsl-board/    ← current 2do-board project (submodule or subtree)
-└── wordpress/    ← future WordPress plugin
-```
-
-`bundle/` as a whole is gitignored. Each subdirectory has its own build
-command and deploy target.
-
-Data files (events.json, events.lsl*, events.ics) live in `data/`,
-**not** inside any bundle subdirectory. The aggregator writes only to
-`data/`; it never touches `bundle/standalone/` or any other bundle.
-The standalone site reads data from a configured `data/` path at runtime.
-Deploy rsync both `bundle/standalone/` and `data/` to their respective
-target locations. The LSL board fetches from the API directly — it does
-not get a local data copy.
-
-**2do-board integration**
-
-Currently `2do-board` lives as a sibling repo. As part of this
-reorganisation, move it under `bundle/lsl-board/`:
-- Option A: **git submodule** — keeps independent history and versioning,
-  clean for contributors who only work on one side.
-- Option B: **git subtree** — history merged, simpler for solo work,
-  harder to split back out.
-
-Either way, the LSL board's build step produces the distributable `.lsl`
-scripts into `bundle/lsl-board/`, documented and downloadable from the
-aggregator app.
-
-**Golden rules**
-- `src/` is the **only** place to edit. Everything that ends up on a deploy
-  target has its source under `src/`.
-- `bundles/standalone/` is **100% generated**, gitignored, safe to wipe at any moment. Standalone Sources are in `bundles/standalone/` (used only by the standalone app) or `app/Shared` (used by several modules, amongst main app, standalone and various scripts).
-  Never edit anything inside it. Never let runtime code read from outside
-  `bundles/standalone/`.
-- App-internal code (aggregator engine, refresh, build scripts) lives
-  outside `src/` (e.g. `app/`, `lib/`, `bin/`) — it must never need to be
-  shipped to a standalone deploy.
-- Test for placement: *« ce fichier doit-il exister sur un serveur de
-  déploiement standalone ? »* — yes → `src/`, no → `app/`/`lib/`/`bin/`.
-
-**Three steps, three commands**
-
-1. **build** (manual, during development) — `src/` → `bundle/standalone/`
-   - Minify `src/styles.css` → `bundle/standalone/styles.min.css`
-   - Minify `src/script.js` → `bundle/standalone/script.min.js`
-   - Process templates from `src/templates/` → `bundle/standalone/`
-     (inject static sections, leave live-data placeholders intact)
-   - Copy runtime PHP: `src/index.php`, `src/events.php` → `bundle/standalone/`
-   - Copy runtime includes: `src/includes/*.php` → `bundle/standalone/includes/`
-   - Copy static assets (`src/templates/events.lsl`, images, fonts, …)
-
-2. **refresh** (cron + on demand) — fetch upstream → `data/`
-   - Pull from configured event sources
-   - Generate `data/events.json`, `events.lsl*`, `events.ics`
-   - Never touches `bundle/standalone/` or any site code
-
-3. **deploy** (cron + on demand) — `bundle/` → target(s)
-   - rsync `bundle/standalone/` to the webroot
-   - rsync `data/` to the data path the site reads from
-   - No transformation, just transport
-
-Cron runs **refresh + deploy** only — never `build` (build is a developer
-action).
-
-**Source layout changes**
-- Move runtime includes into `src/`: `includes/bootstrap.php`,
-  `includes/helpers.php` → `src/includes/`
-- Audit remaining files at repo root: anything used only by aggregator/
-  refresh/build belongs in `app/` (or `lib/`/`bin/`), not `src/`
-- Create `src/templates/` and move into it: `src/static.html` → 
-  `src/templates/calendar.html` (rename avoids confusion with the
-  `index.php` front controller), `src/boards.html`, `src/events.lsl`
-
-**`/` route in `index.php`**
-- Use `include` of `calendar.html` rather than a redirect — user stays on
-  the root URL instead of being bounced to `/calendar.html`
-
-**Forward-looking (Laravel migration)**
-
-Note: Laravel's own `bundles/standalone/` is the webroot of the app itself (depends on
-`app/`, `config/`, `vendor/`, `storage/`) — it is **not** a standalone
-bundle. The current `bundles/standalone/` of this project plays a different role: a
-self-contained artifact meant to be deployed to third-party servers.
-
-Mapping when migrating:
-- Current `src/` (deployable runtime sources) → kept as-is at the repo
-  root, or moved under `resources/bundle/` if going full-Laravel
-  layout. Decision deferred to migration time. **Not** merged into
-  Laravel's `app/`.
-- Current `app/`/`lib/` (internal aggregator engine) → Laravel `app/`
-- Current `bundles/standalone/` (standalone bundle output) → `bundle/standalone/`,
-  generated by an artisan command (e.g. `php artisan aggregator:build`).
-  Entire `bundle/` is gitignored, same wipe-and-regen contract.
-- Refresh → scheduled jobs (`app/Console/Commands/`)
-- Deploy → unchanged (rsync `bundle/standalone/` to targets)
-
-**Composer autoload — keep the two universes strictly separate**
-
-Today `composer.json` declares `"autoload": { "classmap": ["src/"] }`.
-Acceptable while the project is single-universe, but a trap once Laravel
-is added: the app's autoloader would silently see every bundle class,
-allowing `new SomeBundleClass()` from `app/` and breaking the standalone
-contract by accident.
-
-At migration time:
-- Remove `src/` from the Composer autoload (the bundle PHP is loaded by
-  its own front controller from `bundle/`, not via Composer).
-- Laravel `app/` autoloads via its own PSR-4 mapping — independent.
-- If something genuinely needs to be shared between the bundle and the
-  app (rare, deliberate), put it in a dedicated `lib/` or `shared/`
-  directory with its own PSR-4 namespace, and autoload **that** from
-  Composer. Never `src/`.
-
-Rule of thumb: a class accessible from both `app/` and any bundle must
-live in neither — it lives in `lib/`/`shared/` or it doesn't exist.
-
----
-
-### Fetcher source-agnostic refactor + PHAR build
+### Fetcher source-agnostic refactor + aggregator PHAR
 
 These two tasks are linked: converting parsers from `shell_exec` subprocesses to PHP
 includes is a prerequisite for PHAR compilation.
@@ -174,13 +40,14 @@ source-specific logic baked in. The fetcher should be agnostic:
 `opensimworld` becomes a named parser that can be listed in `sources.csv` like any other
 source. Future parsers (including ports of legacy Python parsers) follow the same interface.
 
-**PHAR build**
+**Aggregator PHAR**
 
 Once parsers are includes (no subprocess calls), the aggregator can be compiled to a
 standalone PHAR:
 
-- Source: `src/bin/aggregator.php` (entry point) + all `app/` classes + `vendor/`
-- Output: `bin/aggregator` (executable PHAR, produced by the build script)
+- Logic: `app/Services/Aggregator.php` (used by both CLI and future web UI — no duplication)
+- CLI entry point: thin wrapper in `src/bin/aggregator.php` (or standard Laravel CLI path), compiled into the PHAR
+- Output: `bin/aggregator` (self-contained executable PHAR — installable standalone, same pattern as `bundle/standalone/index.php`)
 - Config files (`sources.csv`, `exclude.txt`, etc.) remain external, read from CWD or a
   configurable path — standard PHAR behaviour.
 - Goal: distributable single-file tool for anyone who wants just the aggregator, without
@@ -192,7 +59,7 @@ standalone PHAR:
 
 The LSL board notecard supports a set of configuration keys. Unknown keys now log a
 debug message (already implemented), but the full list of supported keys has never
-been audited against the old format documentation. Before the v2.0 release:
+been audited against the old format documentation. Before the v3.0 release:
 
 - Review all notecard keys from the legacy script (v1.x) and confirm each is handled
   or intentionally dropped in the new getConfig() parser.
@@ -210,8 +77,8 @@ on multi-face prims.
 
 ### Update server
 
-For automatic LSL script update. 
-- This is currently implemented through our own external "scrup" service. We can use the same architecture or make a simpler one if applicable. 
+For automatic LSL script update.
+- This is currently implemented through our own external "scrup" service. We can use the same architecture or make a simpler one if applicable.
 - events.php should provide additional methods to advertise and serve script updates.
 - When the full app is implemented, this would happen through API endpoint(s)
 
@@ -294,5 +161,23 @@ A proper web application (possibly Laravel) to replace the current aggregator + 
 - **Rich calendar views**: month / week / day, with filtering by category, grid, date range
 - **Event moderation**: review queue before publication
 - The existing aggregator feeds (iCal, JSON, LSL2, PNG) would remain as API outputs
+
+**Forward-looking (Laravel migration)**
+
+Mapping when migrating:
+- Current `app/` (internal aggregator engine) → Laravel `app/`
+- Current `lib/` (external libraries imported as is from other projects) →   `lib/` or  `contrib/` even if used only by Laravel
+- Current `bundle/standalone/` (standalone bundle output) → kept as-is, generated by
+  an artisan command (e.g. `php artisan aggregator:build`).
+- `bundle/` is tracked in git (already done — removed from .gitignore), same wipe-and-regen contract: no direct edit.
+- Refresh → scheduled jobs (`app/Console/Commands/`)
+- Deploy → unchanged (rsync `bundle/standalone/` to targets)
+
+**Composer autoload**
+
+`composer.json` already declares `"autoload": { "classmap": ["app/", "lib/"] }` — `src/`
+is not autoloaded (bundle PHP loads via its own front controller). At migration time:
+- Laravel `app/` autoloads via its own PSR-4 mapping — independent.
+- Shared code between bundle and app stays in `app/Shared/`. Never `src/`.
 
 This is a significant undertaking and depends on having more time than the current series of fixes.
