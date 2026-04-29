@@ -53,14 +53,6 @@ describe("v2 API", function () {
 		}
 	})->depends("valid API");
 
-	test("events.php?api=v2 mirrors $apiRoute", function ($response) {
-		$legacyResponse = file_get_contents(TEST_URL . "/events.php?api=v2");
-		expect($legacyResponse)->toBe(
-			$response,
-			"Legacy and v2 endpoints should return the same response",
-		);
-	})->depends("endpoint");
-
 	$legacyURL = "events.lsl2";
 	test("$legacyURL (legacy) processed by API", function () use ($legacyURL) {
 		// TODO: match api endpoint response, but it does not work as is

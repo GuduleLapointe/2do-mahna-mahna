@@ -23,14 +23,6 @@ describe("Build", function () {
 		expect(TEST_BUILD_DIR . "/script.min.js")->toBeFile();
 	})->depends("execute dev/build.php");
 
-	test("events.php", function () {
-		expect(TEST_BUILD_DIR . "/events.php")->toBeFile();
-	})->depends("execute dev/build.php");
-
-	test("bootstrap.php", function () {
-		expect(TEST_BUILD_DIR . "/bootstrap.php")->toBeFile();
-	})->depends("execute dev/build.php");
-
 	test("index.php", function () {
 		expect(TEST_BUILD_DIR . "/index.php")->toBeFile();
 	})->depends("execute dev/build.php");

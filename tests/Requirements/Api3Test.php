@@ -87,7 +87,7 @@ describe("v3 API", function () {
 		);
 	})->depends("endpoint");
 
-	test("/events.php mirrors $apiRoute", function ($response) {
+	test("/events.php mirrors $apiRoute", function ($response) use ($apiRoute) {
 		$direct = file_get_contents(TEST_URL . "/events.php");
 		expect($direct)->toBe(
 			$response,

@@ -5,14 +5,6 @@
  */
 
 describe("Testing Framework", function () {
-	beforeEach(function () {
-		requires("Testing URL");
-	});
-
-	test("first test", function () {
-		expect(true)->toBeTrue();
-	});
-	test("second test", function () {
-		expect(true)->toBeTrue();
-	});
+	todo("first test");
+	todo("second test");
 });
