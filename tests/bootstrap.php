@@ -60,7 +60,7 @@ foreach (
 	testDetail("$const: " . constant($const));
 }
 
-foreach (["Data", "Build"] as $dir_type) {
+foreach (["Build", "Data", "Config"] as $dir_type) {
 	$DIR_CONST = "TEST_" . strtoupper($dir_type) . "_DIR";
 	$folder = strtolower($dir_type);
 	$dir = TEST_DIRECTORY . "/$folder";
