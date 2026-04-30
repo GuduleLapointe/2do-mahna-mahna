@@ -6,6 +6,16 @@ Ideas and planned improvements, roughly in order of priority. Not all of these w
 
 ## Near term
 
+### LSL board: invalid bannerImageURL crashes the script
+
+Setting an invalid or unreachable URL for `bannerImageURL` causes the script to crash.
+- Validate the URL format before applying it (basic check, not a full HTTP request)
+- Fall back to the default image on failure
+- Check whether a texture UUID is also accepted as an alternative to a URL
+  (`osSetDynamicTextureURLBlendFace` vs `llSetTexture`)
+
+---
+
 ### Version 3.0 release
 
 Both projects bump to **3.x** to align with the API v3 that ships with
