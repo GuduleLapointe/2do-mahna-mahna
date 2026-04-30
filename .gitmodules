@@ -7,3 +7,6 @@
 [submodule "src/bundle/lsl-board"]
 	path = src/bundle/lsl-board
 	url = https://github.com/GuduleLapointe/2do-board
+[submodule "lib/scrup"]
+	path = lib/scrup
+	url = git@github.com:GuduleLapointe/scrup.git

@@ -126,7 +126,7 @@ class Event
 	{
 		header("Content-Type: text/plain; charset=utf-8");
 		$tz = new DateTimeZone(SLT_TIMEZONE);
-		echo EVENTS_VERSION . "\n";
+		echo LSL_BOARD_VERSION . "\n";
 		$i = 0;
 		$limit = self::$config["limit"];
 		foreach (self::$events as $event) {

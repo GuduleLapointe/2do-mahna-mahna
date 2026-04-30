@@ -37,7 +37,7 @@ class HYPEvents_Exporter
 			$this->output_dir . "/events.lsl",
 		);
 
-		$output = APP_VERSION . "\n";
+		$output = LSL_BOARD_VERSION . "\n";
 
 		Console::detail("build events.lsl2");
 		$prev_day = "";

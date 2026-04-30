@@ -76,6 +76,8 @@ define("BUNDLE_DIR", $_pharPath ? dirname($_pharPath) : __DIR__);
 define("BASE_DIR", $_pharPath ? dirname($_pharPath) : dirname(__DIR__, 2));
 define("EVENTS_VERSION", "3.0.0");
 define("API_VERSION", "v3");
+// Latest known LSL board version — hardcoded until scrup integration
+define("LSL_BOARD_VERSION", "3.0.1");
 
 Config::load(
 	defaults: ["data_dir" => BUNDLE_DIR],
