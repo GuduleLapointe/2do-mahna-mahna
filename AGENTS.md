@@ -50,8 +50,8 @@ If the user explicitly requested a change, that request is the confirmation.
 
 ## Git
 
-- Never sign commits. Never add co-authorship lines. You are a coding tool, not an author.
+- Always read the actual diff (staged and unstaged) before committing: , derive the message from it.
+- Never sign commits. Never add co-authorship lines. You are a coding assistant, not an author.
 - Follow the commit message format in [DEVELOPERS.md](DEVELOPERS.md).
 - Do NOT push. Do not suggest pushing. Pushing is the user's responsibility.
-- Before committing: read the actual diff, derive the message from it.
 - Never skip hooks (`--no-verify`).

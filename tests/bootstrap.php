@@ -21,15 +21,6 @@ if (empty($devHost) || empty($devPort)) {
 }
 define("TEST_URL", Config::get('dev_scheme') . "://$devHost:$devPort");
 
-// Read Aggregator version from ../.version file
-if (file_exists(__DIR__ . "/../.version")) {
-	define("APP_VERSION", trim(file_get_contents(__DIR__ . "/../.version")));
-} else {
-	define("APP_VERSION", "unknown");
-}
-
-define("BOARD_VER", Config::get('board_ver', 'unknown'));
-
 // Shared test directories — created once, deleted at process end
 define(
 	"TEST_DIRECTORY",
@@ -37,7 +28,7 @@ define(
 );
 
 foreach (
-	["TEST_URL", "APP_VERSION", "BOARD_VER", "APP_DIR", "TEST_DIRECTORY"]
+	["TEST_URL", "APP_VERSION", "APP_DIR", "TEST_DIRECTORY"]
 	as $const
 ) {
 	testDetail("$const: " . constant($const));

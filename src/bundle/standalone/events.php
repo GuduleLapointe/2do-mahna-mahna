@@ -39,8 +39,6 @@ use Imagick, ImagickPixel, ImagickDraw;
 // ini_set("display_errors", 1); # DEBUG
 // ini_set("display_startup_errors", 1); # DEBUG
 // error_reporting(E_ALL); # DEBUG
-define("BOARD_VER", "3.0.0");
-define("SLT_TIMEZONE", "America/Los_Angeles");
 
 class Event
 {
@@ -61,6 +59,8 @@ class Event
 			return;
 		}
 		require_once __DIR__ . "/bootstrap.php";
+
+		define("SLT_TIMEZONE", "America/Los_Angeles");
 
 		self::$config = $config ?? [];
 		if (empty(self::$config)) {
@@ -99,19 +99,19 @@ class Event
 	private function output(): void
 	{
 		$format = self::$config["format"] ?? null;
-		$api = self::$config["api"] ?? null;
+		$output_api = self::$config["api"] ?? null;
 
-		header("X-2do-Server-Version: " . BOARD_VER);
-		header(
-			"X-2do-Api-Version: " .
-				($format === "lsl2" || $api === "v2" ? "v2" : "v3"),
-		);
+		header("X-2do-api-version: " . API_VERSION);
+		header("X-2do-events-version: " . EVENTS_VERSION);
+		if (!empty($output_api)) {
+			header("X-2do-output-api: " . $output_api);
+		}
 
 		if ($format === "png") {
 			Event::outputBoardImage();
 		} elseif ($format === "json") {
 			Event::output_json();
-		} elseif ($format === "lsl2" || $api === "v2") {
+		} elseif ($format === "lsl2" || $output_api === "v2") {
 			Event::output_lsl2();
 		} else {
 			// Default: api=v3
@@ -126,7 +126,7 @@ class Event
 	{
 		header("Content-Type: text/plain; charset=utf-8");
 		$tz = new DateTimeZone(SLT_TIMEZONE);
-		echo BOARD_VER . "\n";
+		echo EVENTS_VERSION . "\n";
 		$i = 0;
 		$limit = self::$config["limit"];
 		foreach (self::$events as $event) {
@@ -714,7 +714,10 @@ class Event
 						$y0,
 						self::$styles["separator"]["color"],
 					);
-					$imagePath = (defined('BUNDLE_DIR') ? BUNDLE_DIR : __DIR__) . "/" . self::$config["logo"];
+					$imagePath =
+						(defined("BUNDLE_DIR") ? BUNDLE_DIR : __DIR__) .
+						"/" .
+						self::$config["logo"];
 					self::$canvas->addImageFromPath(
 						$imagePath,
 						$y0,

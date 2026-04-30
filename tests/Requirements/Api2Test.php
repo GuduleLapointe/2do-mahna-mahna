@@ -15,7 +15,7 @@ describe("v2 API", function () {
 	});
 
 	$versionRegexp =
-		"/" . (defined("BOARD_VER") ? BOARD_VER : "[0-9]+\.[0-9]+") . "/";
+		"/" . (defined("APP_VERSION") ? APP_VERSION : "[0-9]+\.[0-9]+") . "/";
 	test("valid API", function ($response) use ($versionRegexp) {
 		expect($response)->toMatch(
 			$versionRegexp,

@@ -35,7 +35,6 @@ File execution order within each suite is alphabetical. Name files so prerequisi
 | `APP_DIR` | Project root (from `bootstrap.php`) |
 | `TEST_URL` | Dev server URL (from `tests/.env`) |
 | `APP_VERSION` | From `.version` file |
-| `BOARD_VER` | From `tests/.env` |
 | `TEST_DIRECTORY` | Temporary directory for this test run |
 | `TEST_DATA_DIR` | `TEST_DIRECTORY/data` — aggregator output |
 | `TEST_BUILD_DIR` | `TEST_DIRECTORY/build` — build output |

@@ -98,10 +98,23 @@ Optional additional context.
 - Omit details for trivial single-change commits
 - Prefix with `(untested)` when the change has not been verified yet; reword after a successful test
 
-### Rules
-- Never push. Pushing is the project owner's responsibility.
-- Never sign commits, never add co-authorship lines.
-- Never skip hooks (`--no-verify`).
+### Version releases
+
+```
+v1.2.3 Main change if applicable
+- new ...
+- new ...
+- fix ...
+- update ...
+```
+
+- **subject** first line begins exactly with "v" + the version number to allow automated workflows and maintenance scripts. An option description of the main change might be added if relevant
+- **details** a list of the main changes since the previous version release commit
+- create a version release only when the version is fully tested and approved: bumping the version number in files does not mean the version must be released yet
+- Be concise, full explanation can be found in git history
+- Omit small patches and fixes, focus on essential features
+- Make sure to update all relevant files (.version, README.md, composer.json... ) and update CHANGELOG.md with the exact same description
+- after commit, add a tag with "v1.2.3" (version number) as tag name and the exact same message as commit
 
 ---
 

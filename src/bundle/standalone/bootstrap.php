@@ -74,9 +74,11 @@ require_once __DIR__ . "/Config.php";
 $_pharPath = Phar::running(false);
 define("BUNDLE_DIR", $_pharPath ? dirname($_pharPath) : __DIR__);
 define("BASE_DIR", $_pharPath ? dirname($_pharPath) : dirname(__DIR__, 2));
+define("EVENTS_VERSION", "3.0.0");
+define("API_VERSION", "v3");
 
 Config::load(
-	defaults: ['data_dir' => BUNDLE_DIR],
+	defaults: ["data_dir" => BUNDLE_DIR],
 	jsonFile: BASE_DIR . "/config/config.json",
 	envFiles: [BASE_DIR . "/.env"],
 	withQueryParams: false,
@@ -88,7 +90,7 @@ $_ENV["BASE_URL"] =
 	$_SERVER["HTTP_HOST"];
 
 if (!defined("DATA_DIR")) {
-	define("DATA_DIR", rtrim(Config::get('data_dir'), "/"));
+	define("DATA_DIR", rtrim(Config::get("data_dir"), "/"));
 }
 if (!defined("EVENTS_JSON")) {
 	define("EVENTS_JSON", DATA_DIR . "/events.json");

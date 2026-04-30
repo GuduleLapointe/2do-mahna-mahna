@@ -118,8 +118,6 @@ class Aggregator
 	 */
 	private static function constants()
 	{
-		define("AGGREGATOR_VERSION", "3.0.0");
-		define("BOARD_VER", "3.0.0");
 
 		Console::verbose("APP_DIR: " . APP_DIR);
 

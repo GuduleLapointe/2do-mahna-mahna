@@ -21,7 +21,7 @@
 * events.php: URL parameters aligned with LSL Configuration notecard names:
   textureWidth, textureHeight, bannerHeight, lineHeight, cellPadding,
   mainFontName, mainFontSize, hourFontName, hourFontSize
-* events.php: anticipates 2do-board 1.6.0 (BOARD_VER updated)
+* events.php: anticipates 2do-board 1.6.0
 * Font detection: Roboto, SF (macOS), Arial (Windows/macOS), DejaVu (Linux)
 * Widow fix: day headers never appear without at least one event below them
 * dev/start-server.sh: Symfony CLI dev server with fswatch auto-sync
