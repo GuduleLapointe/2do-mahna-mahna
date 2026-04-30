@@ -1,7 +1,7 @@
 # 2DO Aggregator
 
-![Version 0.3.0](https://badgen.net/badge/Version/0.3.0/FFaa00)
-![Stable 0.3.0](https://badgen.net/badge/0.3.0/Stable/00aa00)
+![Version 3.0.0](https://badgen.net/badge/Version/3.0.0/FFaa00)
+![Stable 3.0.0](https://badgen.net/badge/3.0.0/Stable/00aa00)
 ![Requires PHP 8.2](https://badgen.net/badge/PHP/8.2/7884bf)
 ![License AGPLv3](https://badgen.net/badge/License/AGPLv3/552b55)
 

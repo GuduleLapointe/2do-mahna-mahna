@@ -39,7 +39,7 @@ use Imagick, ImagickPixel, ImagickDraw;
 // ini_set("display_errors", 1); # DEBUG
 // ini_set("display_startup_errors", 1); # DEBUG
 // error_reporting(E_ALL); # DEBUG
-define("BOARD_VER", "1.6.0");
+define("BOARD_VER", "3.0.0");
 define("SLT_TIMEZONE", "America/Los_Angeles");
 
 class Event
