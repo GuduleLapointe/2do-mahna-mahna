@@ -82,6 +82,9 @@ $phar_sources = [
 	"Scrup.php" => "app/Shared/Scrup.php",
 	"templates/events.lsl" => "src/bundle/standalone/templates/events.lsl",
 	"templates/404.html" => "src/bundle/standalone/templates/404.html",
+	"scrup/scrup.php" => "lib/scrup/scrup.php",
+	"scrup/functions.php" => "lib/scrup/functions.php",
+	"scrup/sqlite.php" => "lib/scrup/sqlite.php",
 ];
 foreach ($phar_sources as $internal => $src_rel) {
 	Console::detail("pack $internal ← $src_rel");
@@ -107,7 +110,12 @@ foreach (new DirectoryIterator($scrup_src) as $f) {
 	}
 	if ($f->isFile() && $f->getExtension() === "php") {
 		$dst = $scrup_dest . "/" . $f->getFilename();
-		Console::detail("copy scrup/" . $f->getFilename() . " ← lib/scrup/" . $f->getFilename());
+		Console::detail(
+			"copy scrup/" .
+				$f->getFilename() .
+				" ← lib/scrup/" .
+				$f->getFilename(),
+		);
 		copy($f->getPathname(), $dst) && touch($dst, $f->getMTime());
 	}
 }

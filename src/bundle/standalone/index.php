@@ -10,7 +10,7 @@
  * GET /api/v3/events/ics          → 501 Not Implemented (iCal, planned)
  * GET /api/v3/events/board.png    → PNG board image
  *
- * GET  /api/v3/scrup/version           → latest registered version for a script
+ * GET  /api/v3/scrup/get-version        → latest registered version for a script
  * POST /api/v3/scrup/register/server   → register a scrup server
  * POST /api/v3/scrup/register/script   → register a script version
  * POST /api/v3/scrup/register/client   → register a client for update delivery
@@ -97,7 +97,7 @@ switch ($path) {
 		require __DIR__ . "/events.php";
 		break;
 
-	case "/api/v3/scrup/version":
+	case "/api/v3/scrup/get-version":
 		$_REQUEST["action"] = "get-version";
 		require __DIR__ . "/scrup/scrup.php";
 		break;

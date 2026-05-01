@@ -34,7 +34,7 @@ function fetch_lsl_board_version(
 			return $cached;
 		}
 	}
-	$url = SCRUP_URL . "/version?name=2DO+board";
+	$url = SCRUP_URL . "/get-version?name=2DO+board";
 	$ctx = stream_context_create(["http" => ["timeout" => 3]]);
 	$version = @file_get_contents($url, false, $ctx);
 	if ($version && preg_match("/^\d+\.\d+/", trim($version))) {

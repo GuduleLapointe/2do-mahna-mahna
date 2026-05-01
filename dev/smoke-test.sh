@@ -108,10 +108,13 @@ while IFS= read -r index_url; do
         "${api_url}/api/v2/events" \
         "${api_url}/api/v3/events/lsl" \
         "${api_url}/api/v3/events/json" \
+        "${api_url}/api/v3/scrup/get-version?type=scrup" \
+        "${api_url}/api/v3/scrup/get-version?name=2DO+board" \
         "${index_url}/?api=v3" \
         "${index_url}/events.php?api=v2" \
         "${index_url}/events.lsl2" \
         "${index_url}/scrup/scrup.php" \
+        "${api_url}/api/v3/scrup/get-version" \
         "${index_url}/scrup/scrup.php?action=get-version&name=2DO+board"
     do
         echo ""
