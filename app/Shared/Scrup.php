@@ -10,7 +10,7 @@
 if (!defined("SCRUP_URL")) {
 	define(
 		"SCRUP_URL",
-		getenv("SCRUP_URL") ?: "https://speculoos.world/scrup/scrup.php",
+		getenv("SCRUP_URL") ?: "https://2do.directory/api/v3/scrup",
 	);
 }
 
@@ -34,7 +34,7 @@ function fetch_lsl_board_version(
 			return $cached;
 		}
 	}
-	$url = SCRUP_URL . "?action=get-version&name=2DO+board";
+	$url = SCRUP_URL . "/version?name=2DO+board";
 	$ctx = stream_context_create(["http" => ["timeout" => 3]]);
 	$version = @file_get_contents($url, false, $ctx);
 	if ($version && preg_match("/^\d+\.\d+/", trim($version))) {

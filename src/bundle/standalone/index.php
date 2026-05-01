@@ -10,6 +10,11 @@
  * GET /api/v3/events/ics          → 501 Not Implemented (iCal, planned)
  * GET /api/v3/events/board.png    → PNG board image
  *
+ * GET  /api/v3/scrup/version           → latest registered version for a script
+ * POST /api/v3/scrup/register/server   → register a scrup server
+ * POST /api/v3/scrup/register/script   → register a script version
+ * POST /api/v3/scrup/register/client   → register a client for update delivery
+ *
  * GET /api/v2/events              → legacy lsl2 plain-text format (frozen)
  * GET /events.lsl2                → alias for /api/v2/events (backward compat)
  * GET /events.lsl3                → alias for /api/v2/events (backward compat)
@@ -90,6 +95,29 @@ switch ($path) {
 		unset($_GET["api"]);
 		$_GET["format"] = "png";
 		require __DIR__ . "/events.php";
+		break;
+
+	case "/api/v3/scrup/version":
+		$_REQUEST["action"] = "get-version";
+		require __DIR__ . "/scrup/scrup.php";
+		break;
+
+	case "/api/v3/scrup/register/server":
+		$_POST["action"] = "register";
+		$_POST["type"] = "server";
+		require __DIR__ . "/scrup/scrup.php";
+		break;
+
+	case "/api/v3/scrup/register/script":
+		$_POST["action"] = "register";
+		$_POST["type"] = "script";
+		require __DIR__ . "/scrup/scrup.php";
+		break;
+
+	case "/api/v3/scrup/register/client":
+		$_POST["action"] = "register";
+		$_POST["type"] = "client";
+		require __DIR__ . "/scrup/scrup.php";
 		break;
 
 	// Support for legacy v2 API endpoints
