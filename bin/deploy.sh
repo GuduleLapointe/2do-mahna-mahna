@@ -62,7 +62,6 @@ if [ -z "$yes" ]; then
     echo "$answer" | grep -qi "^y$" || exit 0
 fi
 
-
 rsync_opts="-Wavz"
 [ "$dry_run" ] && rsync_opts="$rsync_opts --dry-run"
 

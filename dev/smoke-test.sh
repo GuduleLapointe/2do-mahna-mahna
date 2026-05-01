@@ -110,7 +110,9 @@ while IFS= read -r index_url; do
         "${api_url}/api/v3/events/json" \
         "${index_url}/?api=v3" \
         "${index_url}/events.php?api=v2" \
-        "${index_url}/events.lsl2"
+        "${index_url}/events.lsl2" \
+        "${index_url}/scrup/scrup.php" \
+        "${index_url}/scrup/scrup.php?action=get-version&name=2DO+board"
     do
         echo ""
     	echo "# $url"
@@ -121,8 +123,8 @@ while IFS= read -r index_url; do
 	# Expect image output
     for url in \
         "${api_url}/api/v3/events/board.png" \
-        "${index_url}/?format=png" \
-        "${index_url}/events.php?format=png"
+        "${index_url}/?format=png"
+        # "${index_url}/events.php?format=png"
     do
         echo ""
     	echo "# $url"

@@ -69,6 +69,7 @@ $themes = [
 
 require_once __DIR__ . "/functions.php";
 require_once __DIR__ . "/Config.php";
+require_once __DIR__ . "/Scrup.php";
 
 // Inside a PHAR, __DIR__ is phar://... — use the real filesystem path instead
 $_pharPath = Phar::running(false);
@@ -76,8 +77,13 @@ define("BUNDLE_DIR", $_pharPath ? dirname($_pharPath) : __DIR__);
 define("BASE_DIR", $_pharPath ? dirname($_pharPath) : dirname(__DIR__, 2));
 define("EVENTS_VERSION", "3.0.0");
 define("API_VERSION", "v3");
-// Latest known LSL board version — hardcoded until scrup integration
-define("LSL_BOARD_VERSION", "3.0.1");
+define(
+	"LSL_BOARD_VERSION",
+	fetch_lsl_board_version(
+		"3.0.1",
+		sys_get_temp_dir() . "/2do-lsl-board-version.txt",
+	),
+);
 
 Config::load(
 	defaults: ["data_dir" => BUNDLE_DIR],
@@ -87,7 +93,7 @@ Config::load(
 );
 
 $_ENV["BASE_URL"] =
-	($_SERVER["HTTPS"] === "On" ? "https" : "http") .
+	(($_SERVER["HTTPS"] ?? "") === "On" ? "https" : "http") .
 	"://" .
 	$_SERVER["HTTP_HOST"];
 

@@ -15,20 +15,20 @@ function setFont(?string $fontName, $fonts = [])
 	if (empty($fonts)) {
 		$fonts = \Imagick::queryFonts();
 	}
-	error_log("queryFonts(): found " . count($fonts) . " fonts");
+	// error_log("queryFonts(): found " . count($fonts) . " fonts");
 
-	error_log(__FUNCTION__ . ": looking for $fontName");
+	// error_log(__FUNCTION__ . ": looking for $fontName");
 
 	$patterns = ["$fontName", "$fontName*", "*$fontName*", "DejaVu-Sans"];
 	foreach ($patterns as $pattern) {
 		$fonts = \Imagick::queryFonts($pattern);
 		if (!empty($fonts)) {
-			error_log(__FUNCTION__ . ": found {$fonts[0]}");
+			// error_log(__FUNCTION__ . ": found {$fonts[0]}");
 			return $fonts[0];
 		}
 	}
 
-	error_log(__FUNCTION__ . ": no match for $fontName");
+	// error_log(__FUNCTION__ . ": no match for $fontName");
 	// return $fonts[0] ?? "DejaVuSans";
 }
 

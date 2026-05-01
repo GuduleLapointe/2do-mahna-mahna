@@ -79,6 +79,7 @@ $phar_sources = [
 	"bootstrap.php" => "src/bundle/standalone/bootstrap.php",
 	"functions.php" => "src/bundle/standalone/functions.php",
 	"Config.php" => "app/Shared/Config.php",
+	"Scrup.php" => "app/Shared/Scrup.php",
 	"templates/events.lsl" => "src/bundle/standalone/templates/events.lsl",
 	"templates/404.html" => "src/bundle/standalone/templates/404.html",
 ];
@@ -92,6 +93,24 @@ $phar->setStub(
 $phar->stopBuffering();
 rename($phar_tmp, $phar_file);
 Console::detail("write index.php ← PHAR (" . count($phar_sources) . " files)");
+
+// Copy lib/scrup/ → bundle/standalone/scrup/ (PHP files only, no config.php or scripts/)
+$scrup_src = APP_DIR . "/lib/scrup";
+$scrup_dest = $output_dir . "/scrup";
+if (!is_dir($scrup_dest)) {
+	mkdir($scrup_dest, 0755, true);
+}
+$scrup_skip = ["config.php", "scripts"];
+foreach (new DirectoryIterator($scrup_src) as $f) {
+	if ($f->isDot() || in_array($f->getFilename(), $scrup_skip)) {
+		continue;
+	}
+	if ($f->isFile() && $f->getExtension() === "php") {
+		$dst = $scrup_dest . "/" . $f->getFilename();
+		Console::detail("copy scrup/" . $f->getFilename() . " ← lib/scrup/" . $f->getFilename());
+		copy($f->getPathname(), $dst) && touch($dst, $f->getMTime());
+	}
+}
 
 $code = Console::exitCode();
 $dest = Console::relpath($output_dir);
