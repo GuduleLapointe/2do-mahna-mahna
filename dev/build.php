@@ -83,8 +83,8 @@ $phar_sources = [
 	"templates/events.lsl" => "src/bundle/standalone/templates/events.lsl",
 	"templates/404.html" => "src/bundle/standalone/templates/404.html",
 	"scrup/scrup.php" => "lib/scrup/scrup.php",
-	"scrup/functions.php" => "lib/scrup/functions.php",
-	"scrup/sqlite.php" => "lib/scrup/sqlite.php",
+	"scrup/app/Scrup.php" => "lib/scrup/app/Scrup.php",
+	"scrup/app/ScrupDB.php" => "lib/scrup/app/ScrupDB.php",
 ];
 foreach ($phar_sources as $internal => $src_rel) {
 	Console::detail("pack $internal ← $src_rel");
@@ -97,25 +97,24 @@ $phar->stopBuffering();
 rename($phar_tmp, $phar_file);
 Console::detail("write index.php ← PHAR (" . count($phar_sources) . " files)");
 
-// Copy lib/scrup/ → bundle/standalone/scrup/ (PHP files only, no config.php or scripts/)
-$scrup_src = APP_DIR . "/lib/scrup";
+// Copy lib/scrup/ → bundle/standalone/scrup/ (PHP files only, no config or docs)
+$scrup_src  = APP_DIR . "/lib/scrup";
 $scrup_dest = $output_dir . "/scrup";
-if (!is_dir($scrup_dest)) {
-	mkdir($scrup_dest, 0755, true);
-}
-$scrup_skip = ["config.php", "scripts"];
-foreach (new DirectoryIterator($scrup_src) as $f) {
-	if ($f->isDot() || in_array($f->getFilename(), $scrup_skip)) {
+$scrup_skip = ["config.php", "scripts", "vendor", "composer.json"];
+$iter = new RecursiveIteratorIterator(
+	new RecursiveDirectoryIterator($scrup_src, RecursiveDirectoryIterator::SKIP_DOTS),
+	RecursiveIteratorIterator::SELF_FIRST,
+);
+foreach ($iter as $f) {
+	$rel = substr($f->getPathname(), strlen($scrup_src) + 1);
+	if (in_array(strtok($rel, "/"), $scrup_skip)) {
 		continue;
 	}
-	if ($f->isFile() && $f->getExtension() === "php") {
-		$dst = $scrup_dest . "/" . $f->getFilename();
-		Console::detail(
-			"copy scrup/" .
-				$f->getFilename() .
-				" ← lib/scrup/" .
-				$f->getFilename(),
-		);
+	$dst = $scrup_dest . "/" . $rel;
+	if ($f->isDir()) {
+		is_dir($dst) || mkdir($dst, 0755, true);
+	} elseif ($f->getExtension() === "php") {
+		Console::detail("copy scrup/$rel ← lib/scrup/$rel");
 		copy($f->getPathname(), $dst) && touch($dst, $f->getMTime());
 	}
 }
