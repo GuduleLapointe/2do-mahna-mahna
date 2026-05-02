@@ -4,6 +4,10 @@ Ideas and planned improvements, roughly in order of priority. Not all of these w
 
 ---
 
+## Bugs
+
+- Scrup server/client: in some conditions, legacy clients are not updated. It might be related with the region not properly used to filter either script or client registrations
+
 ## Near term
 
 ### LSL board: invalid bannerImageURL crashes the script
