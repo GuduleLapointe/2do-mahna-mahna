@@ -99,6 +99,9 @@ Long-running commands (`exec`, file generation) belong **inside** the test body,
 
 ### Use native Pest expectations
 
+- https://pestphp.com/docs/expectations
+- https://craft-pest.com/assertions/http-response.html
+
 Prefer Pest's semantic expectations over raw PHP assertions wrapped in `toBeTrue()`:
 
 ```php

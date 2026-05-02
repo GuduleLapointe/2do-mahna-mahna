@@ -10,7 +10,7 @@
  * GET /api/v3/events/ics          → 501 Not Implemented (iCal, planned)
  * GET /api/v3/events/board.png    → PNG board image
  *
- * GET  /api/v3/scrup/get-version        → latest registered version for a script
+ * GET  /api/v3/scrup/get-version          → latest registered version for a script
  * POST /api/v3/scrup/register/server   → register a scrup server
  * POST /api/v3/scrup/register/script   → register a script version
  * POST /api/v3/scrup/register/client   → register a client for update delivery
@@ -103,20 +103,20 @@ switch ($path) {
 		break;
 
 	case "/api/v3/scrup/register/server":
-		$_POST["action"] = "register";
-		$_POST["type"] = "server";
+		$_POST["action"] = $_REQUEST["action"] = "register";
+		$_POST["type"] = $_REQUEST["type"] = "server";
 		require __DIR__ . "/scrup/scrup.php";
 		break;
 
 	case "/api/v3/scrup/register/script":
-		$_POST["action"] = "register";
-		$_POST["type"] = "script";
+		$_POST["action"] = $_REQUEST["action"] = "register";
+		$_POST["type"] = $_REQUEST["type"] = "script";
 		require __DIR__ . "/scrup/scrup.php";
 		break;
 
 	case "/api/v3/scrup/register/client":
-		$_POST["action"] = "register";
-		$_POST["type"] = "client";
+		$_POST["action"] = $_REQUEST["action"] = "register";
+		$_POST["type"] = $_REQUEST["type"] = "client";
 		require __DIR__ . "/scrup/scrup.php";
 		break;
 
