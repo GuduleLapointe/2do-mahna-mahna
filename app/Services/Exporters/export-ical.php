@@ -19,12 +19,10 @@ use Kigkonsult\Icalcreator\Vevent;
 
 class iCal_Exporter
 {
-	private $events = [];
 	private $output_dir;
 
-	public function __construct($events, $output_dir)
+	public function __construct($output_dir)
 	{
-		$this->events = $events;
 		$this->output_dir = $output_dir;
 		$this->export();
 	}
@@ -32,8 +30,6 @@ class iCal_Exporter
 	public function export()
 	{
 		Console::detail("build events.ics");
-		// $this->events is an array of Event objects
-		// Export to iCal format
 		$vcalendar = Vcalendar::factory();
 		$vcalendar->setConfig(["unique_id" => "2do-aggregator"]);
 		$vcalendar->setMethod("PUBLISH");
@@ -41,7 +37,7 @@ class iCal_Exporter
 		$vcalendar->setXprop("X-WR-CALDESC", "Events from 2do Aggregator");
 		$vcalendar->setXprop("X-WR-TIMEZONE", "America/Los_Angeles");
 
-		foreach ($this->events as $event) {
+		foreach (EventStorage::readEvents() as $event) {
 			if (empty($event->dateUTC)) {
 				continue;
 			}

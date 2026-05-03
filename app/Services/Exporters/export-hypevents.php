@@ -10,12 +10,10 @@ if (!IS_AGGR) {
 
 class HYPEvents_Exporter
 {
-	private $events = [];
 	private $output_dir;
 
-	public function __construct($events, $output_dir)
+	public function __construct($output_dir)
 	{
-		$this->events = $events;
 		$this->output_dir = $output_dir;
 		$this->export();
 	}
@@ -42,7 +40,7 @@ class HYPEvents_Exporter
 		Console::detail("build events.lsl2");
 		$prev_day = "";
 		$today = date("l F j");
-		foreach ($this->events as $event) {
+		foreach (EventStorage::readEvents() as $event) {
 			$name = $event->name;
 			// make sure name is converted to utf8 if not already
 			if (!mb_detect_encoding((string) $name, "UTF-8", true)) {

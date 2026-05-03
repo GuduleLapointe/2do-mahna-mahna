@@ -10,3 +10,6 @@
 [submodule "lib/scrup"]
 	path = lib/scrup
 	url = git@github.com:GuduleLapointe/scrup.git
+[submodule "lib/opensim-helpers"]
+	path = lib/opensim-helpers
+	url = https://github.com/GuduleLapointe/opensim-helpers

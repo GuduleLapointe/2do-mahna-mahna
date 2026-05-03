@@ -52,8 +52,7 @@ class Aggregator
 	{
 		Console::notice("Output: " . Console::relpath($this->output_dir));
 
-		$cache_file = APP_DIR . "/cache/cache_fetcher.json";
-		$cache_time = 55 * 60; // 55 minutes, to accommodate for 1-hour cron job
+		$cache_time  = 55 * 60; // 55 minutes, to accommodate for 1-hour cron job
 		$config_file = APP_DIR . "/config/config.json";
 
 		Config::load(
@@ -62,31 +61,36 @@ class Aggregator
 			envFiles: [APP_DIR . "/.env"],
 		);
 
-		if (self::$force && file_exists($cache_file)) {
-			unlink($cache_file);
+		if (!SearchDB::init()) {
+			Console::error("SearchDB is required — set SEARCH_DB_HOST and SEARCH_DB_NAME in .env", 1, true);
+		}
+
+		if (self::$force) {
+			Cache::forget("aggregator_last_fetch");
 			Console::notice("Cache cleared");
 		}
 
+		$last_fetch  = Cache::get("aggregator_last_fetch");
+		$config_mtime = file_exists($config_file) ? filemtime($config_file) : 0;
 		$cache_stale =
-			!file_exists($cache_file) ||
-			filemtime($cache_file) + $cache_time < time() ||
-			(file_exists($config_file) && filemtime($config_file) > filemtime($cache_file));
+			$last_fetch === null ||
+			$last_fetch + $cache_time < time() ||
+			$config_mtime > $last_fetch;
 
 		if ($cache_stale) {
 			Console::notice("Fetching events...");
 			$fetcher = new Fetcher();
-			file_put_contents($cache_file, serialize($fetcher));
-			touch($cache_file);
-			Console::verbose("Cache saved: " . $cache_file);
+			$count   = EventStorage::write($fetcher->get_events());
+			Cache::set("aggregator_last_fetch", time(), $cache_time + 60);
+			Console::verbose("$count events stored in SearchDB");
 		} else {
-			Console::verbose("Using cache: " . $cache_file);
-			$fetcher = unserialize(file_get_contents($cache_file));
+			Console::verbose("SearchDB up to date, skipping fetch");
 		}
 
-		Console::notice("Exporting " . count($fetcher->get_events()) . " events...");
-		new HYPEvents_Exporter($fetcher->get_events(), $this->output_dir);
-		new JSON_Exporter($fetcher->get_events(), $this->output_dir);
-		new iCal_Exporter($fetcher->get_events(), $this->output_dir);
+		Console::notice("Exporting " . count(EventStorage::readEvents()) . " events...");
+		new HYPEvents_Exporter($this->output_dir);
+		new JSON_Exporter($this->output_dir);
+		new iCal_Exporter($this->output_dir);
 
 		$code = Console::exitCode();
 		$dest = Console::relpath($this->output_dir);
@@ -107,6 +111,10 @@ class Aggregator
 
 		require_once APP_DIR . "/app/Services/class-fetcher.php";
 		require_once APP_DIR . "/app/Models/class-event.php";
+
+		require_once APP_DIR . "/app/Shared/Cache.php";
+		require_once APP_DIR . "/app/Shared/SearchDB.php";
+		require_once APP_DIR . "/app/Services/EventStorage.php";
 
 		require_once APP_DIR . "/app/Services/Exporters/export-hypevents.php";
 		require_once APP_DIR . "/app/Services/Exporters/export-json.php";

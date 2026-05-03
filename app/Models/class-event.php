@@ -157,6 +157,7 @@ class Event
 	public function sanitize_hgurl($url, $grid_url = null)
 	{
 		static $sanitize_hgurl_cache = [];
+		static $globalpos_cache = [];
 
 		if (empty($url)) {
 			$url = $grid_url;
@@ -164,6 +165,7 @@ class Event
 
 		// Return cached value if available
 		if (isset($sanitize_hgurl_cache[$url])) {
+			$this->globalPos = $globalpos_cache[$url] ?? implode(',', DEFAULT_POS);
 			switch ($sanitize_hgurl_cache[$url]) {
 				case "empty":
 					return;
@@ -199,6 +201,15 @@ class Event
 			$sanitize_hgurl_cache[$url] = "offline";
 			return false;
 		}
+
+		// Compute absolute grid position: local pos + region grid coordinates
+		$pos = empty($region["pos"]) ? DEFAULT_POS : array_map("intval", explode("/", $region["pos"]));
+		if (!empty($region_data["x"]) && !empty($region_data["y"])) {
+			$pos[0] += (int) $region_data["x"];
+			$pos[1] += (int) $region_data["y"];
+		}
+		$this->globalPos = $globalpos_cache[$url] = implode(",", $pos);
+
 		$tmpurl =
 			$region["gatekeeper"] .
 			":" .

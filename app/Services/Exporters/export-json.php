@@ -10,12 +10,10 @@ if (!IS_AGGR) {
 
 class JSON_Exporter
 {
-	private $events = [];
 	private $output_dir;
 
-	public function __construct($events, $output_dir)
+	public function __construct($output_dir)
 	{
-		$this->events = $events;
 		$this->output_dir = $output_dir;
 		$this->export();
 	}
@@ -25,7 +23,7 @@ class JSON_Exporter
 		Console::detail("build events.json");
 		$events_array = [];
 
-		foreach ($this->events as $event) {
+		foreach (EventStorage::readEvents() as $event) {
 			$name = $event->name;
 			// Transliterating name to ASCII
 			// $name = preg_replace('/[\x{1F600}-\x{1F6FF}]/u', '', $event->name);
