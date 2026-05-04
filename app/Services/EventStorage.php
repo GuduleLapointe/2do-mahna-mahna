@@ -47,12 +47,18 @@ class EventStorage
 			]));
 			$description = $links ? "$links\n\n{$event->description}" : $event->description;
 
+			// Normalise UTF-8 encoding: some sources declare UTF-8 but send
+			// latin1-encoded data; utf8_decode→utf8_encode round-trip corrects this
+			// (matches the fix applied in eventsparser.php).
+			$name        = utf8_encode(utf8_decode(strip_tags(html_entity_decode($event->name))));
+			$description = utf8_encode(utf8_decode(strip_tags(html_entity_decode($description))));
+
 			$fields = [
 				"owneruuid"     => $event->owneruuid,
-				"name"          => $event->name,
+				"name"          => $name,
 				"creatoruuid"   => $event->creatoruuid,
 				"category"      => $event->category,
-				"description"   => $description,
+				"description"   => $description,  // already normalised above
 				"dateUTC"       => $start,
 				"duration"      => $event->duration,
 				"covercharge"   => $event->covercharge,

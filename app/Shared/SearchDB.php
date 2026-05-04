@@ -54,10 +54,12 @@ class SearchDB
 		define("SEARCH_DB_USER", $user);
 		define("SEARCH_DB_PASS", $pass);
 
+		// Declare global BEFORE require: search.php runs in this method's local scope,
+		// so $SearchDB set there would be local unless we pre-declare the global mapping.
+		global $SearchDB;
 		require_once APP_DIR . "/lib/opensim-helpers/includes/databases.php";
 		require_once APP_DIR . "/lib/opensim-helpers/includes/search.php";
 
-		global $SearchDB;
 		if (!$SearchDB || !$SearchDB->connected) {
 			Console::error("Could not connect to Search DB {$name}@{$host}");
 			return false;
