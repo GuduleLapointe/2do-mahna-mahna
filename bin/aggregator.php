@@ -60,7 +60,9 @@ class Aggregator
 			envFiles: [APP_DIR . "/.env"],
 		);
 
-		if (!SearchDB::init()) {
+		global $SearchDB;
+		$SearchDB = SearchDB::get();
+		if (!$SearchDB) {
 			Console::error(
 				"SearchDB is required — set SEARCH_DB_HOST and SEARCH_DB_NAME in .env",
 				1,

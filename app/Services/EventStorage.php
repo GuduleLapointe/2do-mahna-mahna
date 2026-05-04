@@ -20,7 +20,8 @@ class EventStorage
 	 */
 	public static function write(array $events): int
 	{
-		$db = SearchDB::get();
+		global $SearchDB;
+		$db = $SearchDB;
 		if (!$db) {
 			Console::error("EventStorage::write — SearchDB not connected");
 			return 0;
@@ -134,7 +135,8 @@ class EventStorage
 	 */
 	public static function readEvents(int $notbefore = 0): array
 	{
-		$db = SearchDB::get();
+		global $SearchDB;
+		$db = $SearchDB;
 		if (!$db) {
 			return [];
 		}

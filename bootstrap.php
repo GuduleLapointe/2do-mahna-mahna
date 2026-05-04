@@ -15,6 +15,8 @@ define("API_VERSION", "v3");
 define("TODO_APP", APP_VERSION);
 
 require_once APP_DIR . "/vendor/autoload.php";
+require_once APP_DIR . "/lib/opensim-helpers/includes/databases.php"; // OSPDO class (extends PDO)
+require_once APP_DIR . "/lib/opensim-functions.php";                  // global opensim_*() functions
 require_once APP_DIR . "/app/Helpers/Console.php";
 require_once APP_DIR . "/app/Shared/Config.php";
 require_once APP_DIR . "/app/Shared/Scrup.php";

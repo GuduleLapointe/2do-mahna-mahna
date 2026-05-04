@@ -1,29 +1,39 @@
 <?php
 /**
- * SearchDB — OpenSimSearch database connection manager.
+ * SearchDB — OpenSimSearch database connection.
  *
- * Wraps opensim-helpers includes/databases.php and includes/search.php,
- * initialising the shared $SearchDB connection from .env credentials.
- * Also extends the standard events table schema with 2DO-specific columns
- * (uid, tags, source) that are not part of the OpenSim search standard.
+ * Extends OSPDO (which extends PDO) with SearchDB-specific table management.
+ * Credentials are read from Config (SEARCH_DB_* keys in .env).
  *
  * Usage:
- *   SearchDB::init();          // call once at startup
- *   $db = SearchDB::get();     // returns OSPDO|null
- *   SearchDB::connected();     // bool
+ *   global $SearchDB;
+ *   $SearchDB = SearchDB::get();   // factory: connect and return instance, or null
+ *   // — or —
+ *   $SearchDB = new SearchDB('mysql:host=…;dbname=…', $user, $pass);
+ *
+ * Per the naming convention used across the app ($SearchDB, $ScrupDB,
+ * $OpenSimDB, …) the caller is responsible for assigning the global.
+ * SearchDB itself never touches a global variable.
  */
-class SearchDB
-{
-	private static ?OSPDO $db = null;
+if (!TODO_APP) {
+	die("No direct calls." . PHP_EOL);
+}
 
+class SearchDB extends OSPDO
+{
 	/**
-	 * Initialise the SearchDB connection.
+	 * Connect to the SearchDB using credentials from Config/.env.
 	 *
-	 * Defines the constants expected by opensim-helpers (SEARCH_DB_HOST etc.)
-	 * from Config, then includes databases.php and search.php as-is.
-	 * Returns false (silently) if credentials are not configured.
+	 * Defines SEARCH_TABLE_EVENTS, SEARCH_REGION_TABLE, and SEARCH_DB_*
+	 * constants required by opensim-helpers, then loads search.php for its
+	 * function definitions (ossearch_db_tables, osdb_cache_get/set, …).
+	 * Extends the events table schema with 2DO-specific columns.
+	 *
+	 * Returns null when credentials are not configured or connection fails.
+	 *
+	 * @return static|null
 	 */
-	public static function init(): bool
+	public static function get(): static|null
 	{
 		$host = Config::get("search_db_host");
 		$name = Config::get("search_db_name");
@@ -32,65 +42,48 @@ class SearchDB
 
 		if (empty($host) || empty($name)) {
 			Console::verbose("SEARCH_DB_HOST / SEARCH_DB_NAME not set — SearchDB disabled");
-			return false;
+			return null;
 		}
 
-		// SEARCH_TABLE_EVENTS is guarded by if(!defined()) in search.php — safe to pre-define
+		// Constants required by opensim-helpers search.php
+		if (!defined("SEARCH_DB_HOST")) {
+			define("SEARCH_DB_HOST", $host);
+			define("SEARCH_DB_NAME", $name);
+			define("SEARCH_DB_USER", $user);
+			define("SEARCH_DB_PASS", $pass);
+		}
 		if (!defined("SEARCH_TABLE_EVENTS")) {
 			define("SEARCH_TABLE_EVENTS", Config::get("search_table_events", "events"));
 		}
-
-		// SEARCH_REGION_TABLE is defined unconditionally by search.php via auto-detection.
-		// Pre-define from .env when explicitly set to prevent conflicts with an OpenSim
-		// regions table sharing the same DB. The duplicate define() in search.php will
-		// fail silently (keeping our value) but may emit E_WARNING on PHP 8 — acceptable.
 		$regionTable = Config::get("search_region_table");
 		if ($regionTable && !defined("SEARCH_REGION_TABLE")) {
 			define("SEARCH_REGION_TABLE", $regionTable);
 		}
 
-		define("SEARCH_DB_HOST", $host);
-		define("SEARCH_DB_NAME", $name);
-		define("SEARCH_DB_USER", $user);
-		define("SEARCH_DB_PASS", $pass);
-
-		// Declare global BEFORE require: search.php runs in this method's local scope,
-		// so $SearchDB set there would be local unless we pre-declare the global mapping.
-		global $SearchDB;
-		require_once APP_DIR . "/lib/opensim-helpers/includes/databases.php";
-		require_once APP_DIR . "/lib/opensim-helpers/includes/search.php";
-
-		if (!$SearchDB || !$SearchDB->connected) {
-			Console::error("Could not connect to Search DB {$name}@{$host}");
-			return false;
+		// Load search.php for function definitions (osdb_cache_get/set, ossearch_db_tables…).
+		// It also creates its own $SearchDB global at load time; we ignore that instance.
+		if (!function_exists("osdb_cache_get")) {
+			require_once APP_DIR . "/lib/opensim-helpers/includes/search.php";
 		}
 
-		self::$db = $SearchDB;
-		self::extendSchema();
-		return true;
-	}
+		$db = new static("mysql:host=$host;dbname=$name;charset=utf8", $user, $pass);
+		if (!$db->connected) {
+			Console::error("Could not connect to Search DB {$name}@{$host}");
+			return null;
+		}
 
-	/** Return the active OSPDO connection, or null if not initialised. */
-	public static function get(): ?OSPDO
-	{
-		return self::$db;
-	}
-
-	/** Return true if the connection is active. */
-	public static function connected(): bool
-	{
-		return self::$db !== null && self::$db->connected;
+		$db->extendSchema();
+		return $db;
 	}
 
 	/**
 	 * Add 2DO-specific columns to the events table when missing.
 	 *
-	 * Uses the same SHOW COLUMNS / ALTER TABLE pattern as opensim-helpers
-	 * schema updates (ossearch_db_update_*) to remain non-destructive.
+	 * Uses ALTER TABLE … ADD only when the column is absent, matching the
+	 * non-destructive pattern of opensim-helpers schema updates.
 	 */
-	private static function extendSchema(): void
+	public function extendSchema(): void
 	{
-		$db    = self::$db;
 		$table = SEARCH_TABLE_EVENTS;
 
 		$columns = [
@@ -100,8 +93,8 @@ class SearchDB
 		];
 
 		foreach ($columns as $col => $sql) {
-			if (!count($db->query("SHOW COLUMNS FROM `$table` LIKE '$col'")->fetchAll())) {
-				$db->query($sql);
+			if (!count($this->query("SHOW COLUMNS FROM `$table` LIKE '$col'")->fetchAll())) {
+				$this->query($sql);
 			}
 		}
 	}

@@ -61,7 +61,7 @@ class Region
 	/**
 	 * Parse a region URL into structured components.
 	 *
-	 * Check `empty($region->key)` to detect unparseable URLs.
+	 * Check `empty($region->uri)` to detect unparseable URLs.
 	 * Call data() to fetch grid data and populate schema properties.
 	 * Call online() to check reachability.
 	 *
@@ -91,8 +91,9 @@ class Region
 			? []
 			: array_map("floatval", explode("/", $parsed["pos"]));
 
-		$this->url = $this->gatekeeperURL . ":" . $this->region
-			. (empty($this->pos) ? "" : "/" . implode("/", $this->pos));
+		$this->url =
+			$this->uri .
+			(empty($this->pos) ? "" : "/" . implode("/", $this->pos));
 	}
 
 	/**
@@ -116,11 +117,11 @@ class Region
 		$lookupURL = $this->gatekeeperURL . ":" . $this->region;
 		$this->data = opensim_get_region($lookupURL) ?: [];
 
-		$this->regionname   = $this->data["region_name"] ?? $this->region;
-		$this->regionUUID   = $this->data["uuid"]         ?? "";
+		$this->regionname = $this->data["region_name"] ?? $this->region;
+		$this->regionUUID = $this->data["uuid"] ?? "";
 		$this->regionhandle = $this->data["regionhandle"] ?? "";
-		$this->owner        = $this->data["owner"]        ?? "";
-		$this->owneruuid    = $this->data["owneruuid"]    ?? "";
+		$this->owner = $this->data["owner"] ?? "";
+		$this->owneruuid = $this->data["owneruuid"] ?? "";
 
 		if (!empty($this->regionname)) {
 			$this->region = $this->regionname;
@@ -155,12 +156,12 @@ class Region
 		}
 
 		$online = opensim_region_is_online([
-			"host"       => $this->host,
-			"port"       => $this->port,
-			"region"     => $this->region,
-			"pos"        => implode("/", $this->pos),
+			"host" => $this->host,
+			"port" => $this->port,
+			"region" => $this->region,
+			"pos" => implode("/", $this->pos),
 			"gatekeeper" => $this->gatekeeperURL,
-			"key"        => $this->uri,
+			"key" => $this->uri,
 		]);
 
 		Cache::set("opensim_region_is_online_{$this->uri}", $online, 3600);
@@ -180,17 +181,18 @@ class Region
 	 * @param  int          $format  TPLINK_* constant (default TPLINK_TXT)
 	 * @return string
 	 */
-	public function teleportLink(?array $pos = null, int $format = TPLINK_TXT): string
-	{
+	public function teleportLink(
+		?array $pos = null,
+		int $format = TPLINK_TXT,
+	): string {
 		if (empty($this->gatekeeperURL)) {
 			return "";
 		}
 
-		$effectivePos = $pos ?? $this->pos;
-
-		$uri = $this->gatekeeperURL . ":" . $this->region
-			. (empty($effectivePos) ? "" : "/" . implode("/", $effectivePos));
-
+		if (empty($pos)) {
+			return opensim_format_tp($this->url, $format) ?? "";
+		}
+		$uri = $this->uri . "/" . implode("/", $pos);
 		return opensim_format_tp($uri, $format) ?? "";
 	}
 }
