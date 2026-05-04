@@ -178,7 +178,7 @@ class Event
 			Console::verbose("region offline: " . ($url ?: $grid_url));
 			return false;
 		}
-		$this->globalPos = implode(',', $region->globalPos);
+		$this->globalPos = implode(',', array_map('floatval', $region->globalPos));
 		return $region->hgURL(TPLINK_TXT);
 	}
 

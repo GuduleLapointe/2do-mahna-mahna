@@ -30,9 +30,9 @@
  * @property string  $region       Region name (from URL; updated to canonical after data())
  * @property string  $key          Canonical cache key "host:port/region" (lower-cased, no pos);
  *                                 empty string when URL is not parseable
- * @property int[]   $pos          Local teleport position [x, y, z] from source URL;
+ * @property float[] $pos          Local teleport position [x, y, z] from source URL;
  *                                 empty array when not specified
- * @property int[]   $globalPos    Absolute map position [x, y, z] = grid origin + $pos;
+ * @property float[] $globalPos    Absolute map position [x, y, z] = grid origin + $pos;
  *                                 null until data() has been called
  */
 if (!TODO_APP) {
@@ -55,10 +55,10 @@ class Region
 	public int    $port   = 8002;
 	public string $region = '';
 	public string $key    = '';  // empty = URL was not parseable
-	public array  $pos    = [];  // [x, y, z]; empty = not specified in URL
+	public array  $pos    = [];  // [x, y, z] float; empty = not specified in URL
 
 	// --- Derived from data() ---
-	public ?array $globalPos = null;  // [x, y, z] absolute map position; null until data() called
+	public ?array $globalPos = null;  // [x, y, z] float absolute map position; null until data() called
 
 	// ------------------------------------------------------------------
 	// Constructor — URL parsing only, no network I/O
@@ -95,7 +95,7 @@ class Region
 		$this->gatekeeperURL = $parsed['gatekeeper'];
 		$this->pos           = empty($parsed['pos'])
 			? []
-			: array_map('intval', explode('/', $parsed['pos']));
+			: array_map('floatval', explode('/', $parsed['pos']));
 	}
 
 	// ------------------------------------------------------------------
@@ -138,9 +138,9 @@ class Region
 		// globalPos = region grid origin + local teleport pos (or DEFAULT_POS)
 		$local           = empty($this->pos) ? DEFAULT_POS : $this->pos;
 		$this->globalPos = [
-			(int) ($regionData['x'] ?? 0) + $local[0],
-			(int) ($regionData['y'] ?? 0) + $local[1],
-			$local[2] ?? DEFAULT_POS[2],
+			(float) ($regionData['x'] ?? 0) + $local[0],
+			(float) ($regionData['y'] ?? 0) + $local[1],
+			(float) ($local[2] ?? DEFAULT_POS[2]),
 		];
 
 		return $regionData;
