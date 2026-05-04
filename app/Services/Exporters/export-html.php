@@ -4,7 +4,7 @@
  *
  * Generate mobile-first responsive html page, css and js, with events taken dynamically from events.json
  */
-if (!IS_AGGR) {
+if (!TODO_APP) {
 	die("No direct calls, run main script aggregator.php instead." . PHP_EOL);
 }
 

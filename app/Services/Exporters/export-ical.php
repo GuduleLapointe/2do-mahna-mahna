@@ -7,7 +7,7 @@
  * @package    2do-aggregator
  * @subpackage 2do-aggregator/exporters
  */
-if (!IS_AGGR) {
+if (!TODO_APP) {
 	die("No direct calls, run main script aggregator.php instead." . PHP_EOL);
 }
 

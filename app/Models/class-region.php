@@ -90,9 +90,6 @@ class Region
 		$this->pos = empty($parsed["pos"])
 			? []
 			: array_map("floatval", explode("/", $parsed["pos"]));
-
-		$this->url =
-			$this->uri . ($this->pos ? "/" . implode("/", $this->pos) : "");
 	}
 
 	/**
@@ -155,7 +152,14 @@ class Region
 			return (bool) $online;
 		}
 
-		$online = opensim_region_is_online($this->uri);
+		$online = opensim_region_is_online([
+			"host"       => $this->host,
+			"port"       => $this->port,
+			"region"     => $this->region,
+			"pos"        => implode("/", $this->pos),
+			"gatekeeper" => $this->gatekeeperURL,
+			"key"        => $this->uri,
+		]);
 
 		Cache::set("opensim_region_is_online_{$this->uri}", $online, 3600);
 		return (bool) $online;
@@ -165,21 +169,33 @@ class Region
 	 * Return the region as a formatted teleport URL.
 	 *
 	 * Call data() first so the canonical region name is used.
-	 * The local teleport position ($pos) is appended when present.
 	 *
-	 * @param  int    $format  TPLINK_* constant (default TPLINK_TXT)
+	 * Position resolution when no $pos override is given:
+	 *   1. $this->pos — position embedded in the source URL
+	 *   2. landingpoint from region data (link_region response) — grid default
+	 *   3. No position — link without coordinates
+	 *
+	 * @param  float[]|null $pos     Override position [x, y, z]; null = use source pos or grid default
+	 * @param  int          $format  TPLINK_* constant (default TPLINK_TXT)
 	 * @return string
 	 */
-	public function teleportLink(?array $pos, int $format = TPLINK_TXT): string
+	public function teleportLink(?array $pos = null, int $format = TPLINK_TXT): string
 	{
 		if (empty($this->gatekeeperURL)) {
 			return "";
 		}
 
-		if (empty($pos)) {
-			return opensim_format_tp($this->url, $format) ?? "";
+		if ($pos === null) {
+			if (!empty($this->pos)) {
+				$pos = $this->pos;
+			} elseif (!empty($this->data["link_region"]["landingpoint"])) {
+				$pos = array_map("floatval", explode("/", $this->data["link_region"]["landingpoint"]));
+			}
 		}
-		$uri = $this->uri . "/" . implode("/", $pos);
+
+		$uri = $this->gatekeeperURL . ":" . $this->region
+			. (empty($pos) ? "" : "/" . implode("/", $pos));
+
 		return opensim_format_tp($uri, $format) ?? "";
 	}
 }

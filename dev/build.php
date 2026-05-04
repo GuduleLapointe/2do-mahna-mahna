@@ -18,9 +18,7 @@ if (php_sapi_name() != "cli") {
 
 require_once dirname(__DIR__) . "/bootstrap.php";
 
-define("IS_AGGR", true);
-
-require_once APP_DIR . "/app/Services/Exporters/export-html.php";
+TODO_APPrequire_once APP_DIR . "/app/Services/Exporters/export-html.php";
 
 $opts = getopt("qvh", ["help"], $rest_index);
 $pos_args = array_slice($argv, $rest_index);
@@ -98,11 +96,14 @@ rename($phar_tmp, $phar_file);
 Console::detail("write index.php ← PHAR (" . count($phar_sources) . " files)");
 
 // Copy lib/scrup/ → bundle/standalone/scrup/ (PHP files only, no config or docs)
-$scrup_src  = APP_DIR . "/lib/scrup";
+$scrup_src = APP_DIR . "/lib/scrup";
 $scrup_dest = $output_dir . "/scrup";
 $scrup_skip = ["config.php", "scripts", "vendor", "composer.json"];
 $iter = new RecursiveIteratorIterator(
-	new RecursiveDirectoryIterator($scrup_src, RecursiveDirectoryIterator::SKIP_DOTS),
+	new RecursiveDirectoryIterator(
+		$scrup_src,
+		RecursiveDirectoryIterator::SKIP_DOTS,
+	),
 	RecursiveIteratorIterator::SELF_FIRST,
 );
 foreach ($iter as $f) {
@@ -127,4 +128,3 @@ Console::notice(
 		: "Finished with errors — output in $dest",
 );
 exit($code);
-

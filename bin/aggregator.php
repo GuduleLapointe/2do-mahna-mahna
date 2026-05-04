@@ -20,7 +20,7 @@ if (php_sapi_name() != "cli") {
 	die("This script can only be run from the command line." . PHP_EOL);
 }
 
-require_once dirname(__DIR__) . '/bootstrap.php';
+require_once dirname(__DIR__) . "/bootstrap.php";
 
 /**
  * Aggregator class
@@ -55,25 +55,33 @@ class Aggregator
 		$config_file = APP_DIR . "/config/config.json";
 
 		Config::load(
-			defaults: ['dedup_cross_source' => true],
+			defaults: ["dedup_cross_source" => true],
 			jsonFile: $config_file,
 			envFiles: [APP_DIR . "/.env"],
 		);
 
 		if (!SearchDB::init()) {
-			Console::error("SearchDB is required — set SEARCH_DB_HOST and SEARCH_DB_NAME in .env", 1, true);
+			Console::error(
+				"SearchDB is required — set SEARCH_DB_HOST and SEARCH_DB_NAME in .env",
+				1,
+				true,
+			);
 		}
 
 		if (self::$force) {
-			Console::notice("Cache cleared (per-source caches will be skipped)");
+			Console::notice(
+				"Cache cleared (per-source caches will be skipped)",
+			);
 		}
 
 		Console::notice("Fetching events...");
 		$fetcher = new Fetcher();
-		$count   = EventStorage::write($fetcher->get_events());
+		$count = EventStorage::write($fetcher->get_events());
 		Console::verbose("$count events stored in SearchDB");
 
-		Console::notice("Exporting " . count(EventStorage::readEvents()) . " events...");
+		Console::notice(
+			"Exporting " . count(EventStorage::readEvents()) . " events...",
+		);
 		new HYPEvents_Exporter($this->output_dir);
 		new JSON_Exporter($this->output_dir);
 		new iCal_Exporter($this->output_dir);
@@ -113,10 +121,7 @@ class Aggregator
 	 */
 	private static function constants()
 	{
-
 		Console::verbose("APP_DIR: " . APP_DIR);
-
-		define("IS_AGGR", true);
 
 		define("EVENTS_NULL_KEY", "00000000-0000-0000-0000-000000000001");
 		define("DEFAULT_POS", [128, 128, 25]);
@@ -183,17 +188,26 @@ class Aggregator
 
 		self::$script = basename($argv[0]);
 		$rest_index = null;
-		$opts = getopt("qvhf", ["help", "version", "force", "clear-cache"], $rest_index);
+		$opts = getopt(
+			"qvhf",
+			["help", "version", "force", "clear-cache"],
+			$rest_index,
+		);
 		$pos_args = array_slice($argv, $rest_index);
 
-		$quiet   = isset($opts["q"]);
+		$quiet = isset($opts["q"]);
 		$verbose = isset($opts["v"]);
-		self::$force = isset($opts["f"]) || isset($opts["force"]) || isset($opts["clear-cache"]);
+		self::$force =
+			isset($opts["f"]) ||
+			isset($opts["force"]) ||
+			isset($opts["clear-cache"]);
 
 		Console::init($quiet, $verbose);
 
 		if (isset($opts["h"]) || isset($opts["help"])) {
-			echo "Usage: php " . self::$script . " [-q] [-v] [-f] [output_dir]\n";
+			echo "Usage: php " .
+				self::$script .
+				" [-q] [-v] [-f] [output_dir]\n";
 			echo "  -q  quiet mode\n";
 			echo "  -v  verbose mode (overridden if -q is set)\n";
 			echo "  -f|--force|--clear-cache  clear cache before running\n";
@@ -210,12 +224,16 @@ class Aggregator
 		if (isset($pos_args[0])) {
 			$output_dir = $pos_args[0];
 		} else {
-			$output_dir = APP_DIR . '/data';
+			$output_dir = APP_DIR . "/data";
 		}
 
 		if (!is_dir($output_dir)) {
 			mkdir($output_dir, 0755, true) ||
-				Console::error("Output directory $output_dir could not be created", 1, true);
+				Console::error(
+					"Output directory $output_dir could not be created",
+					1,
+					true,
+				);
 		}
 
 		$this->output_dir = realpath(rtrim($output_dir, "/"));
@@ -236,11 +254,12 @@ class Aggregator
 			"\x{1F600}-\x{1F64F}" . // Emoticons
 			"\x{1F680}-\x{1F6FF}" . // Transport And Map Symbols
 			"\x{1F900}-\x{1F9FF}" . // Supplemental Symbols and Pictographs
-			"\x{2600}-\x{26FF}" .   // Miscellaneous Symbols
-			"\x{2700}-\x{27BF}";    // Dingbats
+			"\x{2600}-\x{26FF}" . // Miscellaneous Symbols
+			"\x{2700}-\x{27BF}"; // Dingbats
 
 		return preg_replace("/[" . $symbols . "]+/u", "", (string) $string);
 	}
 }
 
 new Aggregator();
+

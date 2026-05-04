@@ -9,7 +9,7 @@
  * @property array $events        // Array of fetched events
  */
 
-if (!IS_AGGR) {
+if (!TODO_APP) {
 	die("No direct calls, run main script aggregator.php instead." . PHP_EOL);
 }
 
@@ -179,7 +179,7 @@ class Fetcher
 		$this->mergeConsecutive();
 		$afterMerge = count($this->events);
 
-		$dedupCrossSource = (bool) Config::get('dedup_cross_source', true);
+		$dedupCrossSource = (bool) Config::get("dedup_cross_source", true);
 
 		if ($dedupCrossSource) {
 			$this->deduplicateSameSlot();
@@ -255,7 +255,7 @@ class Fetcher
 
 	private function fetch_ical($slug, $calendar)
 	{
-		$url      = $calendar["ical_url"];
+		$url = $calendar["ical_url"];
 		$cacheKey = "source_" . $slug;
 
 		$json = Aggregator::force() ? null : Cache::get($cacheKey);
@@ -309,12 +309,12 @@ class Fetcher
 
 	private function fetch_opensimworld()
 	{
-		$slug     = "opensimworld";
+		$slug = "opensimworld";
 		$cacheKey = "source_" . $slug;
 		$calendar = [
-			"slug"     => $slug,
+			"slug" => $slug,
 			"grid_url" => null,
-			"type"     => "crawler",
+			"type" => "crawler",
 		];
 
 		$json = Aggregator::force() ? null : Cache::get($cacheKey);
@@ -323,7 +323,9 @@ class Fetcher
 		} else {
 			Console::notice("Fetching $slug...");
 			$command =
-				"php " . APP_DIR . "/app/Services/Parsers/parser-opensimworld.php";
+				"php " .
+				APP_DIR .
+				"/app/Services/Parsers/parser-opensimworld.php";
 			try {
 				$json = shell_exec($command);
 			} catch (Exception $e) {
