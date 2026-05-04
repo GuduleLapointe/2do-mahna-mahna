@@ -21,7 +21,7 @@
  * @property string  $regionname   Canonical region name (from grid data)
  * @property string  $regionUUID   Region UUID
  * @property string  $regionhandle Legacy 64-bit grid coordinate handle
- * @property string  $url          Region info URL from grid data
+ * @property string  $url          Normalized destination URL (gatekeeperURL:region[/pos]), set from constructor args
  * @property string  $owner        Owner display name
  * @property string  $owneruuid    Owner UUID
  * @property string  $gatekeeperURL  Gatekeeper base URL ("http://host:port")
@@ -90,6 +90,9 @@ class Region
 		$this->pos = empty($parsed["pos"])
 			? []
 			: array_map("floatval", explode("/", $parsed["pos"]));
+
+		$this->url = $this->gatekeeperURL . ":" . $this->region
+			. (empty($this->pos) ? "" : "/" . implode("/", $this->pos));
 	}
 
 	/**
@@ -113,12 +116,11 @@ class Region
 		$lookupURL = $this->gatekeeperURL . ":" . $this->region;
 		$this->data = opensim_get_region($lookupURL) ?: [];
 
-		$this->regionname = $this->data["region_name"] ?? $this->region;
-		$this->regionUUID = $this->data["uuid"] ?? "";
+		$this->regionname   = $this->data["region_name"] ?? $this->region;
+		$this->regionUUID   = $this->data["uuid"]         ?? "";
 		$this->regionhandle = $this->data["regionhandle"] ?? "";
-		$this->url = $this->data["url"] ?? "";
-		$this->owner = $this->data["owner"] ?? "";
-		$this->owneruuid = $this->data["owneruuid"] ?? "";
+		$this->owner        = $this->data["owner"]        ?? "";
+		$this->owneruuid    = $this->data["owneruuid"]    ?? "";
 
 		if (!empty($this->regionname)) {
 			$this->region = $this->regionname;
@@ -170,12 +172,11 @@ class Region
 	 *
 	 * Call data() first so the canonical region name is used.
 	 *
-	 * Position resolution when no $pos override is given:
-	 *   1. $this->pos — position embedded in the source URL
-	 *   2. landingpoint from region data (link_region response) — grid default
-	 *   3. No position — link without coordinates
+	 * Without a $pos override the position embedded in the source URL ($this->pos)
+	 * is used when present; otherwise the link has no position component.
+	 * To teleport to the region's default landing point, call landingPoint() (TODO).
 	 *
-	 * @param  float[]|null $pos     Override position [x, y, z]; null = use source pos or grid default
+	 * @param  float[]|null $pos     Position override [x, y, z]; null = use $this->pos
 	 * @param  int          $format  TPLINK_* constant (default TPLINK_TXT)
 	 * @return string
 	 */
@@ -185,16 +186,10 @@ class Region
 			return "";
 		}
 
-		if ($pos === null) {
-			if (!empty($this->pos)) {
-				$pos = $this->pos;
-			} elseif (!empty($this->data["link_region"]["landingpoint"])) {
-				$pos = array_map("floatval", explode("/", $this->data["link_region"]["landingpoint"]));
-			}
-		}
+		$effectivePos = $pos ?? $this->pos;
 
 		$uri = $this->gatekeeperURL . ":" . $this->region
-			. (empty($pos) ? "" : "/" . implode("/", $pos));
+			. (empty($effectivePos) ? "" : "/" . implode("/", $effectivePos));
 
 		return opensim_format_tp($uri, $format) ?? "";
 	}
