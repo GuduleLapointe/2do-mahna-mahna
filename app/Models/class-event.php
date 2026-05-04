@@ -1,8 +1,4 @@
 <?php
-
-use Kigkonsult\Icalcreator\Vcalendar;
-use Kigkonsult\Icalcreator\Vevent;
-
 /**
  * Event class
  *
@@ -28,6 +24,10 @@ use Kigkonsult\Icalcreator\Vevent;
  * @property string $gatekeeperURL  // Region grid target URL
  * @property string $hash           // Not implemented
  */
+
+use Kigkonsult\Icalcreator\Vcalendar;
+use Kigkonsult\Icalcreator\Vevent;
+
 class Event
 {
 	public $uid;
@@ -169,15 +169,16 @@ class Event
 	 */
 	public function sanitize_hgurl($url, $grid_url = null)
 	{
-		$region = Region::get($url, $grid_url);
-		if (!$region) {
+		$region = new Region($url, $grid_url);
+		if (empty($region->key)) {
 			return false;
 		}
+		$region->data();
 		if (!$region->online()) {
 			Console::verbose("region offline: " . ($url ?: $grid_url));
 			return false;
 		}
-		$this->globalPos = $region->globalPos();
+		$this->globalPos = implode(',', $region->globalPos);
 		return $region->hgURL(TPLINK_TXT);
 	}
 
