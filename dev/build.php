@@ -18,7 +18,7 @@ if (php_sapi_name() != "cli") {
 
 require_once dirname(__DIR__) . "/bootstrap.php";
 
-TODO_APPrequire_once APP_DIR . "/app/Services/Exporters/export-html.php";
+require_once APP_DIR . "/app/Services/Exporters/export-html.php";
 
 $opts = getopt("qvh", ["help"], $rest_index);
 $pos_args = array_slice($argv, $rest_index);
@@ -128,3 +128,4 @@ Console::notice(
 		: "Finished with errors — output in $dest",
 );
 exit($code);
+
