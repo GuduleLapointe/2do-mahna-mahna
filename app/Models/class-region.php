@@ -28,12 +28,13 @@
  * @property string  $host         Grid server hostname
  * @property int     $port         Grid server port
  * @property string  $region       Region name (from URL; updated to canonical after data())
- * @property string  $key          Canonical cache key "host:port/region" (lower-cased, no pos);
+ * @property string  $uri          Canonical cache key "host:port/region" (lower-cased, no pos);
  *                                 empty string when URL is not parseable
  * @property float[] $pos          Local teleport position [x, y, z] from source URL;
  *                                 empty array when not specified
  * @property float[] $globalPos    Absolute map position [x, y, z] = grid origin + $pos;
  *                                 null until data() has been called
+ * @property array   $data         Cached region data
  */
 if (!TODO_APP) {
 	die("No direct calls." . PHP_EOL);
@@ -41,28 +42,21 @@ if (!TODO_APP) {
 
 class Region
 {
-	// --- OpenSimSearch regions table schema ---
-	public string $regionname   = '';
-	public string $regionUUID   = '';
-	public string $regionhandle = '';
-	public string $url          = '';
-	public string $owner        = '';
-	public string $owneruuid    = '';
-	public string $gatekeeperURL = '';
-
-	// --- Parsed URL components ---
-	public string $host   = '';
-	public int    $port   = 8002;
-	public string $region = '';
-	public string $key    = '';  // empty = URL was not parseable
-	public array  $pos    = [];  // [x, y, z] float; empty = not specified in URL
-
-	// --- Derived from data() ---
-	public ?array $globalPos = null;  // [x, y, z] float absolute map position; null until data() called
-
-	// ------------------------------------------------------------------
-	// Constructor — URL parsing only, no network I/O
-	// ------------------------------------------------------------------
+	public string $regionname = "";
+	public string $regionUUID = "";
+	public string $regionhandle = "";
+	public string $url = "";
+	public string $owner = "";
+	public string $owneruuid = "";
+	public string $gatekeeperURL = "";
+	public string $host = "";
+	public int $port = 8002;
+	public string $region = "";
+	public string $uri = "";
+	public array $pos = [];
+	public ?array $globalPos = null;
+	public ?array $data = null;
+	public ?bool $online = null;
 
 	/**
 	 * Parse a region URL into structured components.
@@ -77,30 +71,29 @@ class Region
 	public function __construct(string $url, ?string $grid = null)
 	{
 		if (empty($url)) {
-			$url = $grid ?? '';
+			$url = $grid ?? "";
 		}
 		if (empty($url)) {
 			return;
 		}
 
 		$parsed = opensim_sanitize_uri($url, $grid, true);
-		if (!$parsed || empty($parsed['host'])) {
+		if (!$parsed || empty($parsed["host"])) {
 			return;
 		}
 
-		$this->host          = $parsed['host'];
-		$this->port          = (int) ($parsed['port'] ?? 8002);
-		$this->region        = $parsed['region'];
-		$this->key           = $parsed['key'];
-		$this->gatekeeperURL = $parsed['gatekeeper'];
-		$this->pos           = empty($parsed['pos'])
+		$this->host = $parsed["host"];
+		$this->port = (int) ($parsed["port"] ?? 8002);
+		$this->region = $parsed["region"];
+		$this->uri = $parsed["key"];
+		$this->gatekeeperURL = $parsed["gatekeeper"];
+		$this->pos = empty($parsed["pos"])
 			? []
-			: array_map('floatval', explode('/', $parsed['pos']));
-	}
+			: array_map("floatval", explode("/", $parsed["pos"]));
 
-	// ------------------------------------------------------------------
-	// Grid data fetch (cached 24 h)
-	// ------------------------------------------------------------------
+		$this->url =
+			$this->uri . ($this->pos ? "/" . implode("/", $this->pos) : "");
+	}
 
 	/**
 	 * Fetch region data from the grid and populate schema properties.
@@ -112,43 +105,38 @@ class Region
 	 */
 	public function data(): array
 	{
-		if (empty($this->key)) {
+		if (empty($this->uri)) {
 			return [];
 		}
-
-		$regionData = Cache::get("opensim_get_region_{$this->key}");
-		if ($regionData === null) {
-			$lookupURL  = $this->gatekeeperURL . ':' . $this->region;
-			$regionData = opensim_get_region($lookupURL) ?: [];
-			Cache::set("opensim_get_region_{$this->key}", $regionData, 24 * 3600);
+		$this->data = Cache::get("region_data_{$this->uri}", $this->data);
+		if ($this->data) {
+			return $this->data;
 		}
 
-		$this->regionname   = $regionData['region_name'] ?? $this->region;
-		$this->regionUUID   = $regionData['uuid']         ?? '';
-		$this->regionhandle = $regionData['regionhandle'] ?? '';
-		$this->url          = $regionData['url']          ?? '';
-		$this->owner        = $regionData['owner']        ?? '';
-		$this->owneruuid    = $regionData['owneruuid']    ?? '';
+		$lookupURL = $this->gatekeeperURL . ":" . $this->region;
+		$this->data = opensim_get_region($lookupURL) ?: [];
 
-		// Canonical grid name takes precedence over the URL-parsed name
+		$this->regionname = $this->data["region_name"] ?? $this->region;
+		$this->regionUUID = $this->data["uuid"] ?? "";
+		$this->regionhandle = $this->data["regionhandle"] ?? "";
+		$this->url = $this->data["url"] ?? "";
+		$this->owner = $this->data["owner"] ?? "";
+		$this->owneruuid = $this->data["owneruuid"] ?? "";
+
 		if (!empty($this->regionname)) {
 			$this->region = $this->regionname;
 		}
 
-		// globalPos = region grid origin + local teleport pos (or DEFAULT_POS)
-		$local           = empty($this->pos) ? DEFAULT_POS : $this->pos;
+		$local = empty($this->pos) ? DEFAULT_POS : $this->pos;
 		$this->globalPos = [
-			(float) ($regionData['x'] ?? 0) + $local[0],
-			(float) ($regionData['y'] ?? 0) + $local[1],
+			(float) ($this->data["x"] ?? 0) + $local[0],
+			(float) ($this->data["y"] ?? 0) + $local[1],
 			(float) ($local[2] ?? DEFAULT_POS[2]),
 		];
 
-		return $regionData;
+		Cache::set("region_data_{$this->uri}", $this->data, 24 * 3600);
+		return $this->data;
 	}
-
-	// ------------------------------------------------------------------
-	// Online status (cached 1 h)
-	// ------------------------------------------------------------------
 
 	/**
 	 * Return true if the region is currently reachable.
@@ -159,31 +147,19 @@ class Region
 	 */
 	public function online(): bool
 	{
-		if (empty($this->key)) {
+		if (empty($this->uri)) {
 			return false;
 		}
-
-		$online = Cache::get("opensim_region_is_online_{$this->key}");
-		if ($online === null) {
-			// opensim_region_is_online accepts the sanitized array directly
-			$regionArray = [
-				'host'       => $this->host,
-				'port'       => $this->port,
-				'region'     => $this->region,
-				'pos'        => implode('/', $this->pos),
-				'gatekeeper' => $this->gatekeeperURL,
-				'key'        => $this->key,
-			];
-			$online = opensim_region_is_online($regionArray);
-			Cache::set("opensim_region_is_online_{$this->key}", $online, 3600);
+		$online = Cache::get("opensim_region_is_online_{$this->uri}");
+		if ($online !== null) {
+			return (bool) $online;
 		}
 
+		$online = opensim_region_is_online($this->uri);
+
+		Cache::set("opensim_region_is_online_{$this->uri}", $online, 3600);
 		return (bool) $online;
 	}
-
-	// ------------------------------------------------------------------
-	// Formatted teleport URL
-	// ------------------------------------------------------------------
 
 	/**
 	 * Return the region as a formatted teleport URL.
@@ -194,15 +170,16 @@ class Region
 	 * @param  int    $format  TPLINK_* constant (default TPLINK_TXT)
 	 * @return string
 	 */
-	public function hgURL(int $format = TPLINK_TXT): string
+	public function teleportLink(?array $pos, int $format = TPLINK_TXT): string
 	{
 		if (empty($this->gatekeeperURL)) {
-			return '';
+			return "";
 		}
 
-		$uri = $this->gatekeeperURL . ':' . $this->region
-			. (empty($this->pos) ? '' : '/' . implode('/', $this->pos));
-
-		return opensim_format_tp($uri, $format) ?? '';
+		if (empty($pos)) {
+			return opensim_format_tp($this->url, $format) ?? "";
+		}
+		$uri = $this->uri . "/" . implode("/", $pos);
+		return opensim_format_tp($uri, $format) ?? "";
 	}
 }
