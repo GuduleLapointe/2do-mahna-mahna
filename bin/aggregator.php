@@ -52,7 +52,6 @@ class Aggregator
 	{
 		Console::notice("Output: " . Console::relpath($this->output_dir));
 
-		$cache_time  = 55 * 60; // 55 minutes, to accommodate for 1-hour cron job
 		$config_file = APP_DIR . "/config/config.json";
 
 		Config::load(
@@ -66,26 +65,13 @@ class Aggregator
 		}
 
 		if (self::$force) {
-			Cache::forget("aggregator_last_fetch");
-			Console::notice("Cache cleared");
+			Console::notice("Cache cleared (per-source caches will be skipped)");
 		}
 
-		$last_fetch  = Cache::get("aggregator_last_fetch");
-		$config_mtime = file_exists($config_file) ? filemtime($config_file) : 0;
-		$cache_stale =
-			$last_fetch === null ||
-			$last_fetch + $cache_time < time() ||
-			$config_mtime > $last_fetch;
-
-		if ($cache_stale) {
-			Console::notice("Fetching events...");
-			$fetcher = new Fetcher();
-			$count   = EventStorage::write($fetcher->get_events());
-			Cache::set("aggregator_last_fetch", time(), $cache_time + 60);
-			Console::verbose("$count events stored in SearchDB");
-		} else {
-			Console::verbose("SearchDB up to date, skipping fetch");
-		}
+		Console::notice("Fetching events...");
+		$fetcher = new Fetcher();
+		$count   = EventStorage::write($fetcher->get_events());
+		Console::verbose("$count events stored in SearchDB");
 
 		Console::notice("Exporting " . count(EventStorage::readEvents()) . " events...");
 		new HYPEvents_Exporter($this->output_dir);

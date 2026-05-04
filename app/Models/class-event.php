@@ -156,17 +156,21 @@ class Event
 	 */
 	public function sanitize_hgurl($url, $grid_url = null)
 	{
-		static $sanitize_hgurl_cache = [];
-		static $globalpos_cache = [];
-
 		if (empty($url)) {
 			$url = $grid_url;
 		}
 
-		// Return cached value if available
-		if (isset($sanitize_hgurl_cache[$url])) {
-			$this->globalPos = $globalpos_cache[$url] ?? implode(',', DEFAULT_POS);
-			switch ($sanitize_hgurl_cache[$url]) {
+		// Cache keys derived from the original (pre-transform) input URL.
+		$cacheKey    = "hgurl_" . md5((string) $url);
+		$posKey      = "hgpos_" . md5((string) $url);
+		// Region info changes infrequently; 6-hour TTL avoids stale data accumulating.
+		$cacheTTL    = 6 * 3600;
+
+		// Return cached value if available (memory-first via Cache::get).
+		$cached = Cache::get($cacheKey);
+		if ($cached !== null) {
+			$this->globalPos = Cache::get($posKey) ?? implode(",", DEFAULT_POS);
+			switch ($cached) {
 				case "empty":
 					return;
 				case "offline":
@@ -176,7 +180,7 @@ class Event
 					Console::verbose("cached region $url is invalid");
 					return false;
 			}
-			return $sanitize_hgurl_cache[$url];
+			return $cached;
 		}
 
 		$region = opensim_sanitize_uri($url, $grid_url, true);
@@ -187,8 +191,7 @@ class Event
 
 		if (empty($region_data)) {
 			Console::verbose("region $tmpurl data could not be fetched (empty)");
-
-			$sanitize_hgurl_cache[$url] = "invalid";
+			Cache::set($cacheKey, "invalid", $cacheTTL);
 			return false;
 		}
 		$region["region"] =
@@ -197,8 +200,7 @@ class Event
 				: $region["region"];
 		if (!opensim_region_is_online($region)) {
 			Console::verbose("region $tmpurl is offline");
-
-			$sanitize_hgurl_cache[$url] = "offline";
+			Cache::set($cacheKey, "offline", $cacheTTL);
 			return false;
 		}
 
@@ -208,17 +210,18 @@ class Event
 			$pos[0] += (int) $region_data["x"];
 			$pos[1] += (int) $region_data["y"];
 		}
-		$this->globalPos = $globalpos_cache[$url] = implode(",", $pos);
+		$this->globalPos = implode(",", $pos);
+		Cache::set($posKey, $this->globalPos, $cacheTTL);
 
 		$tmpurl =
 			$region["gatekeeper"] .
 			":" .
 			$region["region"] .
 			(empty($region["pos"]) ? "" : "/" . $region["pos"]);
-		$url = opensim_format_tp($tmpurl, TPLINK_TXT);
+		$result = opensim_format_tp($tmpurl, TPLINK_TXT);
 
-		$sanitize_hgurl_cache[$url] = $url;
-		return $url;
+		Cache::set($cacheKey, $result, $cacheTTL);
+		return $result;
 	}
 
 	/**

@@ -255,24 +255,33 @@ class Fetcher
 
 	private function fetch_ical($slug, $calendar)
 	{
-		$url = $calendar["ical_url"];
-		Console::notice("Fetching $slug...");
+		$url      = $calendar["ical_url"];
+		$cacheKey = "source_" . $slug;
 
-		$command =
-			"php " .
-			APP_DIR .
-			"/app/Services/Parsers/parser-ical.php " .
-			escapeshellarg($url);
-		try {
-			$json = shell_exec($command);
-		} catch (Exception $e) {
-			Console::error(
-				"$slug parse error: " .
-					$e->get_code() .
-					": " .
-					$e->get_message(),
-			);
-			return;
+		$json = Aggregator::force() ? null : Cache::get($cacheKey);
+		if ($json !== null) {
+			Console::verbose("$slug: using cached data");
+		} else {
+			Console::notice("Fetching $slug...");
+			$command =
+				"php " .
+				APP_DIR .
+				"/app/Services/Parsers/parser-ical.php " .
+				escapeshellarg($url);
+			try {
+				$json = shell_exec($command);
+			} catch (Exception $e) {
+				Console::error(
+					"$slug parse error: " .
+						$e->get_code() .
+						": " .
+						$e->get_message(),
+				);
+				return;
+			}
+			if (!empty($json)) {
+				Cache::set($cacheKey, $json, 55 * 60);
+			}
 		}
 		$source_events = json_decode($json ?? "", true);
 
@@ -300,26 +309,35 @@ class Fetcher
 
 	private function fetch_opensimworld()
 	{
-		$slug = "opensimworld";
-		Console::notice("Fetching $slug...");
+		$slug     = "opensimworld";
+		$cacheKey = "source_" . $slug;
 		$calendar = [
-			"slug" => $slug,
+			"slug"     => $slug,
 			"grid_url" => null,
-			"type" => "crawler",
+			"type"     => "crawler",
 		];
 
-		$command =
-			"php " . APP_DIR . "/app/Services/Parsers/parser-opensimworld.php";
-		try {
-			$json = shell_exec($command);
-		} catch (Exception $e) {
-			Console::error(
-				"$slug parse error: " .
-					$e->get_code() .
-					": " .
-					$e->get_message(),
-			);
-			return;
+		$json = Aggregator::force() ? null : Cache::get($cacheKey);
+		if ($json !== null) {
+			Console::verbose("$slug: using cached data");
+		} else {
+			Console::notice("Fetching $slug...");
+			$command =
+				"php " . APP_DIR . "/app/Services/Parsers/parser-opensimworld.php";
+			try {
+				$json = shell_exec($command);
+			} catch (Exception $e) {
+				Console::error(
+					"$slug parse error: " .
+						$e->get_code() .
+						": " .
+						$e->get_message(),
+				);
+				return;
+			}
+			if (!empty($json)) {
+				Cache::set($cacheKey, $json, 55 * 60);
+			}
 		}
 		$source_events = json_decode($json ?? "", true);
 

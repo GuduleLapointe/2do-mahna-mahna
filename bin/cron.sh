@@ -27,6 +27,8 @@ DATA_DIR=${DATA_DIR:-$BASE_DIR/data}
 for arg in "$@"; do
     case "$arg" in
         -n|--dry-run) DRY_RUN=1 ;;
+        -v|--verbose) DEBUG=1 ;;
+        -q|--quiet) DEBUG= ;;
     esac
 done
 
