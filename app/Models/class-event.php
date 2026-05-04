@@ -63,7 +63,9 @@ class Event
 		$data = array_merge(EVENT_STRUCTURE, $data);
 
 		if (Fetcher::isExcluded($calendar["slug"], $data["name"])) {
-			Console::verbose("[{$calendar["slug"]}] {$data["name"]} is in exclusion list");
+			Console::verbose(
+				"[{$calendar["slug"]}] {$data["name"]} is in exclusion list",
+			);
 			return false;
 		}
 
@@ -88,19 +90,28 @@ class Event
 			$calendar["grid_url"],
 		);
 		if ($sanitized_url === false) {
-			Console::verbose(sprintf(
-				"%s event %s error checking sanitize_hgurl(%s, %s)",
-				$calendar["slug"], $data["uid"],
-				$data["simname"] ?? "", $calendar["grid_url"],
-			));
+			Console::verbose(
+				sprintf(
+					"%s event %s error checking sanitize_hgurl(%s, %s)",
+					$calendar["slug"],
+					$data["uid"],
+					$data["simname"] ?? "",
+					$calendar["grid_url"],
+				),
+			);
 			return false;
 		}
 		if (empty($sanitized_url)) {
-			Console::verbose(sprintf(
-				"%s event %s has no location %s",
-				$calendar["slug"], $data["uid"],
-				empty($data["simname"]) ? $calendar["grid_url"] : $data["simname"],
-			));
+			Console::verbose(
+				sprintf(
+					"%s event %s has no location %s",
+					$calendar["slug"],
+					$data["uid"],
+					empty($data["simname"])
+						? $calendar["grid_url"]
+						: $data["simname"],
+				),
+			);
 			return false;
 		}
 		$data["simname"] = $sanitized_url;
@@ -148,80 +159,26 @@ class Event
 	}
 
 	/**
-	 * Sanitize a hypergrid URL
+	 * Resolve a raw region URL to a canonical teleport URL, setting globalPos as a side effect.
 	 *
-	 * @param string $url           // URL to sanitize
-	 * @param string $grid_url      // Grid URL to use if $url is empty or missin host
-	 * @return string|bool          // Sanitized URL or false if the region is offline or invalid
+	 * Delegates to Region::get(), which handles parsing, grid lookups, and caching.
+	 *
+	 * @param  string      $url       Raw region URL from the event source
+	 * @param  string|null $grid_url  Grid gatekeeper URL (fallback when $url has no host)
+	 * @return string|false           Canonical "host:port Region/pos" URL, or false if offline/invalid
 	 */
 	public function sanitize_hgurl($url, $grid_url = null)
 	{
-		if (empty($url)) {
-			$url = $grid_url;
-		}
-
-		// Cache keys derived from the original (pre-transform) input URL.
-		$cacheKey    = "hgurl_" . md5((string) $url);
-		$posKey      = "hgpos_" . md5((string) $url);
-		// Region info changes infrequently; 6-hour TTL avoids stale data accumulating.
-		$cacheTTL    = 6 * 3600;
-
-		// Return cached value if available (memory-first via Cache::get).
-		$cached = Cache::get($cacheKey);
-		if ($cached !== null) {
-			$this->globalPos = Cache::get($posKey) ?? implode(",", DEFAULT_POS);
-			switch ($cached) {
-				case "empty":
-					return;
-				case "offline":
-					Console::verbose("cached region $url is offline");
-					return false;
-				case "invalid":
-					Console::verbose("cached region $url is invalid");
-					return false;
-			}
-			return $cached;
-		}
-
-		$region = opensim_sanitize_uri($url, $grid_url, true);
-
-		$tmpurl = opensim_sanitize_uri($url, $grid_url);
-
-		$region_data = opensim_get_region($tmpurl);
-
-		if (empty($region_data)) {
-			Console::verbose("region $tmpurl data could not be fetched (empty)");
-			Cache::set($cacheKey, "invalid", $cacheTTL);
+		$region = Region::get($url, $grid_url);
+		if (!$region) {
 			return false;
 		}
-		$region["region"] =
-			empty($region["region"]) & !empty($region_data["region_name"])
-				? $region_data["region_name"]
-				: $region["region"];
-		if (!opensim_region_is_online($region)) {
-			Console::verbose("region $tmpurl is offline");
-			Cache::set($cacheKey, "offline", $cacheTTL);
+		if (!$region->online()) {
+			Console::verbose("region offline: " . ($url ?: $grid_url));
 			return false;
 		}
-
-		// Compute absolute grid position: local pos + region grid coordinates
-		$pos = empty($region["pos"]) ? DEFAULT_POS : array_map("intval", explode("/", $region["pos"]));
-		if (!empty($region_data["x"]) && !empty($region_data["y"])) {
-			$pos[0] += (int) $region_data["x"];
-			$pos[1] += (int) $region_data["y"];
-		}
-		$this->globalPos = implode(",", $pos);
-		Cache::set($posKey, $this->globalPos, $cacheTTL);
-
-		$tmpurl =
-			$region["gatekeeper"] .
-			":" .
-			$region["region"] .
-			(empty($region["pos"]) ? "" : "/" . $region["pos"]);
-		$result = opensim_format_tp($tmpurl, TPLINK_TXT);
-
-		Cache::set($cacheKey, $result, $cacheTTL);
-		return $result;
+		$this->globalPos = $region->globalPos();
+		return $region->hgURL(TPLINK_TXT);
 	}
 
 	/**

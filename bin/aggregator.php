@@ -96,6 +96,7 @@ class Aggregator
 		require_once APP_DIR . "/lib/opensim-functions.php";
 
 		require_once APP_DIR . "/app/Services/class-fetcher.php";
+		require_once APP_DIR . "/app/Models/class-region.php";
 		require_once APP_DIR . "/app/Models/class-event.php";
 
 		require_once APP_DIR . "/app/Shared/Cache.php";

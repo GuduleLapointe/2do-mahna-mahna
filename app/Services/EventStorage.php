@@ -48,10 +48,11 @@ class EventStorage
 			$description = $links ? "$links\n\n{$event->description}" : $event->description;
 
 			// Normalise UTF-8 encoding: some sources declare UTF-8 but send
-			// latin1-encoded data; utf8_decode→utf8_encode round-trip corrects this
-			// (matches the fix applied in eventsparser.php).
-			$name        = utf8_encode(utf8_decode(strip_tags(html_entity_decode($event->name))));
-			$description = utf8_encode(utf8_decode(strip_tags(html_entity_decode($description))));
+			// latin1-encoded data. If the string is already valid UTF-8 it is left
+			// unchanged; otherwise it is re-interpreted as ISO-8859-1 and converted.
+			// (Replaces the deprecated utf8_encode/utf8_decode round-trip.)
+			$name        = self::fixEncoding(strip_tags(html_entity_decode($event->name)));
+			$description = self::fixEncoding(strip_tags(html_entity_decode($description)));
 
 			$fields = [
 				"owneruuid"     => $event->owneruuid,
@@ -91,6 +92,21 @@ class EventStorage
 		));
 
 		return $count;
+	}
+
+	/**
+	 * Correct sources that declare UTF-8 but send latin1-encoded bytes.
+	 *
+	 * If the string is already valid UTF-8 it is returned unchanged.
+	 * Otherwise it is re-interpreted as ISO-8859-1 and converted to UTF-8.
+	 * This is the PHP 8.2-safe replacement for utf8_encode(utf8_decode($str)).
+	 */
+	private static function fixEncoding(string $str): string
+	{
+		if (mb_check_encoding($str, 'UTF-8')) {
+			return $str;
+		}
+		return mb_convert_encoding($str, 'UTF-8', 'ISO-8859-1');
 	}
 
 	/**
