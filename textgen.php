@@ -33,59 +33,63 @@
  * @version 2.0
  **/
 
-$fontsize        = isset( $_REQUEST['fontsize'] ) ? $_REQUEST['size'] : 120;
-$textcolor       = isset( $_REQUEST['color'] ) ? $_REQUEST['color'] : 'white';
-$backgroundcolor = isset( $_REQUEST['background'] ) ? $_REQUEST['background'] : 'black';
-$font            = isset( $_REQUEST['font'] ) ? $_REQUEST['font'] : 'Impact';
-$download        = isset( $_REQUEST['inpage'] ) ? false : true;
-$download        = isset( $_REQUEST['download'] ) ? true : false;
-$string          = isset( $_REQUEST['string'] ) ? urldecode( preg_replace( ":\\\':", '\'', $_REQUEST['string'] ) ) : $font;
+$fontsize = isset($_REQUEST["fontsize"]) ? $_REQUEST["size"] : 120;
+$textcolor = isset($_REQUEST["color"]) ? $_REQUEST["color"] : "white";
+$backgroundcolor = isset($_REQUEST["background"])
+	? $_REQUEST["background"]
+	: "black";
+$font = isset($_REQUEST["font"]) ? $_REQUEST["font"] : "Impact";
+$download = isset($_REQUEST["inpage"]) ? false : true;
+$download = isset($_REQUEST["download"]) ? true : false;
+$string = isset($_REQUEST["string"])
+	? urldecode(preg_replace(":\\\':", '\'', $_REQUEST["string"]))
+	: $font;
 
-$finalwidth      = 1024;
-$finalheight     = 1024;
-$workheight      = 1024;
-$workwidth       = 1024;
+$finalwidth = 1024;
+$finalheight = 1024;
+$workheight = 1024;
+$workwidth = 1024;
 
-$queryFonts = \Imagick::queryFonts( '*' );
+$queryFonts = \Imagick::queryFonts("*");
 
-if ( isset( $_REQUEST['json'] ) ) {
-	header( 'Content-Type: application/json' );
-	echo json_encode( $queryFonts );
-	exit;
-} elseif ( isset( $_REQUEST['list'] ) ) {
-	header( 'Content-Type: text/plain' );
-	echo implode( "\n", $queryFonts );
-	exit;
+if (isset($_REQUEST["json"])) {
+	header("Content-Type: application/json");
+	echo json_encode($queryFonts);
+	exit();
+} elseif (isset($_REQUEST["list"])) {
+	header("Content-Type: text/plain");
+	echo implode("\n", $queryFonts);
+	exit();
 }
 
-if ( ! in_array( $font, $queryFonts ) ) {
-	$font = 'DejaVu-Sans'; // Use a default font if the specified font is not available
+if (!in_array($font, $queryFonts)) {
+	$font = "DejaVu-Sans"; // Use a default font if the specified font is not available
 }
 
 $draw = new ImagickDraw();
-$draw->setFont( $font );
-$draw->setFontSize( $fontsize );
-$draw->setFillColor( $textcolor );
-$draw->setTextAlignment( Imagick::ALIGN_CENTER );
+$draw->setFont($font);
+$draw->setFontSize($fontsize);
+$draw->setFillColor($textcolor);
+$draw->setTextAlignment(Imagick::ALIGN_CENTER);
 
 $imagick = new Imagick();
-$imagick->newImage( $workwidth, $workheight, $backgroundcolor );
-$imagick->setImageFormat( 'png' );
+$imagick->newImage($workwidth, $workheight, $backgroundcolor);
+$imagick->setImageFormat("png");
 
-$metrics    = $imagick->queryFontMetrics( $draw, $string );
-$textwidth  = $metrics['textWidth'];
-$textheight = $metrics['textHeight'];
+$metrics = $imagick->queryFontMetrics($draw, $string);
+$textwidth = $metrics["textWidth"];
+$textheight = $metrics["textHeight"];
 
-$xcord = ( $workwidth / 2 );
-$ycord = ( $workheight / 2 ) + ( $textheight / 4 );
+$xcord = $workwidth / 2;
+$ycord = $workheight / 2 + $textheight / 4;
 
-$imagick->annotateImage( $draw, $xcord, $ycord, 0, $string );
+$imagick->annotateImage($draw, $xcord, $ycord, 0, $string);
 
-$imagick->resizeImage( $finalwidth, $finalheight, Imagick::FILTER_LANCZOS, 1 );
+$imagick->resizeImage($finalwidth, $finalheight, Imagick::FILTER_LANCZOS, 1);
 
-header( 'Content-type: image/png' );
-if ( $download ) {
-	header( "Content-Disposition: attachment; filename=\"${string}.png\"" );
+header("Content-type: image/png");
+if ($download) {
+	header("Content-Disposition: attachment; filename=\"{$string}.png\"");
 }
 
 echo $imagick;
