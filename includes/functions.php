@@ -48,17 +48,14 @@ function opensim_isuuid($uuid, $nullok = false, $strict = false)
 /**
  * Sanitize a destination URI or URL
  *
- * @param  string  $url                             url or uri (secondlife:// url, hop:// url, region name...)
- * @param  string  $gatekeeperURL           default login uri to add to urls sithout host:port
- * @param  boolean $array_outout            output as array
+ * @param  string  $url				url or uri or tp link (secondlife:// url, hop:// url, region name...)
+ * @param  string  $gatekeeperURL	default login uri to add to urls sithout host:port
+ * @param  boolean $outputArray		output as array
  * @return string       (default)                   $host:$port $region/$pos
  *           or array                                           array($host, $port, $region, $pos)
  */
-function opensim_sanitize_uri(
-	$url,
-	$gatekeeperURL = null,
-	$array_outout = false,
-) {
+function opensim_sanitize_uri($url, $gatekeeperURL = null, $outputArray = false)
+{
 	// $normalized = opensim_format_tp($uri, TPLINK_TXT);
 	$host = null;
 	$port = null;
@@ -66,20 +63,31 @@ function opensim_sanitize_uri(
 	$pos = null;
 	$uri = urldecode(trim($url));
 	$uri = preg_replace(
-		'#^(.*://)?(([A-Za-z0-9_-]+\.[A-Za-z0-9\._-]+)([:/ ]+)?)?(([0-9]+)([ /:]))?([^/]+)(/|$)(.*)#',
-		'$3:$6:$8/$10',
-		"$uri",
+		[
+			'#^(.*://)?(([A-Za-z0-9_-]+\.[A-Za-z0-9\._-]+)([:/ ]+)?)?(([0-9]+)([ /:]))?([^/]+)(/|$)(.*)#',
+			"/^([^:]+)::([0-9]+)/",
+			'+[:/]*$+',
+		],
+		['$3:$6:$8/$10', '$1:$2', ""],
+		$uri,
 	);
-	$uri = preg_replace("/^([^:]+)::([0-9]+)/", '$1:$2', $uri);
-	$uri = preg_replace('+[:/]*$+', "", $uri);
+	// $uri = preg_replace(
+	// 	'#^(.*://)?(([A-Za-z0-9_-]+\.[A-Za-z0-9\._-]+)([:/ ]+)?)?(([0-9]+)([ /:]))?([^/]+)(/|$)(.*)#',
+	// 	'$3:$6:$8/$10',
+	// 	"$uri",
+	// );
+	// $uri = preg_replace("/^([^:]+)::([0-9]+)/", '$1:$2', $uri);
+	// $uri = preg_replace('+[:/]*$+', "", $uri);
+
 	$split = explode("/", $uri);
 	$uri = array_shift($split);
+
 	if (count($split) == 2 || count($split) == 3) {
 		$pos = implode("/", $split);
 	} else {
 		$pos = "";
 	}
-	// $pos = preg_replace('+[^0-9/]+e', '', $pos);
+
 	$split = explode(":", $uri);
 
 	if (count($split) == 1) {
@@ -128,13 +136,14 @@ function opensim_sanitize_uri(
 	if (empty($port) & !empty($host)) {
 		$port = 80;
 	}
-	$host = strtolower(trim($host));
+	$host = strtolower(trim($host ?? ""));
 	$region = trim(str_replace("_", " ", $region));
 	if (is_numeric($region)) {
 		$pos = "$region/$pos";
 		$region = "";
 	}
-	if ($array_outout) {
+
+	if ($outputArray) {
 		return [
 			"host" => $host,
 			"port" => $port,
@@ -142,6 +151,8 @@ function opensim_sanitize_uri(
 			"pos" => $pos,
 			"gatekeeper" => "http://$host:$port",
 			"key" => strtolower("$host:$port/$region"),
+			"displayName" =>
+				"{$host}:{$port}" . (empty($region) ? "" : " $region"),
 		];
 	} else {
 		return trim(
@@ -180,13 +191,13 @@ function opensim_format_tp($uri, $format = null, $sep = "\n")
 
 	$uri_parts = opensim_sanitize_uri($uri, "", true);
 	extract($uri_parts);
-	if(count($pos) == 3) {
-		$pos_sl = $pos;
-		// unset $pos_sl if $x or $y >= 256
-		($x, $y, $z) = split("/", $pos ?? [null, null, null]);
-		if($x >= 256 || $y >= 256) {
-			$pos_sl = null;
-		}
+	$post_split = explode("/", $pos);
+	if (count($post_split) >= 2) {
+		$pos_x = $post_split[0];
+		$pos_y = $post_split[1];
+
+		// set $pos_sl to $pos only if $pos_x and $pos_y < 256
+		$pos_sl = $pos_x < 256 && $pos_y < 256 ? $pos : null;
 	}
 
 	$region_urlencode = urlencode($region);
@@ -199,12 +210,14 @@ function opensim_format_tp($uri, $format = null, $sep = "\n")
 	if ($format & TPLINK_LOCAL || ($format & TPLINK_HG && empty($host))) {
 		// Web only, do not use for in-world messages
 		$links[TPLINK_LOCAL] =
-			"secondlife://$region_percentencode" . (empty($pos_sl) ? "" : "/$pos_sl");
+			"secondlife://$region_percentencode" .
+			(empty($pos_sl) ? "" : "/$pos_sl");
 	}
 	if ($format & TPLINK_HG) {
 		// Web only, do not use for in-world messages
 		$links[TPLINK_HG] =
-			"secondlife://$host:$port%20$region_percentencode" . (empty($pos_sl) ? "" : "/$pos_sl");
+			"secondlife://$host:$port%20$region_percentencode" .
+			(empty($pos_sl) ? "" : "/$pos_sl");
 	}
 	if ($format & TPLINK_V3HG) {
 		// Web only, do not use for in-world messages
@@ -215,7 +228,8 @@ function opensim_format_tp($uri, $format = null, $sep = "\n")
 	if ($format & TPLINK_HOP) {
 		// Web and in-world messages
 		$links[TPLINK_HOP] =
-			"hop://$host:$port/$region_percentencode" . (empty($pos) ? "" : "/$pos");
+			"hop://$host:$port/$region_percentencode" .
+			(empty($pos) ? "" : "/$pos");
 	}
 	if ($format & TPLINK_APPTP) {
 		// In-world messages, do not use for web links
@@ -224,18 +238,16 @@ function opensim_format_tp($uri, $format = null, $sep = "\n")
 			"secondlife:///app/teleport/$host:$port+$region_urlencode/" .
 			(!empty($pos_sl) ? "$pos_sl/" : "");
 	}
+	// TODO: Alternative web url when maps implemented in API
+	// (No direct map slurl support in the viewer)
+	// Example map URLs (TBD in API)
+	//  - API_HOST/api/v3/map/$host:$port/$region/128/64/32/
+	//  - API_HOST/maps/$host:$port/$region/128/64/32/
+	//  - WEB_HOST/maps/$host:$port/$region/128/64/32/
 	// if ($format & TPLINK_MAP) {
-	// // Map link is not supported in the viewer
-	// // TODO: Alternative SLurl.com-like link when maps implemented in API
-	// // - API_HOST/api/v3/map/$host:$port/$region/128/64/32/
-	// // - API_HOST/maps/$host:$port/$region/128/64/32/
-	// // - WEB_HOST/maps/$host:$port/$region/128/64/32/
-	// 	$links[TPLINK_MAP] =
-	// 		"secondlife:///app/map/$host:$port+$region_urlencode" .
-	// 		(empty($pos) ? "" : "/$pos");
 	// }
 
-	$links = preg_replace('#^[^[:alnum:]]*|[^[:alnum:]]+$#', "", $links);
+	($links = preg_replace('#^[^[:alnum:]]*|[^[:alnum:]]+$#', "", $links))));
 
 	return join($sep, $links);
 }
