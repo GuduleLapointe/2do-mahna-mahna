@@ -10,9 +10,9 @@
  */
 
 // JavaScript code to force horizontal scrolling with mouse wheel
-document.querySelector( '#guide .list' ).addEventListener(
-	'wheel',
-	function (event) {
+document
+	.querySelector("#guide .list")
+	.addEventListener("wheel", function (event) {
 		// Check if Shift key is pressed to allow vertical scrolling
 		if (event.shiftKey) {
 			return;
@@ -25,11 +25,8 @@ document.querySelector( '#guide .list' ).addEventListener(
 		const scrollAmount = event.deltaY * 1.5;
 
 		// Set the horizontal scroll position
-		this.scrollBy(
-			{
-				left: scrollAmount,
-				behavior: 'smooth', // Add a smooth scrolling effect
-			}
-		);
-	}
-);
+		this.scrollBy({
+			left: scrollAmount,
+			behavior: "smooth", // Add a smooth scrolling effect
+		});
+	});

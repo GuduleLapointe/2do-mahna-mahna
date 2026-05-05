@@ -10,7 +10,7 @@
  * @license     AGPLv3
  */
 
-require_once __DIR__ . "/functions-xmlrpc.php";
+require_once __DIR__ . "/xmlrpc-polyfill.php";
 
 /**
  * Verify if given string is an UUID.

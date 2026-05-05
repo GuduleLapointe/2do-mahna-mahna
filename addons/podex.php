@@ -12,7 +12,7 @@
  * @license     AGPLv3
  */
 
-if ( CURRENCY_PROVIDER != 'podex' ) {
+if (CURRENCY_PROVIDER != "podex") {
 	die();
 }
 
@@ -24,10 +24,13 @@ if ( CURRENCY_PROVIDER != 'podex' ) {
  *
  * @var [type]
  */
-if ( ! defined( 'PODEX_ERROR_MESSAGE' ) ) {
-	define( 'PODEX_ERROR_MESSAGE', 'Please use our terminals in-world to proceed. Click OK to teleport to terminals region.' );
+if (!defined("PODEX_ERROR_MESSAGE")) {
+	define(
+		"PODEX_ERROR_MESSAGE",
+		"Please use our terminals in-world to proceed. Click OK to teleport to terminals region.",
+	);
 }
 
-if ( ! defined( 'PODEX_REDIRECT_URL' ) ) {
-	define( 'PODEX_REDIRECT_URL', 'secondlife://Podex Exchange/128/128/21' );
+if (!defined("PODEX_REDIRECT_URL")) {
+	define("PODEX_REDIRECT_URL", "secondlife://Podex Exchange/128/128/21");
 }
