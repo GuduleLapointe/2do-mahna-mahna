@@ -1,12 +1,12 @@
 <?php
 /**
- * economy.php
+ * includes/functions.php
  *
- * Provides functions required by helpers
+ * Provides functions required by opensimulator helpers
  *
  * @package     magicoli/opensim-helpers
  * @author      Gudule Lapointe <gudule@speculoos.world>
- * @link            https://github.com/magicoli/opensim-helpers
+ * @link		https://github.com/magicoli/opensim-helpers
  * @license     AGPLv3
  */
 
@@ -152,9 +152,6 @@ function opensim_sanitize_uri(
 			":/ \n\r\t\v\x00",
 		);
 	}
-
-	// trim(string $string, string $characters = " \n\r\t\v\x00"): string
-	// return preg_replace('#^[: ]*(.*)/*$#', '$1', "$host:$port $region" . ((empty($pos)) ? '' : "/$pos"));
 }
 
 /**
@@ -174,61 +171,70 @@ function opensim_sanitize_uri(
  * @param  string  $sep      Separator for multiple formats, default new line
  * @return string
  */
-function opensim_format_tp($uri, $format = TPLINK, $sep = "\n")
+function opensim_format_tp($uri, $format = null, $sep = "\n")
 {
 	if (empty($uri)) {
 		return;
 	}
-	$parts = parse_url($uri);
+	$format ??= TPLINK;
 
-	// $uri = preg_replace('#!#', '', $uri);
-	// $uri = preg_replace('#.*://+#', '', $uri);
-	// $uri = preg_replace('#[\|:]#', '/', $uri);
-	// $uri = preg_replace('#^([^/]+)/([0-9]+)/#', '$1:$2/', $uri);
-	// $uri = preg_replace('#^[[:blank:]]*#', '', $uri);
-	// echo "$uri ";
-	// // $uri = preg_replace('#(\d{4}):#', '$1/', $uri);
-	// $parts = explode("/", $uri);
-	// $loginuri = array_shift($parts);
-	// $hostparts = explode(":", $loginuri);
-	// $host = $hostparts[0];
-	// $port = (empty($hostparts[1])) ? 80 : $hostparts[1];
-	// $region = urldecode(array_shift($parts));
-	// $pos="";
-	// if(count($parts) >=3 && is_numeric($parts[0]) && is_numeric($parts[1]) && is_numeric($parts[2]) ) {
-	// $posparts = array($parts[0],$parts[1],$parts[2]);
-	// $pos = join('/', $posparts);
-	// $pos_sl = ($parts[0]>=256 || $parts[0]>=256) ? "" : $pos;
-	// }
 	$uri_parts = opensim_sanitize_uri($uri, "", true);
 	extract($uri_parts);
+	if(count($pos) == 3) {
+		$pos_sl = $pos;
+		// unset $pos_sl if $x or $y >= 256
+		($x, $y, $z) = split("/", $pos ?? [null, null, null]);
+		if($x >= 256 || $y >= 256) {
+			$pos_sl = null;
+		}
+	}
 
-	$regionencoded = urlencode($region);
-	$region_hop = str_replace(" ", "%20", $region);
-	// $pos_mandatory = ( empty( $pos ) ) ? '128/128/25' : $pos;
+	$region_urlencode = urlencode($region);
+	$region_percentencode = str_replace(" ", "%20", $region);
+
 	$links = [];
 	if ($format & TPLINK_TXT) {
 		$links[TPLINK_TXT] = "$host:$port $region/$pos";
 	}
 	if ($format & TPLINK_LOCAL || ($format & TPLINK_HG && empty($host))) {
-		$links[TPLINK_LOCAL] = "secondlife://$region/$pos";
+		// Web only, do not use for in-world messages
+		$links[TPLINK_LOCAL] =
+			"secondlife://$region_percentencode" . (empty($pos_sl) ? "" : "/$pos_sl");
 	}
 	if ($format & TPLINK_HG) {
-		$links[TPLINK_HG] = "secondlife://$host:$port $region/$pos";
+		// Web only, do not use for in-world messages
+		$links[TPLINK_HG] =
+			"secondlife://$host:$port%20$region_percentencode" . (empty($pos_sl) ? "" : "/$pos_sl");
 	}
 	if ($format & TPLINK_V3HG) {
-		$links[TPLINK_V3HG] = "secondlife://http|!!$host|$port+$region";
+		// Web only, do not use for in-world messages
+		$links[TPLINK_V3HG] =
+			"secondlife://http|!!$host|$port%20$region_percentencode" .
+			(empty($pos_sl) ? "" : "/$pos_sl");
 	}
 	if ($format & TPLINK_HOP) {
+		// Web and in-world messages
 		$links[TPLINK_HOP] =
-			"hop://$host:$port/$region_hop" . (empty($pos) ? "" : "/$pos");
+			"hop://$host:$port/$region_percentencode" . (empty($pos) ? "" : "/$pos");
 	}
 	if ($format & TPLINK_APPTP) {
+		// In-world messages, do not use for web links
+		// secondlife:///app/teleport/speculoos:8002+Grand+Place/" .
 		$links[TPLINK_APPTP] =
-			"secondlife:///app/teleport/$host:$port+$regionencoded/" .
+			"secondlife:///app/teleport/$host:$port+$region_urlencode/" .
 			(!empty($pos_sl) ? "$pos_sl/" : "");
 	}
-	// if ($format & TPLINK_MAP)        $links[TPLINK_MAP]      = "secondlife:///app/map/$host:$port+$regionencoded/$pos";
+	// if ($format & TPLINK_MAP) {
+	// // Map link is not supported in the viewer
+	// // TODO: Alternative SLurl.com-like link when maps implemented in API
+	// // - API_HOST/api/v3/map/$host:$port/$region/128/64/32/
+	// // - API_HOST/maps/$host:$port/$region/128/64/32/
+	// // - WEB_HOST/maps/$host:$port/$region/128/64/32/
+	// 	$links[TPLINK_MAP] =
+	// 		"secondlife:///app/map/$host:$port+$region_urlencode" .
+	// 		(empty($pos) ? "" : "/$pos");
+	// }
+
 	$links = preg_replace('#^[^[:alnum:]]*|[^[:alnum:]]+$#', "", $links);
 
 	return join($sep, $links);
@@ -619,15 +625,32 @@ function get_writable_tmp_dir()
 if (!defined("NULL_KEY")) {
 	define("NULL_KEY", "00000000-0000-0000-0000-000000000000");
 }
+
 if (!defined("TPLINK_LOCAL")) {
 	define("TPLINK_LOCAL", 1); // seconlife://Region/x/y/z
+}
+if (!defined("TPLINK_HG")) {
 	define("TPLINK_HG", 2); // seconlife://yourgrid.org:8002 Region/x/y/z
+}
+if (!defined("TPLINK_V3HG")) {
 	define("TPLINK_V3HG", 4); // the overcomplicated stuff!
+}
+if (!defined("TPLINK_HOP")) {
 	define("TPLINK_HOP", 8); // hop://yourgrid.org:8002:Region/x/y/z
+}
+if (!defined("TPLINK_TXT")) {
 	define("TPLINK_TXT", 16); // yourgrid.org:8002:Region/x/y/z
+}
+if (!defined("TPLINK_APPTP")) {
 	define("TPLINK_APPTP", 32); // secondlife:///app/teleport/yourgrid.org:8002:Region/x/y/z
+}
+if (!defined("TPLINK_MAP")) {
 	define("TPLINK_MAP", 64); // secondlife:///app/map/yourgrid.org:8002:Region/x/y/z
+}
+if (!defined("TPLINK")) {
 	define("TPLINK", pow(2, 8) - 1); // all formats
+}
+if (!defined("TPLINK_DEFAULT")) {
 	define("TPLINK_DEFAULT", TPLINK_HOP); // default
 }
 
