@@ -9,7 +9,7 @@ set -euo pipefail
 PGM=$(basename "$0")
 TMP=$(mktemp -t "$PGM" || echo /tmp/$PGM.$$)
 
-trap 'rm -rf "$TMP"' EXIT
+trap 'rm -rf "$TMP $TMP.*"' EXIT
 echo "TMP $TMP $TMP.*"
 
 APP_DIR="$(cd "$(dirname "$0")/.." && pwd)"
