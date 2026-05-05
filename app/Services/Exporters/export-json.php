@@ -67,7 +67,7 @@ class JSON_Exporter
 				"end" => $end->format("c"),
 				"title" => $name,
 				"description" => $event->description,
-				"hgurl" => $event->simname,
+				"hgurl" => $event->simName,
 				"hash" => $event->hash,
 				"categories" => $event->category,
 				"tags" => $event->tags,

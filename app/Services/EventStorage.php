@@ -65,19 +65,19 @@ class EventStorage
 			);
 
 			$fields = [
-				"owneruuid" => $event->owneruuid,
+				"owneruuid" => $event->owner_uuid,
 				"name" => $name,
-				"creatoruuid" => $event->creatoruuid,
+				"creatoruuid" => $event->creatorUUID,
 				"category" => $event->category,
 				"description" => $description, // already normalised above
 				"dateUTC" => $start,
 				"duration" => $event->duration,
 				"covercharge" => $event->covercharge,
-				"coveramount" => $event->coveramount,
-				"simname" => $event->simname,
+				"coveramount" => $event->coverAmount,
+				"simname" => $event->simName,
 				"parcelUUID" => $event->parcelUUID,
 				"globalPos" => $event->globalPos ?? implode(",", DEFAULT_POS),
-				"eventflags" => $event->eventflags,
+				"eventflags" => $event->flags,
 				"gatekeeperURL" => $event->gatekeeperURL,
 				// 2DO-specific columns (added by SearchDB::extendSchema)
 				"uid" => $event->uid,
@@ -159,16 +159,16 @@ class EventStorage
 			$obj->uid = $row["uid"] ?? null;
 			$obj->name = $row["name"];
 			$obj->description = $row["description"];
-			$obj->simname = $row["simname"];
+			$obj->simName = $row["simname"];
 			$obj->duration = (int) $row["duration"];
 			$obj->category = (int) $row["category"];
-			$obj->owneruuid = $row["owneruuid"];
-			$obj->creatoruuid = $row["creatoruuid"];
+			$obj->owner_uuid = $row["owneruuid"];
+			$obj->creatorUUID = $row["creatoruuid"];
 			$obj->covercharge = (int) $row["covercharge"];
-			$obj->coveramount = (int) $row["coveramount"];
+			$obj->coverAmount = (int) $row["coveramount"];
 			$obj->parcelUUID = $row["parcelUUID"];
 			$obj->globalPos = $row["globalPos"];
-			$obj->eventflags = (int) $row["eventflags"];
+			$obj->flags = (int) $row["eventflags"];
 			$obj->gatekeeperURL = $row["gatekeeperURL"];
 
 			// 2DO-specific columns

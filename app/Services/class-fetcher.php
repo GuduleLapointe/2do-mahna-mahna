@@ -211,7 +211,7 @@ class Fetcher
 			if (
 				$last !== false &&
 				$last->name === $event->name &&
-				$last->simname === $event->simname
+				$last->simName === $event->simName
 			) {
 				$lastEnd = strtotime($last->dateUTC) + $last->duration * 60;
 				$nextStart = strtotime($event->dateUTC);
@@ -244,7 +244,7 @@ class Fetcher
 				"|" .
 				$event->duration .
 				"|" .
-				$event->simname;
+				$event->simName;
 			if (!isset($seen[$key])) {
 				$seen[$key] = true;
 				$result[] = $event;

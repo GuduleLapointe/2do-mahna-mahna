@@ -7,20 +7,20 @@
  * @property string $uid            // Unique identifier, collected from source if possible
  * @property string $name           // Event name
  * @property string $description    // Event description
- * @property string $simname        // Region name for standalone grids only
+ * @property string $simName        // Region name for standalone grids only
  *                                  // Region Hypergrid URL for hypergrid events
  * @property string $dateUTC        // Event start date and time in UTC
  * @property int $duration          // Event duration in minutes
  * @property int $category          // Event category code number
  * @property array $tags             // Array of category names
  * @property int $categories        // Array of category codes
- * @property string $owneruuid      // Not implemented
- * @property string $creatoruuid    // Not implemented
- * @property int $covercharge       // Not implemented
- * @property int $coveramount       // Not implemented
+ * @property string $ownerUUID      // Not implemented, ROBUST: owner_uuid OSSearch: owneruuid
+ * @property string $creatorUUID    // Not implemented; ROBUST: principalID?
+ * @property int $coverCharge       // Not implemented
+ * @property int $coverAmount       // Not implemented
  * @property string $parcelUUID     // Not implemented
  * @property string $globalPos      // Not implemented
- * @property int $eventflags
+ * @property int $flags				// OSSearch: eventflags
  * @property string $gatekeeperURL  // Region grid target URL
  * @property string $hash           // Not implemented
  */
@@ -33,18 +33,18 @@ class Event
 	public $uid;
 	public $name;
 	public $description;
-	public $simname;
+	public $simName;
 	public $dateUTC;
 	public $duration;
 	public $category;
 	public $categories;
-	public $owneruuid;
-	public $creatoruuid;
-	public $covercharge;
-	public $coveramount;
+	public $ownerUUID;
+	public $creatorUUID;
+	public $coverCharge;
+	public $coverAmount;
 	public $parcelUUID;
 	public $globalPos;
-	public $eventflags;
+	public $flags;
 	public $gatekeeperURL;
 	public $hash;
 	public $source;
@@ -133,28 +133,28 @@ class Event
 
 		// TODO: generate uid if not present (for other sources than iCal)
 		$this->uid = $data["uid"];
-		$this->owneruuid = $data["owneruuid"];
+		$this->ownerUUID = $data["owneruuid"];
 		$this->name = $data["name"];
-		$this->creatoruuid = $data["creatoruuid"];
+		$this->creatorUUID = $data["creatoruuid"];
 		$this->category = $data["category"]; // OpenSim/SL category code
 		$this->tags = $tags; // Array of category names
 		$this->description = $data["description"];
 		$this->dateUTC = $data["dateUTC"];
 		$this->duration = $data["duration"];
-		$this->covercharge = $data["covercharge"];
-		$this->coveramount = $data["coveramount"];
-		$this->simname = $data["simname"];
+		$this->coverCharge = $data["covercharge"];
+		$this->coverAmount = $data["coveramount"];
+		$this->simName = $data["simname"];
 		$this->parcelUUID = $data["parcelUUID"];
 		$this->globalPos = $data["globalPos"];
-		$this->eventflags = $data["eventflags"];
+		$this->flags = $data["eventflags"];
 		$this->gatekeeperURL = $data["gatekeeperURL"];
 		// eventlist.py:        new_hash = hashlib.md5( str(event_start) + hgurl ).hexdigest()
-		$this->hash = md5($this->dateUTC . $this->simname);
+		$this->hash = md5($this->dateUTC . $this->simName);
 		$this->source = $calendar["slug"];
 		$this->teleport = [
-			"HOP" => opensim_format_tp($this->simname, TPLINK_HOP),
-			"HG" => opensim_format_tp($this->simname, TPLINK_HG),
-			"V3HG" => opensim_format_tp($this->simname, TPLINK_V3HG),
+			"HOP" => opensim_format_tp($this->simName, TPLINK_HOP),
+			"HG" => opensim_format_tp($this->simName, TPLINK_HG),
+			"V3HG" => opensim_format_tp($this->simName, TPLINK_V3HG),
 		];
 	}
 

@@ -75,7 +75,7 @@ class HYPEvents_Exporter
 				$end->getTimestamp(),
 			];
 
-			$hgurl = $event->simname;
+			$hgurl = $event->simName;
 
 			$output .= "$name\n" . implode("~", $time_parts) . "\n$hgurl\n";
 		}

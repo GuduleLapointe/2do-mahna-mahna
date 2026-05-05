@@ -19,12 +19,12 @@
  *   opensim_region_is_online —  1 h  (online status can flip between runs)
  *
  * OpenSimSearch module SQL schema
- * @property string  $regionname   Canonical region name (from grid data)
+ * @property string  $regionName   Canonical region name (from grid data)
  * @property string  $regionUUID   Region UUID
- * @property string  $regionhandle Legacy 64-bit grid coordinate handle
+ * @property string  $regionHandle Legacy 64-bit grid coordinate handle
  * @property string  $url          Normalized destination URL (gatekeeperURL:region[/pos]), set from constructor args
  * @property string  $owner        Owner display name
- * @property string  $owneruuid    Owner UUID
+ * @property string  $ownerUUID    Owner UUID
  *
  * opensim-helpers extended SQL schema?
  * @property string  $gatekeeperURL  Gatekeeper base URL ("http://host:port")
@@ -121,12 +121,12 @@ if (!TODO_APP) {
 
 class Region
 {
-	public string $regionname = "";
+	public string $regionName = "";
 	public string $regionUUID = "";
-	public string $regionhandle = "";
+	public string $regionHandle = "";
 	public string $url = "";
 	public string $owner = "";
-	public string $owneruuid = "";
+	public string $ownerUUID = "";
 	public string $gatekeeperURL = "";
 	public string $host = "";
 	public int $port = 8002;
@@ -195,7 +195,7 @@ class Region
 			$this->gatekeeperURL,
 			"link_region",
 			[
-				"region_name" => "$this->regionname",
+				"region_name" => "$this->regionName",
 			],
 		);
 
@@ -259,15 +259,15 @@ class Region
 			$this->get_region_data = $this->data["get_region"] ?? [];
 			unset($this->get_region_data["link_region"]);
 
-			$this->regionname = $this->data["region_name"] ?? $this->region;
+			$this->regionName = $this->data["region_name"] ?? $this->region;
 			$this->regionUUID = $this->data["uuid"] ?? "";
-			$this->regionhandle = $this->data["regionhandle"] ?? "";
+			$this->regionHandle = $this->data["regionhandle"] ?? "";
 			$this->owner = $this->data["owner"] ?? "";
-			$this->owneruuid = $this->data["owneruuid"] ?? "";
+			$this->ownerUUID = $this->data["owneruuid"] ?? "";
 			$this->imageURL = $this->data["region_image"] ?? null;
 
-			if (!empty($this->regionname)) {
-				$this->region = $this->regionname;
+			if (!empty($this->regionName)) {
+				$this->region = $this->regionName;
 			}
 
 			$local = empty($this->pos) ? DEFAULT_POS : $this->pos;
@@ -327,8 +327,8 @@ class Region
 	 */
 	public function teleportLink(
 		?array $pos = null,
-		int $format = TPLINK_TXT,
-	): string {
+		?int $format = null, // Let opensim_format_tp decide default
+	): string|array {
 		if (empty($this->gatekeeperURL)) {
 			return "";
 		}
