@@ -29,8 +29,8 @@ includes/bootstrap.php -> src/bundle/standalone/bootstrap.php
 includes/class-event.php -> app/Models/class-event.php
 includes/class-fetcher.php -> app/Services/class-fetcher.php
 includes/functions.php -> lib/opensim-functions.php
-includes/helpers.php -> src/bundle/standalone/functions.php
-includes/library-xmlrpc.php -> lib/library-xmlrpc.php
+includes/helpers.php -> removed, use lib/opensim-helpers/includes/functions.php
+includes/library-xmlrpc.php -> removed, use lib/opensim-helpers/includes/xmlrpc-polyfill.php
 logs -> (keep)
 package-lock.json -> (keep)
 package.json -> (keep)

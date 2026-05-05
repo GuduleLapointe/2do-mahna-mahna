@@ -7,7 +7,7 @@ if (php_sapi_name() !== "cli") {
 }
 
 require_once dirname(__DIR__, 3) . "/bootstrap.php";
-require_once APP_DIR . "/lib/opensim-functions.php";
+// require_once APP_DIR . "/lib/opensim-functions.php";
 
 Console::useStderr();
 

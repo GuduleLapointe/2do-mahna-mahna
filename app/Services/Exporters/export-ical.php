@@ -12,7 +12,7 @@ if (!TODO_APP) {
 }
 
 require_once APP_DIR . "/vendor/autoload.php";
-require_once APP_DIR . "/lib/opensim-functions.php";
+// require_once APP_DIR . "/lib/opensim-functions.php";
 
 use Kigkonsult\Icalcreator\Vcalendar;
 use Kigkonsult\Icalcreator\Vevent;

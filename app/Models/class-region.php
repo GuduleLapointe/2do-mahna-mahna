@@ -178,10 +178,10 @@ class Region
 			(empty($this->pos) ? "" : "/" . implode("/", $this->pos));
 	}
 
-	public function link_region(): string
+	public function link_region(): array|false
 	{
 		if (empty($this->uri)) {
-			return "";
+			return false;
 		}
 		$this->link_region_data = Cache::get(
 			"link_region_{$this->uri}",
@@ -190,6 +190,7 @@ class Region
 		if ($this->link_region_data !== null) {
 			return $this->link_region_data;
 		}
+
 		$this->link_region_data = oxXmlRequest(
 			$this->gatekeeperURL,
 			"link_region",
@@ -202,10 +203,10 @@ class Region
 		return $this->link_region_data;
 	}
 
-	public function get_region(): array
+	public function get_region(): array|false
 	{
 		if (empty($this->uri)) {
-			return [];
+			return false;
 		}
 		$this->get_region_data = Cache::get(
 			"get_region_{$this->uri}",
@@ -214,6 +215,7 @@ class Region
 		if ($this->get_region_data !== null) {
 			return $this->get_region_data;
 		}
+
 		$region_uuid = $this->link_region()["uuid"] ?? null;
 		if (empty($region_uuid)) {
 			$this->get_region_data = false;
@@ -236,12 +238,12 @@ class Region
 	 * Sets $globalPos = grid origin + $pos (falling back to DEFAULT_POS).
 	 * Repeated calls are free after the first (memory cache).
 	 *
-	 * @return array  Raw opensim_get_region() result, or [] on failure / invalid URL
+	 * @return array|false  Raw opensim_get_region() result, or false on failure / invalid URL
 	 */
-	public function data(): array
+	public function data(): array|false
 	{
 		if (empty($this->uri)) {
-			return [];
+			return false;
 		}
 		$this->data = Cache::get("region_data_{$this->uri}", $this->data);
 		if ($this->data) {
@@ -251,28 +253,30 @@ class Region
 		$lookupURL = $this->gatekeeperURL . ":" . $this->region;
 		$this->data = opensim_get_region($lookupURL) ?: [];
 
-		// Store link_region and get_region for easy access to original opensim api data
-		$this->link_region_data = $this->data["link_region"] ?? [];
-		$this->get_region_data = $this->data["get_region"] ?? [];
-		unset($this->get_region_data["link_region"]);
+		if (!empty($this->data)) {
+			// Store link_region and get_region for easy access to original opensim api data
+			$this->link_region_data = $this->data["link_region"] ?? [];
+			$this->get_region_data = $this->data["get_region"] ?? [];
+			unset($this->get_region_data["link_region"]);
 
-		$this->regionname = $this->data["region_name"] ?? $this->region;
-		$this->regionUUID = $this->data["uuid"] ?? "";
-		$this->regionhandle = $this->data["regionhandle"] ?? "";
-		$this->owner = $this->data["owner"] ?? "";
-		$this->owneruuid = $this->data["owneruuid"] ?? "";
-		$this->imageURL = $this->data["region_image"] ?? null;
+			$this->regionname = $this->data["region_name"] ?? $this->region;
+			$this->regionUUID = $this->data["uuid"] ?? "";
+			$this->regionhandle = $this->data["regionhandle"] ?? "";
+			$this->owner = $this->data["owner"] ?? "";
+			$this->owneruuid = $this->data["owneruuid"] ?? "";
+			$this->imageURL = $this->data["region_image"] ?? null;
 
-		if (!empty($this->regionname)) {
-			$this->region = $this->regionname;
+			if (!empty($this->regionname)) {
+				$this->region = $this->regionname;
+			}
+
+			$local = empty($this->pos) ? DEFAULT_POS : $this->pos;
+			$this->globalPos = [
+				(float) ($this->data["x"] ?? 0) + $local[0],
+				(float) ($this->data["y"] ?? 0) + $local[1],
+				(float) ($local[2] ?? DEFAULT_POS[2]),
+			];
 		}
-
-		$local = empty($this->pos) ? DEFAULT_POS : $this->pos;
-		$this->globalPos = [
-			(float) ($this->data["x"] ?? 0) + $local[0],
-			(float) ($this->data["y"] ?? 0) + $local[1],
-			(float) ($local[2] ?? DEFAULT_POS[2]),
-		];
 
 		Cache::set("region_data_{$this->uri}", $this->data, 24 * 3600);
 		return $this->data;

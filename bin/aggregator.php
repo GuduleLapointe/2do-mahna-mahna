@@ -103,7 +103,7 @@ class Aggregator
 	 */
 	private static function includes()
 	{
-		require_once APP_DIR . "/lib/opensim-functions.php";
+		// require_once APP_DIR . "/lib/opensim-functions.php";
 
 		require_once APP_DIR . "/app/Services/class-fetcher.php";
 		require_once APP_DIR . "/app/Models/class-region.php";

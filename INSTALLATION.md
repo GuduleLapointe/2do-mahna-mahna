@@ -84,7 +84,7 @@ composer install --no-dev
 | **php-curl** | Symfony HTTP client (Composer) | Fetching remote calendars and web sources |
 | **php-imagick** | `events.php` (PNG board image) | Font rendering via system fontconfig; no TTF path needed |
 | **php-iconv** | `export-hypevents.php`, `events.php` | Character set conversion to ASCII |
-| **phpxmlrpc/phpxmlrpc** | `includes/functions.php` | XML-RPC calls to OpenSim grid helpers. The native `xmlrpc_*` functions were removed in PHP 8.0; this Composer package provides a drop-in polyfill (`includes/library-xmlrpc.php`, shared with w4os). Installed automatically by `composer install`. |
+| **phpxmlrpc/phpxmlrpc** | `includes/functions.php` | XML-RPC calls to OpenSim grid helpers. The native `xmlrpc_*` functions were removed in PHP 8.0; this package provides a drop-in polyfill (`includes/xmlrpc-polyfill.php`, shared with w4os). Installed automatically by `composer install`. |
 | **php-json** | everywhere | Built into PHP 8.x — no package needed |
 
 ---
