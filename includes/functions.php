@@ -312,7 +312,7 @@ function opensim_link_region($args, $var = null)
 		$link_region = $OSSEARCH_CACHE["link_region"][$region_uri];
 	} else {
 		$link_region = oxXmlRequest($gatekeeper, "link_region", [
-			"region_name" => $region,
+			"region_name" => $region ?? "",
 		]);
 		$OSSEARCH_CACHE["link_region"][$region_uri] = $link_region;
 	}
@@ -718,8 +718,10 @@ function os_cache_set($key, $value, $expire = 0)
 
 /**
  * Defines the constants used by the OpenSim helpers library.
+ *
+ * Hard constants (cannot be overridden by environment variables)
  */
-$constants = [
+$hard_constants = [
 	"NULL_KEY" => "00000000-0000-0000-0000-000000000000",
 	"HELPERS_LOCALE_DIR" => dirname(__DIR__) . "/languages",
 	"TPLINK_LOCAL" => 1, // secondlife://Region Name/x/y/z
@@ -732,13 +734,22 @@ $constants = [
 	"TPLINK" => 255, // all formats
 	"TPLINK_ARRAY" => 256, // output as array
 ];
-foreach ($constants as $name => $value) {
+foreach ($hard_constants as $name => $value) {
 	if (!defined($name)) {
 		define($name, $value);
 	}
 }
-if (!defined("TPLINK_DEFAULT")) {
-	define("TPLINK_DEFAULT", TPLINK_HOP);
+
+/**
+ * Soft constants (can be overridden by environment variables)
+ */
+$soft_constants = [
+	"TPLINK_DEFAULT" => TPLINK_HOP,
+];
+foreach ($soft_constants as $name => $value) {
+	if (!defined($name)) {
+		define($name, getenv($name) ?: $value);
+	}
 }
 
 /**
