@@ -289,6 +289,9 @@ function opensim_format_tp(
  * @param  mixed  $args   region uri or sanitized region array
  * @param  string $var      output a single variable value
  * @return array (or string if var specified)
+ * Array format:
+ *  - uuid: UUID of the region
+ *
  */
 function opensim_link_region($args, $var = null)
 {
@@ -304,6 +307,15 @@ function opensim_link_region($args, $var = null)
 		$region_array = opensim_parse_url($args);
 	}
 	extract($region_array); // $host, $port, $region, $pos, $gatekeeper, $region_uri, $dest_uri
+	if (empty($gatekeeper)) {
+		// TODO: implemeent default gatekeeper and apply if region name is provided alone
+		return [
+			"code" => 400,
+			"errorMessage" => "no gatekeeper",
+			"data" => $region_array,
+			"args" => $args,
+		];
+	}
 	$gatekeeper = preg_match("#://#", $gatekeeper)
 		? $gatekeeper
 		: "http://$gatekeeper";
