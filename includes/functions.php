@@ -10,6 +10,8 @@
  * @license     AGPLv3
  */
 
+use PhpXmlRpc\Encoder;
+
 require_once __DIR__ . "/xmlrpc-polyfill.php";
 
 /**
@@ -49,126 +51,117 @@ function opensim_isuuid($uuid, $nullok = false, $strict = false)
  * Sanitize a destination URI or URL
  *
  * @param  string  $url				url or uri or tp link (secondlife:// url, hop:// url, region name...)
- * @param  string  $gatekeeperURL	default login uri to add to urls sithout host:port
+ * @param  string  $default_gatekeeper	default login uri to add to urls sithout host:port
  * @param  boolean $outputArray		output as array
  * @return string       (default)                   $host:$port $region/$pos
  *           or array                                           array($host, $port, $region, $pos)
  */
-function opensim_sanitize_uri($url, $gatekeeperURL = null, $outputArray = false)
+function opensim_parse_url($url, $default_gatekeeper = null): array
 {
-	// $normalized = opensim_format_tp($uri, TPLINK_TXT);
-	$host = null;
-	$port = null;
-	$region = null;
-	$pos = null;
-	$uri = urldecode(trim($url));
-	$uri = preg_replace(
+	$e_scheme = "(.*://)";
+	$e_host = "(([A-Za-z0-9_-]+)(\.[A-Za-z0-9\._-]+)+)";
+	$e_short_host = "(([A-Za-z0-9_-]+)(\.[A-Za-z0-9\._-]+)*)?";
+	$e_port = "[:\|]([0-9]+)";
+	$e_float = "(\d+(\.\d+)?)";
+
+	$normalized_url = preg_replace(
 		[
-			'#^(.*://)?(([A-Za-z0-9_-]+\.[A-Za-z0-9\._-]+)([:/ ]+)?)?(([0-9]+)([ /:]))?([^/]+)(/|$)(.*)#',
-			"/^([^:]+)::([0-9]+)/",
-			'+[:/]*$+',
+			"#^{$e_scheme}?{$e_host}{$e_port}?[:\+_ ]#",
+			"#^{$e_scheme}?{$e_short_host}{$e_port}[:\+_ ]#",
+			"/(\+|%20|_)/",
 		],
-		['$3:$6:$8/$10', '$1:$2', ""],
-		$uri,
+		["\\1\\2:\\5/", "\\1\\2:\\5/", " "],
+		urldecode(trim($url)),
 	);
-	// $uri = preg_replace(
-	// 	'#^(.*://)?(([A-Za-z0-9_-]+\.[A-Za-z0-9\._-]+)([:/ ]+)?)?(([0-9]+)([ /:]))?([^/]+)(/|$)(.*)#',
-	// 	'$3:$6:$8/$10',
-	// 	"$uri",
-	// );
-	// $uri = preg_replace("/^([^:]+)::([0-9]+)/", '$1:$2', $uri);
-	// $uri = preg_replace('+[:/]*$+', "", $uri);
 
-	$split = explode("/", $uri);
-	$uri = array_shift($split);
-
-	if (count($split) == 2 || count($split) == 3) {
-		$pos = implode("/", $split);
+	if (
+		!preg_match("#^$e_scheme#", $url) &&
+		preg_match("#$e_host|$e_short_host{$e_port}#", $url)
+	) {
+		$parsed = parse_url("http://" . $normalized_url) ?: [];
+		unset($parsed["scheme"]);
 	} else {
-		$pos = "";
+		$parsed = parse_url($normalized_url) ?: [];
 	}
 
-	$split = explode(":", $uri);
+	if (!empty($parsed["host"]) || !empty($default_gatekeeper)) {
+		$parsed["host"] ??= empty($default_gatekeeper)
+			? null
+			: parse_url($default_gatekeeper, PHP_URL_HOST) ?? null;
+		$parsed["host"] = strtolower(trim($parsed["host"]));
+		$parsed["port"] ??=
+			parse_url($default_gatekeeper ?? "", PHP_URL_PORT) ?? 80;
+		$parsed["gatekeeper"] = $parsed["host"] . ":" . $parsed["port"];
+	}
 
-	if (count($split) == 1) {
-		$region = $split[0];
-	} elseif (count($split) == 2 && preg_match("/ /", $split[1])) {
-		// could probably improve the preg_replace to avoid this
-		$host = $split[0];
-		$split = explode(" ", $split[1]);
-		$port = $split[0];
-		$region = $split[1];
-	} elseif (preg_match("/[a-z].*\.[a-z]/", $split[0])) {
-		$host = array_shift($split);
-		if (preg_match('/^[0-9]+$/', $split[0])) {
-			$port = array_shift($split);
-		} else {
-			$port = 8002;
+	$split_path = array_values(
+		array_filter(explode("/", $parsed["path"] ?? "")),
+	);
+
+	if (count($split_path) > 0) {
+		if (!preg_match("/^$e_float$/", $split_path[0])) {
+			$parsed["region"] = array_shift($split_path);
 		}
-		$region = preg_replace(":^/*:", "", $split[0] ?? "");
-	} elseif (function_exists("w4os_grid_login_uri")) {
-		$host = parse_url(w4os_grid_login_uri(), PHP_URL_HOST);
-		$port = parse_url(w4os_grid_login_uri(), PHP_URL_HOST);
-		if (preg_match('/^[0-9]+$/', $split[0])) {
-			array_shift($split);
-		}
-		$region = preg_replace(":^/*:", "", @$split[0]);
-	} else {
-		if (empty($gatekeeperURL)) {
-			return false;
-		}
-		$region = $split[2];
-		$split = explode(
-			":",
-			preg_replace("#.*://([^/]+)/?.*#", '$1', $gatekeeperURL),
+
+		// Sanitize remaining items for position
+		$split_path = array_map(
+			"floatval",
+			array_slice(
+				array_filter($split_path, fn($item) => is_numeric($item)),
+				0,
+				3,
+			),
 		);
-		$host = $split[0];
-		$port = $split[1];
-	}
-	if (empty($host) & !empty($gatekeeperURL)) {
-		$split = explode(
-			":",
-			preg_replace("#.*://([^/]+)/?.*#", '$1', $gatekeeperURL),
-		);
-		$host = $split[0];
-		$port = $split[1];
-	}
-	if (empty($port) & !empty($host)) {
-		$port = 80;
-	}
-	$host = strtolower(trim($host ?? ""));
-	$region = trim(str_replace("_", " ", $region));
-	if (is_numeric($region)) {
-		$pos = "$region/$pos";
-		$region = "";
+		if (count($split_path) >= 2) {
+			$parsed["pos"] = implode("/", $split_path);
+		}
 	}
 
+	$parsed["region_uri"] = trim(
+		($parsed["gatekeeper"] ?? "") .
+			(empty($parsed["region"]) ? "" : "/") .
+			($parsed["region"] ?? ""),
+		":/ \n\r\t\v\x00",
+	);
+	$parsed["dest_uri"] =
+		$parsed["region_uri"] . (empty($parsed["pos"]) ? "" : "/$parsed[pos]");
+
+	return $parsed;
+}
+
+/**
+ * Sanitize a destination URI or URL
+ *
+ * @param  string  $url				url or uri or tp link (secondlife:// url, hop:// url, region name...)
+ * @param  string  $default_gatekeeper	default login uri to add to urls sithout host:port
+ * @return string					$host:$port $region/$pos
+ */
+function opensim_uri($url, $default_gatekeeper = null): string
+{
+	$parsed = opensim_parse_url($url, $default_gatekeeper);
+	return $parsed["dest_uri"] ?? "";
+}
+
+/**
+ * Deprecated: use opensim_uri() instead
+ *
+ * @deprecated since #c9ee461 2025-05-05
+ */
+function opensim_sanitize_uri(
+	$url,
+	$default_gatekeeper = null,
+	$outputArray = false,
+): string|array {
 	if ($outputArray) {
-		return [
-			"host" => $host,
-			"port" => $port,
-			"region" => $region,
-			"pos" => $pos,
-			"gatekeeper" => "http://$host:$port",
-			"key" => strtolower("$host:$port/$region"),
-			"displayName" =>
-				"{$host}:{$port}" . (empty($region) ? "" : " $region"),
-		];
-	} else {
-		return trim(
-			$host .
-				(empty($port) ? "" : ":$port") .
-				(empty($region) ? "" : " $region") .
-				(empty($pos) ? "" : "/$pos"),
-			":/ \n\r\t\v\x00",
-		);
+		return opensim_parse_url($url, $default_gatekeeper);
 	}
+	return opensim_uri($url, $default_gatekeeper);
 }
 
 /**
  * Format destination uri as a valid local or hypergrid link url
  *
- * @param  string  $uri      Destination uri, as "host:port:Region Name" or already formatted URL
+ * @param  string  $destination      Destination uri, as "host:port:Region Name" or already formatted URL
  * @param  integer $format  The desired format as binary flags. Several values can be specified with an addition
  *                          e.g. TPLINK_V3HG + TPLINK_APPTP
  *                          TPLINK_LOCAL or 1:   secondlife://Region Name/x/y/z
@@ -177,21 +170,32 @@ function opensim_sanitize_uri($url, $gatekeeperURL = null, $outputArray = false)
  *                          TPLINK_HOP or 8:     hop:// format (FireStorm)
  *                          TPLINK_TXT or 16:    host:port Region Name
  *                          TPLINK_APPTP or 32:  secondlife:///app/teleport link
- *                          TPLINK_MAP or 64:    (not implemented)
- *                          127:                      output all formats
+ *                          TPLINK_MAP or 64:    (map, not implemented)
+ * 							128:                 (for future use, not implemented)
+ *                          TPLINK or 255:       output all formats
+ *                          TPLINK_ARRAY or 256: output all formats as array
+ *
  * @param  string  $sep      Separator for multiple formats, default new line
  * @return string
  */
-function opensim_format_tp($uri, $format = null, $sep = "\n")
-{
-	if (empty($uri)) {
-		return;
+function opensim_format_tp(
+	$destination,
+	$format = null,
+	$sep = "\n",
+): string|array {
+	if (empty($destination)) {
+		return $format & TPLINK_ARRAY ? [] : "";
 	}
-	$format ??= TPLINK;
+	// TODO: allow Region, Destination or Event classes
+	// if (is_object($destination) && !empty($destination->uri)) {
+	// 	$destination = $destination->uri;
+	// }
+	$format ??= TPLINK_DEFAULT;
 
-	$uri_parts = opensim_sanitize_uri($uri, "", true);
-	extract($uri_parts);
-	$post_split = explode("/", $pos);
+	$parsed = opensim_parse_url($destination);
+	extract($parsed);
+
+	$post_split = explode("/", $pos ?? "");
 	if (count($post_split) >= 2) {
 		$pos_x = $post_split[0];
 		$pos_y = $post_split[1];
@@ -200,42 +204,57 @@ function opensim_format_tp($uri, $format = null, $sep = "\n")
 		$pos_sl = $pos_x < 256 && $pos_y < 256 ? $pos : null;
 	}
 
-	$region_urlencode = urlencode($region);
-	$region_percentencode = str_replace(" ", "%20", $region);
+	$region_urlencode = urlencode($region ?? "");
+	$region_percentencode = str_replace("+", "%20", $region_urlencode);
 
 	$links = [];
-	if ($format & TPLINK_TXT) {
-		$links[TPLINK_TXT] = "$host:$port $region/$pos";
+	if (empty($host) && empty($region)) {
+		return $format & TPLINK_ARRAY ? [] : "";
 	}
-	if ($format & TPLINK_LOCAL || ($format & TPLINK_HG && empty($host))) {
+
+	if ($format & TPLINK_TXT) {
+		$links[TPLINK_TXT] =
+			trim(($gatekeeper ?? "") . " " . ($region ?? "")) .
+			(empty($pos) ? "" : "/$pos");
+	}
+	if ($format & TPLINK_LOCAL) {
 		// Web only, do not use for in-world messages
 		$links[TPLINK_LOCAL] =
 			"secondlife://$region_percentencode" .
 			(empty($pos_sl) ? "" : "/$pos_sl");
 	}
 	if ($format & TPLINK_HG) {
+		// if(empty())
 		// Web only, do not use for in-world messages
-		$links[TPLINK_HG] =
-			"secondlife://$host:$port%20$region_percentencode" .
-			(empty($pos_sl) ? "" : "/$pos_sl");
+		$links[TPLINK_HG] = empty($host)
+			? $links[TPLINK_LOCAL]
+			: "zecondlife://$host:$port%20$region_percentencode" .
+				(empty($pos_sl) ? "" : "/$pos_sl");
 	}
 	if ($format & TPLINK_V3HG) {
 		// Web only, do not use for in-world messages
 		$links[TPLINK_V3HG] =
-			"secondlife://http|!!$host|$port%20$region_percentencode" .
+			(empty($host)
+				? $links[TPLINK_LOCAL]
+				: "secondlife://http|!!$host|$port%20$region_percentencode") .
 			(empty($pos_sl) ? "" : "/$pos_sl");
 	}
 	if ($format & TPLINK_HOP) {
-		// Web and in-world messages
-		$links[TPLINK_HOP] =
-			"hop://$host:$port/$region_percentencode" .
-			(empty($pos) ? "" : "/$pos");
+		// Web and in-world. Position (/x/y/z) is
+		// - optional for web browser links (viewer applies default)
+		// - required for in-world messages
+		$links[TPLINK_HOP] = empty($gatekeeper)
+			? ""
+			: trim("hop://$host:$port/$region_urlencode", "/") .
+				(empty($pos) ? "" : "/$pos");
 	}
 	if ($format & TPLINK_APPTP) {
 		// In-world messages, do not use for web links
 		// secondlife:///app/teleport/speculoos:8002+Grand+Place/" .
 		$links[TPLINK_APPTP] =
-			"secondlife:///app/teleport/$host:$port+$region_urlencode/" .
+			(empty($host)
+				? "secondlife:///app/teleport/$region_urlencode/"
+				: "secondlife:///app/teleport/$host:$port+$region_urlencode/") .
 			(!empty($pos_sl) ? "$pos_sl/" : "");
 	}
 	// TODO: Alternative web url when maps implemented in API
@@ -247,8 +266,12 @@ function opensim_format_tp($uri, $format = null, $sep = "\n")
 	// if ($format & TPLINK_MAP) {
 	// }
 
-	($links = preg_replace('#^[^[:alnum:]]*|[^[:alnum:]]+$#', "", $links))));
+	// clean up trailing/leading non-alphanumeric characters
+	$links = preg_replace('#^[^[:alnum:]]*|[^[:alnum:]]+$#', "", $links);
 
+	if ($format & TPLINK_ARRAY) {
+		return $links;
+	}
 	return join($sep, $links);
 }
 
@@ -262,6 +285,7 @@ function opensim_format_tp($uri, $format = null, $sep = "\n")
 function opensim_link_region($args, $var = null)
 {
 	if (empty($args)) {
+		error_log("DEBUG " . __FUNCTION__ . " empty args");
 		return [];
 	}
 	global $OSSEARCH_CACHE;
@@ -269,17 +293,20 @@ function opensim_link_region($args, $var = null)
 	if (is_array($args)) {
 		$region_array = $args;
 	} else {
-		$region_array = opensim_sanitize_uri($args, "", true);
+		$region_array = opensim_parse_url($args);
 	}
-	extract($region_array); // $host, $port, $region, $pos, $gatekeeper, $key
+	extract($region_array); // $host, $port, $region, $pos, $gatekeeper, $region_uri, $dest_uri
+	$gatekeeper = preg_match("#://#", $gatekeeper)
+		? $gatekeeper
+		: "http://$gatekeeper";
 
-	if (isset($OSSEARCH_CACHE["link_region"][$key])) {
-		$link_region = $OSSEARCH_CACHE["link_region"][$key];
+	if (isset($OSSEARCH_CACHE["link_region"][$region_uri])) {
+		$link_region = $OSSEARCH_CACHE["link_region"][$region_uri];
 	} else {
 		$link_region = oxXmlRequest($gatekeeper, "link_region", [
-			"region_name" => "$region",
+			"region_name" => $region,
 		]);
-		$OSSEARCH_CACHE["link_region"][$key] = $link_region;
+		$OSSEARCH_CACHE["link_region"][$region_uri] = $link_region;
 	}
 
 	if ($link_region) {
@@ -309,34 +336,59 @@ function opensim_region_url($region)
 		(empty($region["pos"]) ? "" : "/" . $region["pos"]);
 }
 
-function opensim_get_region($region_uri, $var = null)
+/**
+ * Get region data from region name or UUID
+ *
+ * @param  string|array $region region name or UUID or sanitized region array
+ * @param  string $var   optional variable to return
+ * @return array
+ */
+function opensim_get_region($region, $var = null)
 {
-	if (empty($region_uri)) {
-		return [];
+	if (empty($region)) {
+		return [
+			"errorCode" => 400,
+			"error" => "Empty region",
+		];
+	}
+	if (opensim_isuuid($region)) {
+		// Not implemented, UUID lookup would require a default gatekeeper
+		return [
+			"errorCode" => 501,
+			"error" => "UUID lookup not implemented",
+		];
 	}
 	global $OSSEARCH_CACHE;
-	$region = opensim_sanitize_uri($region_uri, "", true);
 
-	$gatekeeper = $region["gatekeeper"];
-
+	$region = opensim_parse_url($region);
 	$link_region = opensim_link_region($region);
-
-	$uuid = @$link_region["uuid"];
-	if (!opensim_isuuid($uuid)) {
-		// error_log( "opensim_get_region $region_uri invalid uuid $uuid" );
-		return [];
+	if (!opensim_isuuid($link_region["uuid"])) {
+		return [
+			"errorCode" => 400,
+			"error" => "Invalid region UUID",
+		];
 	}
 
+	if (empty($region["gatekeeper"])) {
+		return [
+			"errorCode" => 400,
+			"error" => "Empty gatekeeper",
+		];
+	}
+	extract($region);
+	$gatekeeper = preg_match("#://#", $gatekeeper)
+		? $gatekeeper
+		: "http://$gatekeeper";
+
+	$uuid = $link_region["uuid"] ?? false;
 	if (isset($OSSEARCH_CACHE["get_region"][$uuid])) {
 		$get_region = $OSSEARCH_CACHE["get_region"][$uuid];
 	} else {
 		$get_region = oxXmlRequest($gatekeeper, "get_region", [
 			"region_uuid" => "$uuid",
 		]);
-		// $get_region = oxXmlRequest('http://dev.w4os.org:8402/grid', 'get_region_by_name', ['scopeid' => NULL_KEY,'name'=>"$region"]);
 		$OSSEARCH_CACHE["get_region"][$uuid] = $get_region;
 	}
-	$get_region["link_region"] = $link_region;
 
 	if ($get_region) {
 		if ($var) {
@@ -407,7 +459,7 @@ function opensim_user_alert($agentID, $message, $secureID = null)
  */
 function oxXmlRequest($gatekeeper, $method, $request)
 {
-	$xml_request = xmlrpc_encode_request($method, [$request]);
+	$xml_request = xmlrpc_encode_request($method, [$request]); // phpcs:ignore PHPCompatibility.FunctionUse.RemovedFunctions
 
 	$context = stream_context_create([
 		"http" => [
@@ -421,56 +473,66 @@ function oxXmlRequest($gatekeeper, $method, $request)
 	$response = @file_get_contents($gatekeeper, false, $context);
 	if ($response === false) {
 		return false;
+	} elseif (empty($response)) {
+		return false;
 	}
 
-	$xml_array = xmlrpc_decode($response);
-	if (empty($xml_array)) {
-		return;
+	// xmlrpc_decode() from library-xmlrpc.php does not handle raw XML strings
+	// (new Response($xml) does not parse XML — it is a phpxmlrpc limitation).
+	// Use Encoder::decodeXml() directly, which correctly parses any XML-RPC envelope.
+	// decodeXml() returns a PhpXmlRpc\Response object; extract the PHP array from it.
+	try {
+		$encoder = new \PhpXmlRpc\Encoder();
+		$decoded = $encoder->decodeXml($response);
+	} catch (\Throwable $e) {
+		error_log(
+			"oxXmlRequest decode error ($gatekeeper $method): " .
+				$e->getMessage(),
+		);
+		return false;
 	}
-	if (is_array($xml_array) & !xmlrpc_is_fault($xml_array)) {
-		return $xml_array;
+	if (empty($decoded)) {
+		return false;
 	}
-
-	return false;
+	if ($decoded instanceof \PhpXmlRpc\Response) {
+		if ($decoded->faultCode()) {
+			error_log(
+				"oxXmlRequest fault ($gatekeeper $method): " .
+					$decoded->faultCode() .
+					" " .
+					$decoded->faultString(),
+			);
+			return false;
+		}
+		$xml_array = $encoder->decode($decoded->value());
+	} else {
+		$xml_array = $decoded;
+	}
+	if (empty($xml_array) || !is_array($xml_array)) {
+		return false;
+	}
+	if (xmlrpc_is_fault($xml_array)) {
+		// phpcs:ignore PHPCompatibility.FunctionUse.RemovedFunctions
+		return false;
+	}
+	return $xml_array;
 }
 
 function osXmlResponse($success = true, $errorMessage = false, $data = false)
 {
-	global $request_key;
-
-	// Data given, output as xmlrpc
 	if (is_array($data)) {
-		if (!$success && !empty($errorMessage)) {
-			# Avoid duplicate error messages
-			# TODO: improve to make sure we don't cache error messages for different requests
-			#	(currently $request_key only identifies search arguments, client IP and gateway url,
-			# 	but client IP is the simulator, not the actual user, so in theory, the key could
-			# 	be identical for two simultaneous requests by different users in the same region,
-			#	although this is unlikely to happen)
-
-			$tmp_dir = get_writable_tmp_dir();
-			$cache = $tmp_dir . "/cache-" . $request_key;
-			# Check if file exists and is not older than 5 seconds
-			if (file_exists($cache) && time() - filemtime($cache) < 1.5) {
-				$errorMessage = "";
-			} else {
-				file_put_contents($cache, $errorMessage);
-			}
-		}
-
 		$array = [
 			"success" => $success,
 			"errorMessage" => $errorMessage,
-			"data" => $data,
 		];
-
-		$response_xml = xmlrpc_encode($array);
-
+		if (!empty($data)) {
+			$array["data"] = $data;
+		}
+		array_filter($array);
+		$response_xml = xmlrpc_encode($array); // phpcs:ignore PHPCompatibility.FunctionUse.RemovedFunctions
 		echo $response_xml;
 		return;
 	}
-
-	// No data given, output simple boolean or error message, no change here
 	if ($success) {
 		$answer = new SimpleXMLElement("<boolean>true</boolean>");
 	} else {
@@ -550,7 +612,7 @@ if (!function_exists("osdebug")) {
 		if (!is_string($message)) {
 			$message = print_r($message, true);
 		}
-		error_log("osdebug " . $message);
+		error_log("[DEBUG] " . $message);
 		echo $message . "\n";
 	}
 }
@@ -634,40 +696,6 @@ function get_writable_tmp_dir()
 	// return '/tmp';
 }
 
-if (!defined("NULL_KEY")) {
-	define("NULL_KEY", "00000000-0000-0000-0000-000000000000");
-}
-
-if (!defined("TPLINK_LOCAL")) {
-	define("TPLINK_LOCAL", 1); // seconlife://Region/x/y/z
-}
-if (!defined("TPLINK_HG")) {
-	define("TPLINK_HG", 2); // seconlife://yourgrid.org:8002 Region/x/y/z
-}
-if (!defined("TPLINK_V3HG")) {
-	define("TPLINK_V3HG", 4); // the overcomplicated stuff!
-}
-if (!defined("TPLINK_HOP")) {
-	define("TPLINK_HOP", 8); // hop://yourgrid.org:8002:Region/x/y/z
-}
-if (!defined("TPLINK_TXT")) {
-	define("TPLINK_TXT", 16); // yourgrid.org:8002:Region/x/y/z
-}
-if (!defined("TPLINK_APPTP")) {
-	define("TPLINK_APPTP", 32); // secondlife:///app/teleport/yourgrid.org:8002:Region/x/y/z
-}
-if (!defined("TPLINK_MAP")) {
-	define("TPLINK_MAP", 64); // secondlife:///app/map/yourgrid.org:8002:Region/x/y/z
-}
-if (!defined("TPLINK")) {
-	define("TPLINK", pow(2, 8) - 1); // all formats
-}
-if (!defined("TPLINK_DEFAULT")) {
-	define("TPLINK_DEFAULT", TPLINK_HOP); // default
-}
-
-define("HELPERS_LOCALE_DIR", dirname(__DIR__) . "/languages");
-
 function os_cache_get($key, $default = null)
 {
 	global $oshelpers_cache;
@@ -678,6 +706,31 @@ function os_cache_set($key, $value, $expire = 0)
 {
 	global $oshelpers_cache;
 	$oshelpers_cache[$key] = $value;
+}
+
+/**
+ * Defines the constants used by the OpenSim helpers library.
+ */
+$constants = [
+	"NULL_KEY" => "00000000-0000-0000-0000-000000000000",
+	"HELPERS_LOCALE_DIR" => dirname(__DIR__) . "/languages",
+	"TPLINK_LOCAL" => 1, // secondlife://Region Name/x/y/z
+	"TPLINK_HG" => 2, // original HG format (obsolete?)
+	"TPLINK_V3HG" => 4, // the overcomplicated stuff! Should be deprecated
+	"TPLINK_HOP" => 8, // hop://yourgrid.org:8002:Region/x/y/z (FireStorm)
+	"TPLINK_TXT" => 16, // host:port Region Name
+	"TPLINK_APPTP" => 32, // secondlife:///app/teleport/host:port+Region%20Name/x/y/z
+	"TPLINK_MAP" => 64, // (map, not implemented)
+	"TPLINK" => 255, // all formats
+	"TPLINK_ARRAY" => 256, // output as array
+];
+foreach ($constants as $name => $value) {
+	if (!defined($name)) {
+		define($name, $value);
+	}
+}
+if (!defined("TPLINK_DEFAULT")) {
+	define("TPLINK_DEFAULT", TPLINK_HOP);
 }
 
 /**

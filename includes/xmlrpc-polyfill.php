@@ -79,6 +79,11 @@ function xmlrpc_decode($xml, $encoding = "iso-8859-1")
 {
 	$encoder = new Encoder();
 
+	// For PhpXmlRpc\Value objects
+	if ($xml instanceof \PhpXmlRpc\Value) {
+		return $encoder->decode($xml);
+	}
+
 	// Handle string input (XML data)
 	if (is_string($xml)) {
 		// Check if it's actually XML content
@@ -121,11 +126,6 @@ function xmlrpc_decode($xml, $encoding = "iso-8859-1")
 			// Not valid XML, just return the string
 			return $xml;
 		}
-	}
-
-	// For PhpXmlRpc\Value objects
-	if ($xml instanceof \PhpXmlRpc\Value) {
-		return $encoder->decode($xml);
 	}
 
 	// For other values, just return as is
