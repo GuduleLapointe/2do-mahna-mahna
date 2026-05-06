@@ -91,7 +91,8 @@ function opensim_parse_url($url, $default_gatekeeper = null): array
 		$parsed["host"] = strtolower(trim($parsed["host"]));
 		$parsed["port"] ??=
 			parse_url($default_gatekeeper ?? "", PHP_URL_PORT) ?? 80;
-		$parsed["gatekeeper"] = $parsed["host"] . ":" . $parsed["port"];
+		$parsed["gatekeeper"] =
+			"http://" . $parsed["host"] . ":" . $parsed["port"];
 	}
 
 	$split_path = array_values(
@@ -117,8 +118,15 @@ function opensim_parse_url($url, $default_gatekeeper = null): array
 		}
 	}
 
+	if (!empty($parsed["host"])) {
+		$parsed["region_uri"] =
+			$parsed["host"] .
+			(empty($parsed["host"]) || empty($parsed["port"])
+				? ""
+				: ":" . $parsed["port"]);
+	}
 	$parsed["region_uri"] = trim(
-		($parsed["gatekeeper"] ?? "") .
+		($parsed["region_uri"] ?? "") .
 			(empty($parsed["region"]) ? "" : "/") .
 			($parsed["region"] ?? ""),
 		":/ \n\r\t\v\x00",
@@ -228,7 +236,7 @@ function opensim_format_tp(
 		// Web only, do not use for in-world messages
 		$links[TPLINK_HG] = empty($host)
 			? $links[TPLINK_LOCAL]
-			: "zecondlife://$host:$port%20$region_percentencode" .
+			: "secondlife://$host:$port%20$region_percentencode" .
 				(empty($pos_sl) ? "" : "/$pos_sl");
 	}
 	if ($format & TPLINK_V3HG) {
