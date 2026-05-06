@@ -301,17 +301,45 @@ function opensim_link_region($args, $var = null)
 	}
 	global $OSSEARCH_CACHE;
 
-	if (is_array($args)) {
-		$region_array = $args;
-	} else {
+	if (is_string($args)) {
 		$region_array = opensim_parse_url($args);
+	} elseif (is_array($args)) {
+		if (!empty($args["region_uri"])) {
+			$region_array = $args;
+		} elseif ($args["host"] || $args["region"]) {
+			$tryurl = join("/", [
+				join(":", [$args["host"] ?? "", $args["port"] ?? ""]),
+				$args["region"] ?? "",
+			]);
+
+			$region_array = opensim_parse_url($tryurl);
+		}
+	}
+	if (!$region_array) {
+		return [
+			"success" => false,
+			"errorMessage" =>
+				"could not parse region url from args: " . print_r($args, true),
+			"data" => $region_array,
+			"args" => $args,
+		];
 	}
 	extract($region_array); // $host, $port, $region, $pos, $gatekeeper, $region_uri, $dest_uri
 	if (empty($gatekeeper)) {
 		// TODO: implemeent default gatekeeper and apply if region name is provided alone
 		return [
-			"code" => 400,
+			"success" => false,
 			"errorMessage" => "no gatekeeper",
+			"data" => $region_array,
+			"args" => $args,
+		];
+	}
+	if (empty($region_uri)) {
+		return [
+			"success" => false,
+			"errorMessage" =>
+				"could not parse region uri from region_array: " .
+				print_r($region_array, true),
 			"data" => $region_array,
 			"args" => $args,
 		];
@@ -428,8 +456,18 @@ function opensim_get_region($region, $var = null)
  */
 function opensim_region_is_online($region)
 {
-	$data = opensim_link_region($region);
-	return $data && $data["result"] == "True";
+	$link_region = opensim_link_region($region);
+
+	// About `result = "True"` vs `uuid != NULL_KEY`
+	//
+	// In some circumstances, maybe one of them will be matched
+	// and the other will not, while region is found but offline.
+	// In doubt, rely on semantics: "result" = "True" means a result
+	// was found, not specifically that it's a good result.
+	//
+	// handle or uuid are better indicators of a good result.
+
+	return opensim_isuuid($link_region["uuid"] ?? false);
 }
 
 function opensim_user_alert($agentID, $message, $secureID = null)
