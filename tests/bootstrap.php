@@ -27,6 +27,10 @@ define(
 	sys_get_temp_dir() . "/" . basename(APP_DIR) . "-" . uniqid(),
 );
 
+define("TEST_TMP_HOST", uniqid() . ".yourgrid.org");
+define("TEST_TMP_PORT", (string) rand(8100, 8999));
+define("TEST_TMP_REGION", uniqid("Welcome "));
+
 foreach (["TEST_URL", "APP_VERSION", "APP_DIR", "TEST_DIRECTORY"] as $const) {
 	testDetail("$const: " . constant($const));
 }
