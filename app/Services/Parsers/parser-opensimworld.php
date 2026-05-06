@@ -32,7 +32,6 @@ function fetchHGUrl($event_page_url)
 {
 	static $url_cache;
 	if (isset($url_cache[$event_page_url])) {
-		// error_log("DEBUG: Cache hit for $event_page_url");
 		return $url_cache[$event_page_url];
 	}
 
