@@ -8,6 +8,13 @@ Ideas and planned improvements, roughly in order of priority. Not all of these w
 
 - Scrup server/client: in some conditions, legacy clients are not updated. It might be related with the region not properly used to filter either script or client registrations
 
+- `Region::$region` property still declared but never set (leftover from before
+  `$this->regionName` rename) — remove it once all callers are confirmed clean.
+
+- `Region::data()` is deprecated (mixes link_region and get_region data, transforms
+  some fields). Migrate remaining callers to `link_region()` + `get_region()` then
+  remove. Currently kept for backward compatibility.
+
 ## Near term
 
 ### LSL board: invalid bannerImageURL crashes the script
@@ -26,11 +33,10 @@ Both projects bump to **3.x** to align with the API v3 that ships with
 this release (aggregator was 0.3, lsl-board was 1.6 — versions are
 misleading and out of sync with each other and the API).
 
-- Bump aggregator to 3.0.0
-- Bump lsl-board (2do-board) to 3.0.0
-- Update version references in README, changelog, and API version header
+- Version numbers set to 3.0.0 in both projects (working version, not yet released)
+- [ ] Update version references in README, changelog, and API version header
   (`X-2do-Api-Version`)
-- Tag both repos
+- [ ] Tag both repos once a functional beta is ready to deploy
 
 ---
 
@@ -42,7 +48,9 @@ includes is a prerequisite for PHAR compilation.
 **Fetcher refactor**
 
 Today `Fetcher` has two code paths: `fetch_ical()` and `fetch_opensimworld()`, with
-source-specific logic baked in. The fetcher should be agnostic:
+source-specific logic baked in. `app/Services/Parsers/` exists with `parser-ical.php`
+and `parser-opensimworld.php` as standalone scripts (still spawned via `shell_exec`).
+Next step: convert them to proper PHP classes.
 
 - Parsers become classes in `app/Services/Parsers/`, loaded via autoloader, not spawned subprocesses.
 - Each source type maps to a parser class; `ical` is the default.
@@ -78,6 +86,20 @@ been audited against the old format documentation. Before the v3.0 release:
 - Review all notecard keys from the legacy script (v1.x) and confirm each is handled
   or intentionally dropped in the new getConfig() parser.
 - Document the final supported key list in the README / Configuration notecard template.
+
+### opensim_parse_url: SLURL / secondlife:// support
+
+`opensim_format_tp()` can generate the complex HG secondlife:// format
+(`secondlife://http|!!host|port%20Region%20Name`) for viewers that require it, but
+`opensim_parse_url()` cannot parse it back. Two test cases are marked `todo` in
+`OpensimHelpersTest` pending this.
+
+Before implementing: verify whether hop:// is now universally supported. Firestorm
+supports it and is the dominant viewer. Singularity required the old SLURL format, but
+its status (active development?) should be confirmed. If hop:// is sufficient for all
+active viewers, the SLURL parse path may not be worth the complexity.
+
+---
 
 ### Deduplication by ratio
 
