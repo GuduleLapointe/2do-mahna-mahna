@@ -28,13 +28,13 @@ fi
 
 # Run tests with Pest
 # php vendor/bin/pest tests/ --testsuite Requirements,Features,Units $*
-php vendor/bin/pest $* | tee "$TMP.pest.output"
+php vendor/bin/pest $* 2>&1 | tee "$TMP.pest.output"
 
 # Capture exit code from test run
 EXIT_CODE=${PIPESTATUS[0]}
 
 # Extract failed test lines (⨯ lines with timing) and display as summary
-FAILURES=$(egrep "  (⨯|-| FAILED) " "$TMP.pest.output" | grep -E '[0-9]+\.[0-9]+s' || true)
+FAILURES=$(egrep "^\s*(⨯|-) " "$TMP.pest.output" || true)
 
 if [ -n "$FAILURES" ]; then
 	echo ""

@@ -33,7 +33,7 @@
  * @property string  $host         Grid server hostname
  * @property int     $port         Grid server port
  * @property string  $region       Region name (from URL; updated to canonical after data())
- * @property string  $uri          Canonical cache key "host:port/region" (lower-cased, no pos);
+ * @property string  $uri          Canonical region URI "host:port/region" (no pos, host lowercased);
  *                                 empty string when URL is not parseable
  * @property float[] $globalPos    Absolute map position [x, y, z] = grid origin + $pos;
  *                                 null until data() has been called
@@ -130,7 +130,7 @@ class Region
 	public string $gatekeeperURL = "";
 	public string $host = "";
 	public int $port = 8002;
-	public string $region = "";
+	public string $region = ""; // DEPRECATED, use `regionName` instead
 	public string $uri = "";
 	public array $pos = [];
 	public ?array $globalPos = null;
@@ -159,23 +159,21 @@ class Region
 			return;
 		}
 
-		$parsed = opensim_sanitize_uri($url, $grid, true);
+		$parsed = opensim_parse_url($url, $grid);
 		if (!$parsed || empty($parsed["host"])) {
 			return;
 		}
 
 		$this->host = $parsed["host"];
 		$this->port = (int) ($parsed["port"] ?? 8002);
-		$this->region = $parsed["region"];
-		$this->uri = $parsed["key"];
-		$this->gatekeeperURL = $parsed["gatekeeper"];
+		$this->regionName = $parsed["region"] ?? "";
+		$this->uri = $parsed["region_uri"] ?? "";
+		$this->gatekeeperURL = $parsed["gatekeeper"] ?? "";
 		$this->pos = empty($parsed["pos"])
 			? []
 			: array_map("floatval", explode("/", $parsed["pos"]));
 
-		$this->url =
-			$this->uri .
-			(empty($this->pos) ? "" : "/" . implode("/", $this->pos));
+		$this->url = $parsed["dest_uri"] ?? "";
 	}
 
 	public function link_region(): array|false
@@ -250,7 +248,7 @@ class Region
 			return $this->data;
 		}
 
-		$lookupURL = $this->gatekeeperURL . ":" . $this->region;
+		$lookupURL = $this->gatekeeperURL . ":" . $this->regionName;
 		$this->data = opensim_get_region($lookupURL) ?: [];
 
 		if (!empty($this->data)) {
@@ -259,16 +257,12 @@ class Region
 			$this->get_region_data = $this->data["get_region"] ?? [];
 			unset($this->get_region_data["link_region"]);
 
-			$this->regionName = $this->data["region_name"] ?? $this->region;
+			$this->regionName = $this->data["region_name"] ?? $this->regionName;
 			$this->regionUUID = $this->data["uuid"] ?? "";
 			$this->regionHandle = $this->data["regionhandle"] ?? "";
 			$this->owner = $this->data["owner"] ?? "";
 			$this->ownerUUID = $this->data["owneruuid"] ?? "";
 			$this->imageURL = $this->data["region_image"] ?? null;
-
-			if (!empty($this->regionName)) {
-				$this->region = $this->regionName;
-			}
 
 			$local = empty($this->pos) ? DEFAULT_POS : $this->pos;
 			$this->globalPos = [
@@ -302,7 +296,7 @@ class Region
 		$online = opensim_region_is_online([
 			"host" => $this->host,
 			"port" => $this->port,
-			"region" => $this->region,
+			"region" => $this->regionName,
 			"pos" => implode("/", $this->pos),
 			"gatekeeper" => $this->gatekeeperURL,
 			"key" => $this->uri,
@@ -313,7 +307,7 @@ class Region
 	}
 
 	/**
-	 * Return the region as a formatted teleport URL.
+	 * Return the region formatted teleport URL.
 	 *
 	 * Call data() first so the canonical region name is used.
 	 *
@@ -322,7 +316,7 @@ class Region
 	 * To teleport to the region's default landing point, call landingPoint() (TODO).
 	 *
 	 * @param  float[]|null $pos     Position override [x, y, z]; null = use $this->pos
-	 * @param  int          $format  TPLINK_* constant (default TPLINK_TXT)
+	 * @param  int          $format  TPLINK_* constant (default TPLINK_DEFAULT, see constants in opensim-helpers)
 	 * @return string
 	 */
 	public function teleportLink(

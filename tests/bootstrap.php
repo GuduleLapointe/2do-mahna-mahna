@@ -19,19 +19,19 @@ if (empty($devHost) || empty($devPort)) {
 	);
 	die(1);
 }
-define("TEST_URL", Config::get("dev_scheme") . "://$devHost:$devPort");
 
-// Shared test directories — created once, deleted at process end
-define(
-	"TEST_DIRECTORY",
-	sys_get_temp_dir() . "/" . basename(APP_DIR) . "-" . uniqid(),
-);
-
-define("TEST_TMP_HOST", uniqid() . ".yourgrid.org");
-define("TEST_TMP_PORT", (string) rand(8100, 8999));
-define("TEST_TMP_REGION", uniqid("Welcome "));
-
-foreach (["TEST_URL", "APP_VERSION", "APP_DIR", "TEST_DIRECTORY"] as $const) {
+$constants = [
+	"TEST_URL" => Config::get("dev_scheme") . "://$devHost:$devPort",
+	"TEST_DIRECTORY" =>
+		sys_get_temp_dir() . "/" . basename(APP_DIR) . "-" . uniqid(),
+	"TEST_GRID" => Config::get("test_grid"),
+	"TEST_REGION" => Config::get("test_region"),
+	"TEST_TMP_HOST" => uniqid() . ".localhost",
+	"TEST_TMP_PORT" => (string) rand(8100, 8999),
+	"TEST_TMP_REGION" => uniqid("Welcome "),
+];
+foreach ($constants as $const => $value) {
+	define($const, $value);
 	testDetail("$const: " . constant($const));
 }
 

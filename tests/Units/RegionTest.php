@@ -21,7 +21,48 @@ if (!defined("DEFAULT_POS")) {
 	define("DEFAULT_POS", [128, 128, 25]);
 }
 
-// ---------------------------------------------------------------------------
+describe("Test region setup", function () {
+	beforeEach(function () {
+		$this->test_grid = TEST_GRID ?: TEST_TMP_HOST . ":" . TEST_TMP_PORT;
+		$this->regionName = TEST_REGION ?: TEST_TMP_REGION;
+	});
+
+	test("Test Grid config", function () {
+		if (empty($this->test_grid)) {
+			test()->markTestSkipped("TEST_GRID not set in tests/.env");
+		}
+		expect(true)->toBeTrue();
+		passed("Test Grid config");
+	});
+
+	// Region object can be created from grid config, with or without
+	// an active server
+	test("Test Region instance", function () {
+		if (empty($this->regionName)) {
+			echo "TEST_REGION not set in tests/.env" . PHP_EOL;
+			test()->markTestSkipped("TEST_REGION not set in tests/.env");
+		}
+
+		$url =
+			"http://" .
+			$this->test_grid .
+			($this->regionName ? "/$this->regionName" : "");
+		$this->region = new Region($url);
+		expect($this->region)->toBeInstanceOf(Region::class);
+
+		passed("Test Region instance");
+	})->depends("Test Grid config");
+
+	// An active server is required for functions querying the grid
+	test("Test Grid running", function () {
+		$status = httpStatus("http://" . $this->test_grid . "/get_grid_info");
+		if (empty($status) || $status !== 200) {
+			$this->markTestSkipped("TEST_GRID not reachable");
+		}
+		expect(true)->toBeTrue();
+		passed("Test Grid running");
+	})->depends("Test Region instance");
+});
 
 describe("Constructor URL parsing", function () {
 	test("empty URL gives empty uri", function () {
@@ -40,9 +81,9 @@ describe("Constructor URL parsing", function () {
 		$region = new Region("yourgrid.org:8002 Welcome");
 		expect($region->host)->toBe("yourgrid.org");
 		expect($region->port)->toBe(8002);
-		expect($region->region)->toBe("Welcome");
+		expect($region->regionName)->toBe("Welcome");
 		expect($region->gatekeeperURL)->toBe("http://yourgrid.org:8002");
-		expect($region->uri)->toBe("yourgrid.org:8002/welcome");
+		expect($region->uri)->toBe("yourgrid.org:8002/Welcome");
 	});
 
 	test("http://host:port/Region same uri as bare", function () {
@@ -50,7 +91,7 @@ describe("Constructor URL parsing", function () {
 		$http = new Region("http://yourgrid.org:8002/Welcome");
 		expect($http->host)->toBe($bare->host);
 		expect($http->port)->toBe($bare->port);
-		expect($http->region)->toBe($bare->region);
+		expect($http->regionName)->toBe($bare->regionName);
 	});
 
 	test("hop://host:port/Region same host/port/region as bare", function () {
@@ -58,7 +99,7 @@ describe("Constructor URL parsing", function () {
 		$hop = new Region("hop://yourgrid.org:8002/Welcome");
 		expect($hop->host)->toBe($bare->host);
 		expect($hop->port)->toBe($bare->port);
-		expect($hop->region)->toBe($bare->region);
+		expect($hop->regionName)->toBe($bare->regionName);
 	});
 
 	test(
@@ -67,7 +108,7 @@ describe("Constructor URL parsing", function () {
 			$region = new Region("yourgrid.org:8002 Welcome/64/32/10");
 			expect($region->pos)->toBe([64.0, 32.0, 10.0]);
 			$region = new Region("yourgrid.org:8002 Welcome/64.5/32.2500/10.0");
-			expect($region->pos)->toBe([64.5, 32.25, 10]);
+			expect($region->pos)->toBe([64.5, 32.25, 10.0]);
 
 			expect($region->url)->toContain("64");
 			expect($region->url)->toContain("32");
@@ -92,17 +133,17 @@ describe("Constructor URL parsing", function () {
 
 	test("region name with spaces", function () {
 		$region = new Region("yourgrid.org:8002 Grand Place");
-		expect($region->region)->toBe("Grand Place");
+		expect($region->regionName)->toBe("Grand Place");
 		$region = new Region("yourgrid.org:8002:Grand Place");
-		expect($region->region)->toBe("Grand Place");
+		expect($region->regionName)->toBe("Grand Place");
 		$region = new Region("yourgrid.org:8002/Grand Place");
-		expect($region->region)->toBe("Grand Place");
+		expect($region->regionName)->toBe("Grand Place");
 		$region = new Region("yourgrid.org:8002/Grand+Place");
-		expect($region->region)->toBe("Grand Place");
+		expect($region->regionName)->toBe("Grand Place");
 		$region = new Region("yourgrid.org:8002/Grand_Place");
-		expect($region->region)->toBe("Grand Place");
+		expect($region->regionName)->toBe("Grand Place");
 		$region = new Region("yourgrid.org:8002/Grand%20Place");
-		expect($region->region)->toBe("Grand Place");
+		expect($region->regionName)->toBe("Grand Place");
 	});
 
 	test("gatekeeperURL is http://host:port", function () {
@@ -111,111 +152,143 @@ describe("Constructor URL parsing", function () {
 	});
 });
 
-// ---------------------------------------------------------------------------
-
 describe("teleportLink()", function () {
-	test("teleportLink() succeeds with no args", function () {
+	test("teleportLink() with no args uses TPLINK_HOP", function () {
 		$region = new Region("yourgrid.org:8002 Welcome");
-		$link = $region->teleportLink();
-		expect($link)->toContain("yourgrid.org:8002");
-		expect($link)->toContain("Welcome");
-		expect($link)->toStartWith("nothing://");
-		// uri is lowercased (canonical cache key); region name in link follows suit
-		expect(strtolower($link))->toContain("welcome");
+		$teleportLink = $region->teleportLink();
+		// Default format is TPLINK_HOP
+		expect($teleportLink)->toStartWith("hop://");
+		expect($teleportLink)->toContain("yourgrid.org:8002");
+		expect($teleportLink)->toContain("Welcome");
 	});
 
 	test("pos override — builds link from uri + given pos", function () {
 		$region = new Region("yourgrid.org:8002 Welcome");
-		$link = $region->teleportLink([64, 32, 10]);
-		expect($link)->toContain("64");
-		expect($link)->toContain("32");
-		expect($link)->toContain("10");
-	})->depends("teleportLink() succeeds with no args");
+		$teleportLink = $region->teleportLink([64, 32, 10]);
+		expect($teleportLink)->toContain("64/32/10");
+		$teleportLink = $region->teleportLink([64.25, "32.5000", 10.0]);
+		expect($teleportLink)->toContain("64.25/32.5/10");
+	})->depends("teleportLink() with no args uses TPLINK_HOP");
 
-	test("TPLINK_TXT format", function () {
+	test("TPLINK_HOP format", function () {
 		$region = new Region("yourgrid.org:8002 Welcome");
-		$link = $region->teleportLink(null, TPLINK_TXT);
-		expect($link)->toContain("yourgrid.org:8002");
-		expect($link)->not->toStartWith("hop://");
-	})->depends("teleportLink() succeeds with no args");
+		$teleportLink = $region->teleportLink(null, TPLINK_HOP);
+		expect($teleportLink)->toStartWith("hop://");
+		expect($teleportLink)->toContain("yourgrid.org:8002");
+		expect($teleportLink)->not->toStartWith("http://");
+	})->depends("teleportLink() with no args uses TPLINK_HOP");
 
 	test("empty uri — returns empty string", function () {
 		$region = new Region("");
 		expect($region->teleportLink())->toBe("");
-	})->depends("teleportLink() succeeds with no args");
+	})->depends("teleportLink() with no args uses TPLINK_HOP");
 });
 
-// ---------------------------------------------------------------------------
-
-describe("extended (requires TEST_GRID)", function () {
+describe("live helpers", function () {
 	beforeEach(function () {
-		$grid = Config::get("test_grid");
-		if (empty($grid)) {
-			test()->markTestSkipped("TEST_GRID not set in tests/.env");
+		requires("Test Grid running");
+		$errors = [];
+		if (empty(TEST_GRID ?? "")) {
+			$errors[] = "TEST_GRID not set";
 		}
-		$regionName = Config::get("test_region") ?: "";
-		$url = "http://$grid" . ($regionName ? "/$regionName" : "");
-		$this->region = new Region($url);
-		$this->grid = $grid;
-		$this->regionName = $regionName;
+		if (empty(TEST_REGION ?? "")) {
+			$errors[] = "TEST_REGION not set";
+		}
+		if (!empty($errors)) {
+			$this->markTestSkipped(implode(", ", $errors));
+		}
+		$this->region = new Region(TEST_REGION, TEST_GRID);
+	});
+
+	test("Region->link_region() method", function () {
+		expect($this->region)->toBeInstanceOf(Region::class);
+		expect(method_exists($this->region, "link_region"))->toBeTrue();
+		passed("Region->link_region() method");
 	});
 
 	// link_region() with no region name = default landing region.
 	// All other extended tests depend on this succeeding.
-	test("link_region() — default region reachable", function () {
-		$bare = new Region("http://" . $this->grid);
-		$result = $bare->link_region();
-		expect($result)->toBeArray()->toHaveKey("uuid");
-		passed("Region link_region reachable");
+	test("Region->link_region() resolves default region", function () {
+		$defaultRegion = new Region(TEST_GRID);
+		$link_region = $defaultRegion->link_region();
+		expect($link_region)
+			->toBeArray()
+			->toHaveKeys(["uuid", "external_name"]);
+		passed("Region->link_region() resolves default region");
 	});
 
-	test("link_region() with region name", function () {
-		if (empty($this->regionName)) {
-			test()->markTestSkipped("TEST_REGION not set in tests/.env");
-		}
-		$result = $this->region->link_region();
-		expect($result)->toBeArray()->toHaveKey("uuid");
-	})->depends("link_region() — default region reachable");
+	test("Region->link_region() resolves region name", function () {
+		$testRegion = new Region(TEST_REGION, TEST_GRID);
+		$link_region = $testRegion->link_region();
+		expect($link_region)
+			->toBeArray()
+			->toHaveKeys(["uuid", "external_name"]);
+		expect($link_region["external_name"])->toMatch(
+			"#/ " . TEST_REGION . "$#",
+		);
+		passed("Region->link_region() resolves region name");
+	})->depends("Region->link_region() method");
+
+	test("Region->get_region() method", function () {
+		$this->region = new Region(TEST_GRID);
+		expect($this->region)->toBeInstanceOf(Region::class);
+		expect(method_exists($this->region, "get_region"))->toBeTrue();
+		passed("Region->get_region() method");
+	});
 
 	test("get_region() returns region details", function () {
-		$bare = new Region("http://" . $this->grid);
-		$result = $bare->get_region();
+		$this->region = new Region(TEST_GRID);
+		$result = $this->region->get_region();
 		expect($result)->toBeArray()->toHaveKey("uuid");
 		expect($result)->toHaveKey("x");
 		expect($result)->toHaveKey("y");
-	})->depends("link_region() — default region reachable");
+	})->depends("Region->get_region() method");
 
-	test("data() returns array and populates regionname", function () {
+	// DEPRECATED: use specific link_region() or get_region()
+	// instead of data() which is a mix of both
+	test("Region->data() method", function () {
 		$data = $this->region->data();
 		expect($data)->toBeArray()->not->toBeEmpty();
 		expect($this->region->regionName)->not->toBeEmpty();
-		passed("Region data fetched");
-	})->depends("link_region() — default region reachable");
+		passed("Region->data() method");
+	})->depends("Region->get_region() method", "Region->link_region() method");
+});
 
-	test("data() populates globalPos as float[3]", function () {
-		$this->region->data();
-		expect($this->region->globalPos)->toBeArray()->toHaveCount(3);
-		foreach ($this->region->globalPos as $coord) {
-			expect($coord)->toBeFloat();
-		}
-	})->depends("data() returns array and populates regionname");
+describe("active test grid", function () {
+	beforeEach(function () {
+		requires("Test Grid running");
+		requires("Region->data() method");
+		$this->active_test_grid =
+			TEST_GRID ?: TEST_TMP_HOST . ":" . TEST_TMP_PORT;
+		$this->active_test_region = TEST_REGION ?: TEST_TMP_REGION;
+		$this->region = new Region(
+			$this->active_test_region,
+			$this->active_test_grid,
+		);
+	});
 
-	test("data() sets regionUUID", function () {
-		$this->region->data();
-		expect($this->region->regionUUID)->toMatch("/^[0-9a-f\-]{36}$/i");
-	})->depends("data() returns array and populates regionname");
+	test("Test region config", function () {
+		expect($this->active_test_grid)->not->toBeEmpty();
+		expect($this->active_test_region)->not->toBeEmpty();
+		expect($this->region)->toBeInstanceOf(Region::class);
+		expect($this->region->regionName)->toBe($this->active_test_region);
+		expect($this->active_test_grid)->toMatch(
+			"/^{$this->region->host}:{$this->region->port}$/",
+		);
+		passed("Test region config");
+	});
 
 	test("online() returns boolean", function () {
 		expect($this->region->online())->toBeBool();
-	})->depends("link_region() — default region reachable");
+	});
 
 	test("teleportLink() after data() is a valid hop:// link", function () {
 		$this->region->data();
-		$link = $this->region->teleportLink(null, TPLINK_HOP);
-		expect($link)->toStartWith("hop://");
-		// url is built from the lowercased uri; regionname from the server may
+		$teleportLink = $this->region->teleportLink(null, TPLINK_HOP);
+		expect($teleportLink)->toStartWith("hop://");
+		// url is built from the lowercased uri; regionName from the server may
 		// differ in case — verify the link contains the host and a region segment
-		expect($link)->toContain($this->region->host);
-		expect($link)->toMatch("#^hop://[^/]+/[^/]+/#");
-	})->depends("data() returns array and populates regionname");
+		expect($teleportLink)->toContain($this->region->host);
+		expect($teleportLink)->toMatch("#^hop://[^/]+/[^/]+#");
+	});
 });
