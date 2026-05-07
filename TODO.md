@@ -33,10 +33,11 @@ Both projects bump to **3.x** to align with the API v3 that ships with
 this release (aggregator was 0.3, lsl-board was 1.6 — versions are
 misleading and out of sync with each other and the API).
 
-- Version numbers set to 3.0.0 in both projects (working version, not yet released)
+- lsl-board 3.0.5 released and deployed (compatible with old and new server)
+- aggregator at 3.0.0 in code — working version, not yet released
 - [ ] Update version references in README, changelog, and API version header
   (`X-2do-Api-Version`)
-- [ ] Tag both repos once a functional beta is ready to deploy
+- [ ] Tag aggregator once a functional beta is ready to deploy
 
 ---
 
