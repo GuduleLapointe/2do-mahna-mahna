@@ -221,9 +221,12 @@ function opensim_format_tp(
 	}
 
 	if ($format & TPLINK_TXT) {
-		$links[TPLINK_TXT] =
-			trim(($gatekeeper ?? "") . " " . ($region ?? "")) .
-			(empty($pos) ? "" : "/$pos");
+		$links[TPLINK_TXT] = trim(
+			(empty($host) ? "" : join(":", [$host, $port])) .
+				" " .
+				($region ?? "") .
+				(empty($pos) ? "" : "/$pos"),
+		);
 	}
 	if ($format & TPLINK_LOCAL) {
 		// Web only, do not use for in-world messages
