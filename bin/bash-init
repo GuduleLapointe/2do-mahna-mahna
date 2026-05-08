@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+
+PGM=${PGM:-$(basename $0)}
+APP_DIR=$(cd "$(dirname "$BASH_SOURCE")/.." && pwd)
+TMP=$(mktemp -t "$PGM" || echo /tmp/$PGM.$$)
+LOG=$APP_DIR/logs/$PGM.log
+OS=$(uname | tr [:upper:] [:lower:])
+DEBUG=${DEBUG:-}
+TRACE=${TRACE:-}
+DRY_RUN=${DRY_RUN:-}
+DATA_DIR=${DATA_DIR:-$APP_DIR/data}
+
+[ -f $APP_DIR/.env ] && source $APP_DIR/.env
+
+[ "$DEBUG" = "yes" -o "$DEBUG" = "true" -o "$DEBUG" = "1" ] && DEBUG=1 || DEBUG=
+[ "$TRACE" = "yes" -o "$TRACE" = "true" -o "$TRACE" = "1" ] && TRACE=1 || TRACE=
+[ "$TRACE" ] && set -x
+
+trap 'DEBUG=; rm -f "$TMP" "$TMP".*' EXIT
+
+log() {
+	[ "${1:-}" = "0" ] && shift
+	[ "${1:-}" ] || return
+    echo "$@" >> $TMP.processing
+
+	error=
+	err_msg=
+    echo "$1" | cut -d " " -f 1 | grep -E -q '^[0-9]+$' && error=$1 && shift
+    [ "$error" ] && err_msg=" [ERROR $error]"
+    [ -z "$error" -a -z "$DEBUG" ] && return
+
+    echo "$PGM$err_msg: $@" >&2
+}
+
+fail() {
+    # cat $TMP.processing >&2
+    echo "$1" | cut -d " " -f 1 | grep -E -q '^[0-9]+$' && error=$1 && shift || error=1
+    log $error "$@"
+    end $error
+}
+
+end() {
+    mv $TMP.processing $LOG
+    [ "${tailpid:-}" ] && kill -9 $tailpid
+
+	[ -z "$1" ] && log "end processing" || log "$@"
+    exit $1
+}
+
+for arg in "$@"; do
+    case "$arg" in
+        -n|--dry-run) DRY_RUN=1 ;;
+        -y|--yes) YES=1 ;;
+        -v|--verbose) DEBUG=1 ;;
+        -q|--quiet) DEBUG= ;;
+    esac
+done
+
+if [ -z $DRY_RUN ]; then
+	for dir in $APP_DIR/logs $DATA_DIR
+	do
+		if [ ! -e $dir ]; then
+			log "init create $dir"
+			mkdir -p $dir
+		fi
+	done
+fi
