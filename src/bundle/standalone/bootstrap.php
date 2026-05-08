@@ -75,7 +75,7 @@ require_once __DIR__ . "/Scrup.php";
 $_pharPath = Phar::running(false);
 define("BUNDLE_DIR", $_pharPath ? dirname($_pharPath) : __DIR__);
 define("BASE_DIR", $_pharPath ? dirname($_pharPath) : dirname(__DIR__, 2));
-define("EVENTS_VERSION", "3.0.0");
+define("EVENTS_VERSION", "3.0.0-dev");
 define("API_VERSION", "v3");
 define(
 	"LSL_BOARD_VERSION",

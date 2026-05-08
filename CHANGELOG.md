@@ -1,6 +1,6 @@
 ## Changelog
 
-3.0.0
+Unreleased (dev)
 * Version alignment: aggregator and 2do-board both bump to 3.x to match API v3
 * API v3: clean REST-style URL routing (/api/v3/events/lsl, /api/v3/events/json,
   /api/v3/events/board.png) with fallback query-param routes for servers without

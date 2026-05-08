@@ -34,7 +34,7 @@ this release (aggregator was 0.3, lsl-board was 1.6 — versions are
 misleading and out of sync with each other and the API).
 
 - lsl-board 3.0.5 released and deployed (compatible with old and new server)
-- aggregator at 3.0.0 in code — working version, not yet released
+- aggregator at 3.0.0-dev in code — working version, not yet released
 - [ ] Update version references in README, changelog, and API version header
   (`X-2do-Api-Version`)
 - [ ] Tag aggregator once a functional beta is ready to deploy

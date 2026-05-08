@@ -10,7 +10,7 @@ if (defined("APP_DIR") || defined("APP_VERSION")) {
 }
 
 define("APP_DIR", __DIR__);
-define("APP_VERSION", "3.0.0");
+define("APP_VERSION", "3.0.0-dev");
 define("API_VERSION", "v3");
 define("TODO_APP", APP_VERSION);
 
