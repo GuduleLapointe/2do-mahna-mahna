@@ -197,8 +197,8 @@ class Aggregator
 		);
 		$pos_args = array_slice($argv, $rest_index);
 
-		$quiet = isset($opts["q"]);
-		$verbose = isset($opts["v"]);
+		$quiet = isset($opts["q"]) || isset($opts["quiet"]);
+		$verbose = isset($opts["v"]) || isset($opts["verbose"]);
 		self::$force =
 			isset($opts["f"]) ||
 			isset($opts["force"]) ||
@@ -210,8 +210,8 @@ class Aggregator
 			echo "Usage: php " .
 				self::$script .
 				" [-q] [-v] [-f] [output_dir]\n";
-			echo "  -q  quiet mode\n";
-			echo "  -v  verbose mode (overridden if -q is set)\n";
+			echo "  -q|--quiet  quiet mode\n";
+			echo "  -v|--verbose  verbose mode (overridden if -q is set)\n";
 			echo "  -f|--force|--clear-cache  clear cache before running\n";
 			echo "  -h|--help  show help and die\n";
 			echo "  --version  show version and die\n";

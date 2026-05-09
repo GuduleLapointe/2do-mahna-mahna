@@ -170,7 +170,7 @@ class Event
 	public function sanitize_hgurl($url, $grid_url = null)
 	{
 		$region = new Region($url, $grid_url);
-		if (empty($region->key)) {
+		if (empty($region->uri)) {
 			return false;
 		}
 		$region->data();
@@ -178,10 +178,12 @@ class Event
 			Console::verbose("region offline: " . ($url ?: $grid_url));
 			return false;
 		}
-		$this->globalPos = implode(
-			",",
-			array_map("floatval", $region->globalPos),
-		);
+		if (!empty($region->globalPos)) {
+			$this->globalPos = implode(
+				",",
+				array_map("floatval", $region->globalPos),
+			);
+		}
 		return $region->teleportLink();
 	}
 

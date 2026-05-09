@@ -63,16 +63,23 @@ class EventStorage
 			$description = self::fixEncoding(
 				strip_tags(html_entity_decode($description)),
 			);
+			// TODO: remove once the search DB is migrated to utf8mb4.
+			// The DB currently uses MySQL utf8 (3-byte), which rejects 4-byte emoji
+			// codepoints with a fatal error. This strips them as a temporary workaround;
+			// the canonical fix is to ALTER the tables to utf8mb4 (see TODO.md).
+			// Note: remove_emoji() should only be called at LSL output time, not here.
+			$name = Aggregator::remove_emoji($name);
+			$description = Aggregator::remove_emoji($description);
 
 			$fields = [
-				"owneruuid" => $event->owner_uuid,
+				"owneruuid" => $event->ownerUUID,
 				"name" => $name,
 				"creatoruuid" => $event->creatorUUID,
 				"category" => $event->category,
 				"description" => $description, // already normalised above
 				"dateUTC" => $start,
 				"duration" => $event->duration,
-				"covercharge" => $event->covercharge,
+				"covercharge" => $event->coverCharge,
 				"coveramount" => $event->coverAmount,
 				"simname" => $event->simName,
 				"parcelUUID" => $event->parcelUUID,
@@ -85,11 +92,19 @@ class EventStorage
 				"source" => $event->source,
 			];
 
-			if ($db->insert($table, $fields)) {
-				$count++;
-			} else {
+			try {
+				if ($db->insert($table, $fields)) {
+					$count++;
+				} else {
+					Console::error(
+						"EventStorage: failed to insert \"{$event->name}\"",
+					);
+					$errors++;
+				}
+			} catch (Exception $e) {
 				Console::error(
-					"EventStorage: failed to insert \"{$event->name}\"",
+					"EventStorage: exception inserting \"{$event->name}\": " .
+						$e->getMessage(),
 				);
 				$errors++;
 			}

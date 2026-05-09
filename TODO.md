@@ -15,6 +15,11 @@ Ideas and planned improvements, roughly in order of priority. Not all of these w
   some fields). Migrate remaining callers to `link_region()` + `get_region()` then
   remove. Currently kept for backward compatibility.
 
+- `EventStorage`: emoji are currently stripped before DB insert as a temporary
+  workaround for the MySQL utf8 (3-byte) charset limitation. `remove_emoji()` should
+  only be called at LSL output time; the DB should store the original text faithfully.
+  Fix: migrate the search DB to utf8mb4 (see "Database portability" below).
+
 ## Near term
 
 ### LSL board: invalid bannerImageURL crashes the script
@@ -111,6 +116,44 @@ on multi-face prims.
 ---
 
 ## Medium term
+
+### Database portability
+
+The entire 2do suite should support the same database engines as OpenSimulator:
+**MySQL/MariaDB** (Robust), **PostgreSQL** (Robust), and **SQLite** (OpenSim standalone).
+Many users share the same DB instance between OpenSim and the search/events features,
+even though it is not required.
+
+**utf8mb4 (MySQL/MariaDB)**
+
+The search DB currently uses MySQL `utf8` (3-byte charset), which rejects 4-byte
+emoji codepoints. The fix is to ALTER the `events` table columns to `utf8mb4`:
+
+```sql
+ALTER TABLE events CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+Also change the DSN in `SearchDB::get()` from `charset=utf8` to `charset=utf8mb4`.
+
+Until this is done, `EventStorage` strips emoji before insert (workaround — see Bugs).
+The LSL output layer (`remove_emoji()`) should be the only place emoji are stripped,
+since the PNG/JSON API consumers handle them fine and the DB should be faithful.
+
+**PostgreSQL support**
+
+`OSPDO` (the PDO wrapper in `opensim-helpers`) and `SearchDB` are MySQL-specific in
+places (backtick quoting, `AUTO_INCREMENT`, `ON DUPLICATE KEY`). A PostgreSQL backend
+would require either a query abstraction layer or dialect-aware schema helpers. Worth
+designing once the Laravel migration is on the table, since Laravel's query builder
+handles this natively.
+
+**SQLite support**
+
+SQLite lacks `ALTER TABLE … ADD COLUMN IF NOT EXISTS` and some MySQL date functions.
+`SearchDB::extendSchema()` already uses `SHOW COLUMNS` (MySQL-only). A SQLite backend
+would need a parallel schema helper. Useful for local development and single-node grids.
+
+---
 
 ### Update server
 
