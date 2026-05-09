@@ -6,19 +6,37 @@ Ideas and planned improvements, roughly in order of priority. Not all of these w
 
 ## Bugs
 
-- Scrup server/client: in some conditions, legacy clients are not updated. It might be related with the region not properly used to filter either script or client registrations
+- Scrup server/client: in some conditions, legacy clients are not updated. It
+  might be related with the region not properly used to filter either script or
+  client registrations
 
 - `Region::$region` property still declared but never set (leftover from before
   `$this->regionName` rename) — remove it once all callers are confirmed clean.
 
-- `Region::data()` is deprecated (mixes link_region and get_region data, transforms
-  some fields). Migrate remaining callers to `link_region()` + `get_region()` then
-  remove. Currently kept for backward compatibility.
+- `Region::data()` is deprecated (mixes link_region and get_region data,
+  transforms some fields). Migrate remaining callers to `link_region()` +
+  `get_region()` then remove. Currently kept for backward compatibility.
 
 - `EventStorage`: emoji are currently stripped before DB insert as a temporary
-  workaround for the MySQL utf8 (3-byte) charset limitation. `remove_emoji()` should
-  only be called at LSL output time; the DB should store the original text faithfully.
+  workaround for the MySQL utf8 (3-byte) charset limitation. `remove_emoji()` should only be called at LSL output time; the DB should store the original text faithfully.
   Fix: migrate the search DB to utf8mb4 (see "Database portability" below).
+
+- **Test suite requires live aggregator run** — architectural flaw. Tests 
+  currently read static data files (events.lsl2, events.json) produced by the
+  last aggregator run. This means the test can only verify code that has already
+  been executed against real live data — the opposite of CI. Fix: tests must
+  generate all artefacts into TEST_BUILD_DIR / TEST_DATA_DIR using
+  TEST_CONFIG_DIR (already defined in tests/bootstrap.php) with local, reduced
+  test source data instead of config/sources.csv. Only then can tests validate
+  the build *before* any destructive operation on real data.
+  Approximate scope:
+  - Define local test iCal and opensimworld fixtures (small static files served
+    locally)
+  - tests/bootstrap.php: start a minimal HTTP server serving those fixtures
+  - Run the aggregator against TEST_CONFIG_DIR → TEST_DATA_DIR as part of the
+    test suite
+  - API tests read from TEST_DATA_DIR, not from the live deployment
+  - A separate "live" test mode (opt-in) can test against the deployed server
 
 ## Near term
 

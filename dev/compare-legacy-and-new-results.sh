@@ -28,7 +28,7 @@ log Run tests
 ./tests/run-tests.sh
 
 log Deploy
-./bin/deploy.sh
+./bin/deploy.sh -y
 
 log Get sources list from $LIVE_HOST
 rsync -Wavz $LIVE_HOST:$LIVE_APP_DIR/config/sources.csv config/

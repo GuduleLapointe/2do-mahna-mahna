@@ -57,7 +57,7 @@ describe("v2 API", function () {
 			$time = $lines[$i + 2];
 			$dest = $lines[$i + 3];
 			expect($time)->toMatch($timespecRegexp, "invalid time");
-			expectValidHypergridUri($dest, "v2 API: $title - $time - $dest");
+			expectValidHypergridUri($dest, "invalid destination URL");
 			$i = $i + 3;
 		}
 	})->depends("valid API");

@@ -85,14 +85,14 @@ class Event
 			}
 		}
 
-		$sanitized_url = $this->sanitize_hgurl(
+		$sanitized_url = $this->sanitize_destination_uri(
 			$data["simname"],
 			$calendar["grid_url"],
 		);
 		if ($sanitized_url === false) {
 			Console::verbose(
 				sprintf(
-					"%s event %s error checking sanitize_hgurl(%s, %s)",
+					"%s event %s error checking sanitize_destination_uri(%s, %s)",
 					$calendar["slug"],
 					$data["uid"],
 					$data["simname"] ?? "",
@@ -159,32 +159,42 @@ class Event
 	}
 
 	/**
-	 * Resolve a raw region URL to a canonical teleport URL, setting globalPos as a side effect.
+	 * Resolve a raw region URL to a canonical simname string.
 	 *
-	 * Delegates to Region::get(), which handles parsing, grid lookups, and caching.
+	 * Returns the simname in "host:port Region Name[/x/y/z]" format — no URI scheme,
+	 * space before the region name, slash only before position coordinates.
+	 * This format is required by the HYPEvents LSL board and validated by tests.
+	 *
+	 * Constructs the result from Region properties (no second opensim_parse_url call).
+	 * Uses the canonical region name from data() when available.
 	 *
 	 * @param  string      $url       Raw region URL from the event source
 	 * @param  string|null $grid_url  Grid gatekeeper URL (fallback when $url has no host)
-	 * @return string|false           Canonical "host:port Region/pos" URL, or false if offline/invalid
+	 * @return string|false           Canonical simname, or false if URL is unparseable or region offline
 	 */
-	public function sanitize_hgurl($url, $grid_url = null)
+	public function sanitize_destination_uri($url, $grid_url = null)
 	{
-		$region = new Region($url, $grid_url);
-		if (empty($region->uri)) {
+		$destination = new Region($url, $grid_url);
+		if (empty($destination->dest_uri)) {
 			return false;
 		}
-		$region->data();
-		if (!$region->online()) {
+		$destination->data();
+		if (!$destination->online()) {
 			Console::verbose("region offline: " . ($url ?: $grid_url));
 			return false;
 		}
-		if (!empty($region->globalPos)) {
-			$this->globalPos = implode(
-				",",
-				array_map("floatval", $region->globalPos),
-			);
+
+		// Build "host:port Region Name[/x/y/z]" from Region properties.
+		// dest_uri (host:port/Region/pos) is used only for the emptiness check above;
+		// the simname format needs a space before the region name, not a slash.
+		$simname = $destination->host . ":" . $destination->port;
+		if (!empty($destination->regionName)) {
+			$simname .= " " . $destination->regionName;
 		}
-		return $region->teleportLink();
+		if (!empty($destination->pos)) {
+			$simname .= "/" . implode("/", $destination->pos);
+		}
+		return $simname;
 	}
 
 	/**

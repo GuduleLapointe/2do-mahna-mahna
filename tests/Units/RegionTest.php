@@ -89,6 +89,8 @@ describe("Constructor URL parsing", function () {
 	test("http://host:port/Region same uri as bare", function () {
 		$bare = new Region("yourgrid.org:8002 Welcome");
 		$http = new Region("http://yourgrid.org:8002/Welcome");
+		expect($http->uri)->toBe($bare->uri);
+		expect($http->dest_uri)->toBe($bare->dest_uri);
 		expect($http->host)->toBe($bare->host);
 		expect($http->port)->toBe($bare->port);
 		expect($http->regionName)->toBe($bare->regionName);
@@ -97,6 +99,8 @@ describe("Constructor URL parsing", function () {
 	test("hop://host:port/Region same host/port/region as bare", function () {
 		$bare = new Region("yourgrid.org:8002 Welcome");
 		$hop = new Region("hop://yourgrid.org:8002/Welcome");
+		expect($bare->uri)->toBe($hop->uri);
+		expect($bare->dest_uri)->toBe($hop->dest_uri);
 		expect($hop->host)->toBe($bare->host);
 		expect($hop->port)->toBe($bare->port);
 		expect($hop->regionName)->toBe($bare->regionName);
@@ -110,23 +114,21 @@ describe("Constructor URL parsing", function () {
 			$region = new Region("yourgrid.org:8002 Welcome/64.5/32.2500/10.0");
 			expect($region->pos)->toBe([64.5, 32.25, 10.0]);
 
-			expect($region->url)->toContain("64");
-			expect($region->url)->toContain("32");
-			expect($region->url)->toContain("10");
+			expect($region->dest_uri)->toEndWith("/64.5/32.25/10");
 		},
 	);
 
 	test("no position in URL properly results in empty array", function () {
 		$region = new Region("yourgrid.org:8002 Welcome");
 		expect($region->pos)->toBe([]);
-		expect($region->url)->not->toMatch("#/\d+/\d+#");
+		expect($region->dest_uri)->not->toMatch("#/\d+/\d+#");
 	});
 
 	test(
 		"url is set by constructor — globalPos null before data()",
 		function () {
 			$region = new Region("yourgrid.org:8002 Welcome");
-			expect($region->url)->not->toBeEmpty();
+			expect($region->dest_uri)->not->toBeEmpty();
 			expect($region->globalPos)->toBeNull();
 		},
 	);
@@ -152,37 +154,38 @@ describe("Constructor URL parsing", function () {
 	});
 });
 
-describe("teleportLink()", function () {
-	test("teleportLink() with no args uses TPLINK_HOP", function () {
-		$region = new Region("yourgrid.org:8002 Welcome");
-		$teleportLink = $region->teleportLink();
-		// Default format is TPLINK_HOP
-		expect($teleportLink)->toStartWith("hop://");
-		expect($teleportLink)->toContain("yourgrid.org:8002");
-		expect($teleportLink)->toContain("Welcome");
-	});
+// DEPRECATED. teleportLink() is basically an alias of
+// describe("teleportLink()", function () {
+// 	test("teleportLink() with no args uses TPLINK_HOP", function () {
+// 		$region = new Region("yourgrid.org:8002 Welcome");
+// 		$teleportLink = $region->teleportLink();
+// 		// Default format is TPLINK_HOP
+// 		expect($teleportLink)->toStartWith("hop://");
+// 		expect($teleportLink)->toContain("yourgrid.org:8002");
+// 		expect($teleportLink)->toContain("Welcome");
+// 	});
 
-	test("pos override — builds link from uri + given pos", function () {
-		$region = new Region("yourgrid.org:8002 Welcome");
-		$teleportLink = $region->teleportLink([64, 32, 10]);
-		expect($teleportLink)->toContain("64/32/10");
-		$teleportLink = $region->teleportLink([64.25, "32.5000", 10.0]);
-		expect($teleportLink)->toContain("64.25/32.5/10");
-	})->depends("teleportLink() with no args uses TPLINK_HOP");
+// 	test("pos override — builds link from uri + given pos", function () {
+// 		$region = new Region("yourgrid.org:8002 Welcome");
+// 		$teleportLink = $region->teleportLink([64, 32, 10]);
+// 		expect($teleportLink)->toContain("64/32/10");
+// 		$teleportLink = $region->teleportLink([64.25, "32.5000", 10.0]);
+// 		expect($teleportLink)->toContain("64.25/32.5/10");
+// 	})->depends("teleportLink() with no args uses TPLINK_HOP");
 
-	test("TPLINK_HOP format", function () {
-		$region = new Region("yourgrid.org:8002 Welcome");
-		$teleportLink = $region->teleportLink(null, TPLINK_HOP);
-		expect($teleportLink)->toStartWith("hop://");
-		expect($teleportLink)->toContain("yourgrid.org:8002");
-		expect($teleportLink)->not->toStartWith("http://");
-	})->depends("teleportLink() with no args uses TPLINK_HOP");
+// 	test("TPLINK_HOP format", function () {
+// 		$region = new Region("yourgrid.org:8002 Welcome");
+// 		$teleportLink = $region->teleportLink(null, TPLINK_HOP);
+// 		expect($teleportLink)->toStartWith("hop://");
+// 		expect($teleportLink)->toContain("yourgrid.org:8002");
+// 		expect($teleportLink)->not->toStartWith("http://");
+// 	})->depends("teleportLink() with no args uses TPLINK_HOP");
 
-	test("empty uri — returns empty string", function () {
-		$region = new Region("");
-		expect($region->teleportLink())->toBe("");
-	})->depends("teleportLink() with no args uses TPLINK_HOP");
-});
+// 	test("empty uri — returns empty string", function () {
+// 		$region = new Region("");
+// 		expect($region->teleportLink())->toBe("");
+// 	})->depends("teleportLink() with no args uses TPLINK_HOP");
+// });
 
 describe("live helpers", function () {
 	beforeEach(function () {
@@ -282,13 +285,13 @@ describe("active test grid", function () {
 		expect($this->region->online())->toBeBool();
 	});
 
-	test("teleportLink() after data() is a valid hop:// link", function () {
-		$this->region->data();
-		$teleportLink = $this->region->teleportLink(null, TPLINK_HOP);
-		expect($teleportLink)->toStartWith("hop://");
-		// url is built from the lowercased uri; regionName from the server may
-		// differ in case — verify the link contains the host and a region segment
-		expect($teleportLink)->toContain($this->region->host);
-		expect($teleportLink)->toMatch("#^hop://[^/]+/[^/]+#");
-	});
+	// test("teleportLink() after data() is a valid hop:// link", function () {
+	// 	$this->region->data();
+	// 	$teleportLink = $this->region->teleportLink(null, TPLINK_HOP);
+	// 	expect($teleportLink)->toStartWith("hop://");
+	// 	// url is built from the lowercased uri; regionName from the server may
+	// 	// differ in case — verify the link contains the host and a region segment
+	// 	expect($teleportLink)->toContain($this->region->host);
+	// 	expect($teleportLink)->toMatch("#^hop://[^/]+/[^/]+#");
+	// });
 });

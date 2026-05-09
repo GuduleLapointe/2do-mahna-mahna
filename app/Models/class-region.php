@@ -22,7 +22,7 @@
  * @property string  $regionName   Canonical region name (from grid data)
  * @property string  $regionUUID   Region UUID
  * @property string  $regionHandle Legacy 64-bit grid coordinate handle
- * @property string  $url          Normalized destination URL (gatekeeperURL:region[/pos]), set from constructor args
+ * #property string  $url          Renamed as $dest_uri for disambiguation
  * @property string  $owner        Owner display name
  * @property string  $ownerUUID    Owner UUID
  *
@@ -35,6 +35,7 @@
  * @property string  $region       Region name (from URL; updated to canonical after data())
  * @property string  $uri          Canonical region URI "host:port/region" (no pos, host lowercased);
  *                                 empty string when URL is not parseable
+ * @property string  $dest_uri     Normalized destination URL (gatekeeperURL:region[/pos]), set from constructor args
  * @property float[] $globalPos    Absolute map position [x, y, z] = grid origin + $pos;
  *                                 null until data() has been called
  *
@@ -124,7 +125,7 @@ class Region
 	public string $regionName = "";
 	public string $regionUUID = "";
 	public string $regionHandle = "";
-	public string $url = "";
+	public string $dest_uri = "";
 	public string $owner = "";
 	public string $ownerUUID = "";
 	public string $gatekeeperURL = "";
@@ -167,13 +168,12 @@ class Region
 		$this->host = $parsed["host"];
 		$this->port = (int) ($parsed["port"] ?? 8002);
 		$this->regionName = $parsed["region"] ?? "";
-		$this->uri = $parsed["region_uri"] ?? "";
+		$this->uri = $parsed["region_uri"] ?? ""; // Region URI
+		$this->dest_uri = $parsed["dest_uri"] ?? ""; // Requested landing poit URI
 		$this->gatekeeperURL = $parsed["gatekeeper"] ?? "";
 		$this->pos = empty($parsed["pos"])
 			? []
 			: array_map("floatval", explode("/", $parsed["pos"]));
-
-		$this->url = $parsed["dest_uri"] ?? "";
 	}
 
 	public function link_region(): array|false
@@ -307,30 +307,7 @@ class Region
 	}
 
 	/**
-	 * Return the region formatted teleport URL.
-	 *
-	 * Call data() first so the canonical region name is used.
-	 *
-	 * Without a $pos override the position embedded in the source URL ($this->pos)
-	 * is used when present; otherwise the link has no position component.
-	 * To teleport to the region's default landing point, call landingPoint() (TODO).
-	 *
-	 * @param  float[]|null $pos     Position override [x, y, z]; null = use $this->pos
-	 * @param  int          $format  TPLINK_* constant (default TPLINK_DEFAULT, see constants in opensim-helpers)
-	 * @return string
+	 * teleportLink() removed, it's basically an alias of opensim_format_tp,
+	 * only adding confusion.
 	 */
-	public function teleportLink(
-		?array $pos = null,
-		?int $format = null, // Let opensim_format_tp decide default
-	): string|array {
-		if (empty($this->gatekeeperURL)) {
-			return "";
-		}
-
-		if (empty($pos)) {
-			return opensim_format_tp($this->url, $format) ?? "";
-		}
-		$uri = $this->uri . "/" . implode("/", $pos);
-		return opensim_format_tp($uri, $format) ?? "";
-	}
 }

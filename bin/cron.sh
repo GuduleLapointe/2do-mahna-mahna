@@ -39,7 +39,7 @@ cd $APP_DIR || fail $? could not cd to $APP_DIR
 [ -d $DATA_DIR ] || mkdir -p $DATA_DIR || fail $? could not create $DATA_DIR
 
 if [ -z "$DRY_RUN" ]; then
-    log "starting aggregation"
+    log "starting aggregation to  $DATA_DIR/"
     $APP_DIR/bin/aggregator.php $varg $DATA_DIR/ >> $TMP.processing 2>&1 || fail $? error while executing aggregator.php
 else
     log "dry-run: skipping aggregation"
