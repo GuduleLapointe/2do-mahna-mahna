@@ -46,7 +46,7 @@ rm -f cache/*
 echo "DELETE FROM $CACHE_TABLE" | mysql $SEARCH_DB_NAME
 
 log Execute local cron
-./bin/cron.sh -v | tee -a ${LOG/.log/.local.log}
+./bin/cron.sh --verbose --clear-cache | tee -a ${LOG/.log/.local.log}
 
 log Dump live data for diff
 ssh $LIVE_HOST "cd $LIVE_APP_DIR && php dev/dump-events-for-diff.php" > ${LOG/.log/.live.dump}

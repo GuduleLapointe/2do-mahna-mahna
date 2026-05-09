@@ -30,7 +30,7 @@ require_once dirname(__DIR__) . "/bootstrap.php";
 class Aggregator
 {
 	public $output_dir;
-	private static $force;
+	private static $clearCache;
 	public static $script;
 
 	public function __construct()
@@ -70,7 +70,7 @@ class Aggregator
 			);
 		}
 
-		if (self::$force) {
+		if (self::$clearCache) {
 			Console::notice(
 				"Cache cleared (per-source caches will be skipped)",
 			);
@@ -199,10 +199,7 @@ class Aggregator
 
 		$quiet = isset($opts["q"]) || isset($opts["quiet"]);
 		$verbose = isset($opts["v"]) || isset($opts["verbose"]);
-		self::$force =
-			isset($opts["f"]) ||
-			isset($opts["force"]) ||
-			isset($opts["clear-cache"]);
+		self::$clearCache = isset($opts["c"]) || isset($opts["clear-cache"]);
 
 		Console::init($quiet, $verbose);
 
@@ -245,7 +242,7 @@ class Aggregator
 
 	public static function force()
 	{
-		return self::$force;
+		return self::$clearCache;
 	}
 
 	public static function remove_emoji($string)

@@ -2,7 +2,8 @@
 /**
  * Event class
  *
- * Represents an event of the calendar
+ * Represents an event of the calendar, matches OpenSim events table format,
+ * must keep strict compatibility with viewer query protocol.
  *
  * @property string $uid            // Unique identifier, collected from source if possible
  * @property string $name           // Event name
@@ -23,6 +24,9 @@
  * @property int $flags				// OSSearch: eventflags
  * @property string $gatekeeperURL  // Region grid target URL
  * @property string $hash           // Not implemented
+ *
+ * Additional properties for internal purpose
+ * @property string $defaultDestination // From calendar[grid_url]
  */
 
 use Kigkonsult\Icalcreator\Vcalendar;
@@ -51,72 +55,49 @@ class Event
 	public $teleport;
 	public $tags;
 
+	private string $defaultDestination;
+
 	/**
 	 * Event constructor.
 	 *
-	 * @param array $data
+	 * @param array $args
 	 */
-	public function __construct($data, $calendar = [])
+	public function __construct($args, $calendar = [])
 	{
-		$original_data = $data;
-		// Make sure all required indices are present
-		$data = array_merge(EVENT_STRUCTURE, $data);
+		// Make sure all required keys are present
+		$args = array_merge(EVENT_STRUCTURE, $args);
 
-		if (Fetcher::isExcluded($calendar["slug"], $data["name"])) {
+		if (Fetcher::isExcluded($calendar["slug"], $args["name"])) {
 			Console::verbose(
-				"[{$calendar["slug"]}] {$data["name"]} is in exclusion list",
+				"[{$calendar["slug"]}] {$args["name"]} is in exclusion list",
 			);
 			return false;
 		}
 
-		$data["category"] = $this->sanitize_category($data["category"]);
+		// TODO: generate uid if not present (for other sources than iCal)
+		$this->uid = $args["uid"];
+		$this->name = $args["name"];
+		$this->description = $args["description"];
+		$this->dateUTC = $args["dateUTC"];
+		$this->duration = $args["duration"];
+		$this->ownerUUID = $args["owneruuid"];
+		$this->creatorUUID = $args["creatoruuid"];
+		$this->category = $this->sanitize_category($args["category"]); // OpenSim/SL category code
+		$this->tags = $tags; // Array of category names
+		$this->coverCharge = $args["covercharge"];
+		$this->coverAmount = $args["coveramount"];
+		$this->parcelUUID = $args["parcelUUID"];
+		$this->globalPos = $args["globalPos"]; // Region map coordinates, NOT destination Pos
+		$this->flags = $args["eventflags"];
+		// eventlist.py:        new_hash = hashlib.md5( str(event_start) + hgurl ).hexdigest()
+		$this->source = $calendar["slug"];
 
-		if (empty($data["simname"])) {
-			$description = preg_replace("/%20/", " ", $data["description"]);
-			$reg_protocol = "((https?|hop:|secondlife:)\/\/)?";
-			$reg_host = "([\w-]+(\.[\w-]+)+)";
-			$reg_port = "(:\d+)";
-			$reg_region = "([:\/ \+]([\w _\+-](%20)?)+)?";
-			$reg_xyz = "((\/\d+){3})?";
-			$pattern = "/$reg_protocol$reg_host$reg_port$reg_region$reg_xyz/";
-			preg_match($pattern, $description, $matches);
-			if (!empty($matches)) {
-				$data["simname"] = $matches[0];
-			}
-		}
+		$this->setDestination($args["simname"], $calendar["grid_url"]);
 
-		$sanitized_url = $this->sanitize_destination_uri(
-			$data["simname"],
-			$calendar["grid_url"],
-		);
-		if ($sanitized_url === false) {
-			Console::verbose(
-				sprintf(
-					"%s event %s error checking sanitize_destination_uri(%s, %s)",
-					$calendar["slug"],
-					$data["uid"],
-					$data["simname"] ?? "",
-					$calendar["grid_url"],
-				),
-			);
-			return false;
-		}
-		if (empty($sanitized_url)) {
-			Console::verbose(
-				sprintf(
-					"%s event %s has no location %s",
-					$calendar["slug"],
-					$data["uid"],
-					empty($data["simname"])
-						? $calendar["grid_url"]
-						: $data["simname"],
-				),
-			);
-			return false;
-		}
-		$data["simname"] = $sanitized_url;
+		// Hash ensures teh
+		$this->hash = md5($this->dateUTC . $this->simName);
 
-		$tags = $data["tags"];
+		$tags = $args["tags"];
 		if (empty($tags)) {
 			$tags = [];
 		} elseif (!is_array($tags)) {
@@ -126,75 +107,107 @@ class Event
 		$tags = array_filter($tags);
 		$tags = array_unique($tags);
 
-		// Sanitize $data['description'], replace "\n" with actual new lines, trim trailing spaces and new lines
-		$data["description"] = trim(
-			str_replace("\\n", PHP_EOL, $data["description"]),
+		// Sanitize $args['description'], replace "\n" with actual new lines, trim trailing spaces and new lines
+		$args["description"] = trim(
+			str_replace("\\n", PHP_EOL, $args["description"]),
 		);
-
-		// TODO: generate uid if not present (for other sources than iCal)
-		$this->uid = $data["uid"];
-		$this->ownerUUID = $data["owneruuid"];
-		$this->name = $data["name"];
-		$this->creatorUUID = $data["creatoruuid"];
-		$this->category = $data["category"]; // OpenSim/SL category code
-		$this->tags = $tags; // Array of category names
-		$this->description = $data["description"];
-		$this->dateUTC = $data["dateUTC"];
-		$this->duration = $data["duration"];
-		$this->coverCharge = $data["covercharge"];
-		$this->coverAmount = $data["coveramount"];
-		$this->simName = $data["simname"];
-		$this->parcelUUID = $data["parcelUUID"];
-		$this->globalPos = $data["globalPos"];
-		$this->flags = $data["eventflags"];
-		$this->gatekeeperURL = $data["gatekeeperURL"];
-		// eventlist.py:        new_hash = hashlib.md5( str(event_start) + hgurl ).hexdigest()
-		$this->hash = md5($this->dateUTC . $this->simName);
-		$this->source = $calendar["slug"];
-		$this->teleport = [
-			"HOP" => opensim_format_tp($this->simName, TPLINK_HOP),
-			"HG" => opensim_format_tp($this->simName, TPLINK_HG),
-			"V3HG" => opensim_format_tp($this->simName, TPLINK_V3HG),
-		];
 	}
 
 	/**
 	 * Resolve a raw region URL to a canonical simname string.
 	 *
-	 * Returns the simname in "host:port Region Name[/x/y/z]" format — no URI scheme,
-	 * space before the region name, slash only before position coordinates.
-	 * This format is required by the HYPEvents LSL board and validated by tests.
+	 * - Filter out destination if region is offline
+	 * - Extract destination url from description if not provided
+	 * - Sets event destination properties:
+	 *   $simName: canonical destination uri (host:port/Region)
+	 *   $gatekeeperURL: canonical Region gatekeeper URL (http://host:port)
+	 *   $teleport: array of most common tp link formats
 	 *
-	 * Constructs the result from Region properties (no second opensim_parse_url call).
-	 * Uses the canonical region name from data() when available.
+	 * Strictly use Region uri and dest_uri properties, Region is the only
+	 * source of truth for uris, never rewrite the construction logic.
 	 *
-	 * @param  string      $url       Raw region URL from the event source
-	 * @param  string|null $grid_url  Grid gatekeeper URL (fallback when $url has no host)
-	 * @return string|false           Canonical simname, or false if URL is unparseable or region offline
+	 * Reads initial data from properties set by the constructor, arguments
+	 * are optional, and might even be deprecated.
+	 *
+	 * @param  string|null $url       		Raw region URL from the event source
+	 * @param  string|null $gatekeeperURL	Grid gatekeeper URL (fallback when $url has no host)
+	 * @return string|null|false           	Canonical simname, or false or null depending on failure
 	 */
-	public function sanitize_destination_uri($url, $grid_url = null)
+	public function setDestination($location = null, $defaultLocation = null)
 	{
-		$destination = new Region($url, $grid_url);
-		if (empty($destination->dest_uri)) {
-			return false;
-		}
-		$destination->data();
-		if (!$destination->online()) {
-			Console::verbose("region offline: " . ($url ?: $grid_url));
-			return false;
+		$url = $location ?: $this->simName;
+
+		$reg_protocol = "((https?|hop:|secondlife:)\/\/)?";
+		$reg_host = "([\w-]+(\.[\w-]+)+)";
+		$reg_port = "(:\d+)";
+		$reg_region = "([:\/ \+]([\w _\+-](%20)?)+)?";
+		$reg_xyz = "((\/\d+){3})?";
+		$pattern = "/$reg_protocol$reg_host$reg_port$reg_region$reg_xyz/";
+
+		if (empty($url)) {
+			$description = preg_replace("/%20/", " ", $this->description);
+			preg_match($pattern, $description, $matches);
+			if (!empty($matches)) {
+				$url = $matches[0];
+			}
 		}
 
-		// Build "host:port Region Name[/x/y/z]" from Region properties.
-		// dest_uri (host:port/Region/pos) is used only for the emptiness check above;
-		// the simname format needs a space before the region name, not a slash.
-		$simname = $destination->host . ":" . $destination->port;
-		if (!empty($destination->regionName)) {
-			$simname .= " " . $destination->regionName;
+		// Now that we have looked everywhere, we can fallback to calendar grid url or region gatekeeperURL
+		$url = $url ?: $defaultLocation;
+
+		if (!empty($url) && preg_match($pattern, $url)) {
+			$destination = new Region($url, $this->gatekeeperURL ?? null);
+
+			// $destination->data(); // Region constructor already sanitizes uri  and dest_uri
+			if ($destination->online()) {
+				$this->simName = $destination->dest_uri;
+				$this->gatekeeperURL = $destination->gatekeeperURL;
+				$this->teleport = [
+					"HOP" => opensim_format_tp($this->simName, TPLINK_HOP),
+					"HG" => opensim_format_tp($this->simName, TPLINK_HG),
+					"V3HG" => opensim_format_tp($this->simName, TPLINK_V3HG),
+				];
+			} else {
+				$this->simName = false;
+				Console::verbose(
+					sprintf(
+						"%s event %s region offline %s",
+						$this->slug,
+						$this->uid,
+						$url,
+					),
+				);
+			}
+		} elseif (!empty($url)) {
+			$this->simName = false;
+			Console::verbose(
+				sprintf(
+					"%s event %s incomplete or invalid location (%s, %s)",
+					$this->slug,
+					$this->uid,
+					$location,
+					$defaultLocation,
+				),
+			);
+		} else {
+			$this->simName = false;
 		}
-		if (!empty($destination->pos)) {
-			$simname .= "/" . implode("/", $destination->pos);
+
+		if ($this->simName === false) {
+			Console::verbose(
+				sprintf(
+					"%s event %s error parsing location from event",
+					$this->slug,
+					$this->uid,
+				),
+			);
+		} elseif (empty($this->simName)) {
+			Console::verbose(
+				sprintf("%s event %s has no location", $this->slug, $this->uid),
+			);
 		}
-		return $simname;
+
+		return $this->simName;
 	}
 
 	/**

@@ -13,7 +13,15 @@
 
 set -euo pipefail
 
+CLEAR_CACHE=${CLEAR_CACHE:-}
+
 source $(dirname $0)/bash-init
+
+for arg in "$@"; do
+    case "$arg" in
+        -c|--clear-cache) CLEAR_CACHE=1 ;;
+    esac
+done
 
 log OS $OS
 
@@ -33,6 +41,9 @@ if [ "$DEBUG" ]; then
     varg="-v"
     tail -f $TMP.processing &
     tailpid=$!
+fi
+if [ "$CLEAR_CACHE" ]; then
+	varg="$varg --clear-cache"
 fi
 
 cd $APP_DIR || fail $? could not cd to $APP_DIR

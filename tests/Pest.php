@@ -74,14 +74,28 @@ function httpStatus(string $url): int
  */
 function expectValidHyperGridUri(string $uri, string $context = "")
 {
+	$reg_protocol = "((https?|hop:|secondlife:)\/\/)?";
+	$reg_host = "([\w-]+(\.[\w-]+)+)";
+	$reg_port = "(:\d+)?";
+	$reg_region = "([:\/ \+]([\w _\+-](%20)?)+)?";
+	$reg_xyz = "((\/\d+){3})?";
+	$pattern_uri = "/$reg_host$reg_port$reg_region$reg_xyz/";
+	$pattern_url = "/$reg_protocol$reg_host$reg_port$reg_region$reg_xyz/";
+
 	// $uri = "$uri/1.1/1.2/1.3";
 	// $uri = "$uri/1";
 	// $uri = "$uri/1/2";
 	// $uri = "$uri/1/2/3";
 	// $uri = "$uri/1/2/3/4";
 
+	// Exclude uri with scheme
+	expect($uri)->not->toMatch(
+		"#://#",
+		"destination uri should not include scheme",
+	);
+
 	// Strip anything after space (region and coordinates)
-	$hostPort = preg_replace("# .*#", "", $uri);
+	$hostPort = preg_replace(["#.*://#", "#[+/_ ].*#"], ["", ""], $uri);
 	if (empty($hostPort)) {
 		echo "! empty destination uri in {$context}" . PHP_EOL;
 		return;
@@ -90,23 +104,13 @@ function expectValidHyperGridUri(string $uri, string $context = "")
 	// // Must pass standard URL validation
 	expect("http://" . $hostPort)->toBeUrl();
 
-	// Exclude uri with scheme
-	expect($hostPort)->not->toMatch(
-		"#://#",
-		"destination uri should not include scheme",
-	);
-
 	// Exclude any remaining invalid characters
 	expect($hostPort)->toMatch(
-		"/^[a-z0-9\.:_-]+$/i",
+		"/$reg_host$reg_port?$/i",
 		"destination uri must match 'hostname:port'",
 	);
 
-	$num = "-?[0-9]+(?:\.[0-9]+)?";
-	expect($uri)->toMatch(
-		"#^([^/ ]+)(?: ([^/]+?))?(/$num/$num/$num)?$#",
-		"Invalid destination URI",
-	);
+	expect($uri)->toMatch($pattern_uri, "Invalid destination URI");
 }
 
 function expectValidHttpStatus(string $url)
