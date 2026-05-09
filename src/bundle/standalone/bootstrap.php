@@ -80,7 +80,7 @@ define("API_VERSION", "v3");
 define(
 	"LSL_BOARD_VERSION",
 	fetch_lsl_board_version(
-		"3.0.1",
+		"3.0.5",
 		sys_get_temp_dir() . "/2do-lsl-board-version.txt",
 	),
 );

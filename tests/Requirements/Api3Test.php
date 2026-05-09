@@ -5,13 +5,14 @@ describe("v3 API", function () {
 	});
 
 	$apiRoute = "/api/v3/events/lsl";
-	test("endpoint", function () use ($apiRoute) {
+	test("v3 endpoint", function () use ($apiRoute) {
 		$url = TEST_URL . $apiRoute;
 		expectValidHttpStatus($url);
 		$response = file_get_contents($url);
 		expect($response)->not->toBeEmpty(
 			"$apiRoute response should not be empty",
 		);
+		passed("v3 endpoint");
 		return $response;
 	});
 
@@ -77,7 +78,7 @@ describe("v3 API", function () {
 				"Field 9 must be a timestamp",
 			);
 		}
-	})->depends("endpoint");
+	})->depends("v3 endpoint");
 
 	test("/?api=v3 mirrors $apiRoute", function ($response) {
 		$fallback = file_get_contents(TEST_URL . "/?api=v3");
@@ -85,7 +86,7 @@ describe("v3 API", function () {
 			$response,
 			"/?api=v3 fallback should return the same response",
 		);
-	})->depends("endpoint");
+	})->depends("v3 endpoint");
 
 	test("/events.php mirrors $apiRoute", function ($response) use ($apiRoute) {
 		$direct = file_get_contents(TEST_URL . "/events.php");
@@ -93,5 +94,5 @@ describe("v3 API", function () {
 			$response,
 			"/events.php should return the same response as $apiRoute",
 		);
-	})->depends("endpoint");
+	})->depends("v3 endpoint");
 });

@@ -4,25 +4,32 @@ describe("v2 API", function () {
 		requires("Test URL");
 	});
 	$apiRoute = "/api/v2/events";
-	test("endpoint", function () use ($apiRoute) {
-		$url = TEST_URL . $apiRoute;
-		expectValidHttpStatus($url);
-		$response = file_get_contents($url);
+	$v2endpoint = TEST_URL . $apiRoute;
+	$versionPattern = "\d+(\.\d)+";
+	$appVersion = defined("APP_VERSION") ? APP_VERSION : null;
+	$boardVersion = defined("LSL_BOARD_VERSION") ? LSL_BOARD_VERSION : null;
+	$appVersionExp =
+		"/" . (str_replace(".", "\.", $appVersion) ?: $versionPattern) . "/";
+	$boardVersionExp =
+		"/" . (str_replace(".", "\.", $boardVersion) ?: $versionPattern) . "/";
+
+	test("v2 enpoint", function () use ($v2endpoint) {
+		expectValidHttpStatus($v2endpoint);
+		$response = file_get_contents($v2endpoint);
 		expect($response)->not->toBeEmpty(
-			"$apiRoute response should not be empty",
+			"/api/v2/events response should not be empty",
 		);
+		passed("v2 enpoint");
 		return $response;
 	});
 
-	$versionRegexp =
-		"/" . (defined("APP_VERSION") ? APP_VERSION : "[0-9]+\.[0-9]+") . "/";
-	test("valid API", function ($response) use ($versionRegexp) {
-		expect($response)->toMatch(
-			$versionRegexp,
-			"Response should contain version {$versionRegexp}",
+	test("valid API", function ($response) use ($boardVersionExp) {
+		expect(trim($response))->toMatch(
+			$boardVersionExp,
+			"/api/v2/events response should match 2do Board lsl script verrtion",
 		);
 		return $response; // repeat endpoint return to avoid multiple depends below
-	})->depends("endpoint");
+	})->depends("v2 enpoint");
 
 	test("proper v2 formatting", function ($response) {
 		$lines = explode("\n", trim($response));
@@ -32,7 +39,9 @@ describe("v2 API", function () {
 			"Response should have 1 + a multiple of 3 lines, got {$count}",
 		);
 		if ($count < 4) {
-			test()->markTestSkipped("Empty list, skipped events validation");
+			test()->markTestSkipped(
+				"Empty list, skipping further events validation",
+			);
 		}
 
 		$timeRegexp = "[0-9]{2}:[0-9]{2}[AP]M";

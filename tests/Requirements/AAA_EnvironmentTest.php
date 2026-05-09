@@ -1,9 +1,7 @@
 <?php
 describe("Environment", function () {
 	test("Test URL", function () {
-		expect(defined("TEST_URL"))->toBeTrue(
-			"DEV_HOST and DEV_PORT must be set in tests/.env",
-		);
+		expect(defined("TEST_URL"))->toBeTrue("TEST_URL must be defined");
 		passed("Test URL");
 	});
 

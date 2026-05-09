@@ -47,9 +47,7 @@ foreach (["Build", "Data", "Config"] as $dir_type) {
 }
 
 register_shutdown_function(function () {
-	testNotice("Cleaning test environment");
-	testDetail("Delete " . TEST_DIRECTORY);
-
+	testNotice("Clean test temp directory " . TEST_DIRECTORY);
 	exec("rm -rf " . escapeshellarg(TEST_DIRECTORY));
 });
 

@@ -38,7 +38,7 @@ FAILURES=$(egrep "^\s*(⨯|-) " "$TMP.pest.output" || true)
 
 if [ -n "$FAILURES" ]; then
 	echo ""
-    echo "FAILURES SUMMARY"
+    echo "Incidents summary"
     echo "$FAILURES"
 fi
 
