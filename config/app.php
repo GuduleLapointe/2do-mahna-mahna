@@ -13,7 +13,8 @@ return [
     */
 
     "name" => env("APP_NAME", "2do Mahna-Mahna"),
-    "logo" => asset(env("APP_NAME", "/assets/images/2do-logo.png")),
+    "logo" => asset(env("APP_LOGO", "images/2do-logo.png")),
+    "logo-square" => asset(env("APP_LOGO", "images/2do-logo-square.png")),
 
     /*
     |--------------------------------------------------------------------------
