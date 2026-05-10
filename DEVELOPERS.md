@@ -40,7 +40,7 @@ Always run tests and check the result with curl before submitting changes.
 ├── bundle
 │   │   ├── currency.php	  
 │   ├── helpers				# standalone helpers
-│   │   │   				# https://github.com/GuduleLapointe/opensim-helpers/tree/2.x
+│   │   │   				# https://github.com/GuduleLapointe/opensim-helpers/tree/2do
 │   │   ├── events.php
 │   │   ├── guide.php
 │   │   ├── index.php
