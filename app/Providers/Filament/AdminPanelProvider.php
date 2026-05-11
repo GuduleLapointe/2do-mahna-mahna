@@ -50,9 +50,7 @@ class AdminPanelProvider extends PanelProvider
                 in: app_path("Filament/Pages"),
                 for: "App\Filament\Pages",
             )
-            ->pages([
-                // Dashboard::class,
-            ])
+            ->pages([Dashboard::class])
             ->plugins([
                 FilamentEditProfilePlugin::make()
                     ->slug("profile")
@@ -93,7 +91,7 @@ class AdminPanelProvider extends PanelProvider
                 in: app_path("Filament/Widgets"),
                 for: "App\Filament\Widgets",
             )
-            ->widgets([AccountWidget::class, FilamentInfoWidget::class])
+            ->widgets([])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
