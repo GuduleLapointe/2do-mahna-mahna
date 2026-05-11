@@ -22,6 +22,10 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Enums\UserMenuPosition;
 
+use Filament\Navigation\MenuItem;
+use Joaopaulolndev\FilamentEditProfile\Pages\EditProfilePage;
+use Joaopaulolndev\FilamentEditProfile\FilamentEditProfilePlugin;
+
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
@@ -49,11 +53,31 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 // Dashboard::class,
             ])
+            ->plugins([
+                FilamentEditProfilePlugin::make()
+                    ->slug("profile")
+                    ->setTitle("My Profile")
+                    ->setIcon("heroicon-o-user")
+                    ->shouldRegisterNavigation(false)
+                    // ->setNavigationLabel("My Profile")
+                    // ->setNavigationGroup("Group Profile"),
+                    // ->setSort(10)
+                    // ->canAccess(fn() => auth()->user()->id === 1)
+                    // ->shouldShowEmailForm()
+                    // ->shouldShowDeleteAccountForm(false)
+                    // ->shouldShowSanctumTokens()
+                    // ->shouldShowBrowserSessionsForm()
+                    ->shouldShowAvatarForm(),
+                // ->customProfileComponents([
+                //     \App\Livewire\CustomProfileComponent::class,
+                // ]),
+            ])
             ->userMenu(position: UserMenuPosition::Sidebar)
             ->userMenuItems([
-                "profile" => fn(Action $action) => $action->label(
-                    __("Profile"),
-                ),
+                "profile" => fn(Action $action) => $action
+                    ->label(fn() => auth()->user()->name)
+                    ->url(fn(): string => EditProfilePage::getUrl())
+                    ->icon("heroicon-m-user-circle"),
                 Action::make("repository")
                     ->url("https://github.com/GuduleLapointe/2do-mahna-mahna")
                     ->icon("heroicon-o-folder")
