@@ -170,20 +170,6 @@ class Parcel extends Model
         ]);
     }
     /**
-     * @return HasMany<Object,Parcel>
-     */
-    public function objects(): HasMany
-    {
-        return $this->hasMany(Object::class, "parcel_uuid", "uuid");
-    }
-    /**
-     * @return HasMany<Classified,Parcel>
-     */
-    public function classifieds(): HasMany
-    {
-        return $this->hasMany(Classified::class, "parcel_uuid", "uuid");
-    }
-    /**
      * @return HasMany<Event,Parcel>
      */
     public function events(): HasMany
