@@ -1,5 +1,7 @@
 <?php
 
+use App\Settings\GeneralSettings;
+
 return [
     /*
      * Each settings class used in your application must be registered, you can
