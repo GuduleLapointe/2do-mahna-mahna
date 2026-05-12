@@ -22,6 +22,7 @@
         "joaopaulolndev/filament-edit-profile": "^3.0",
         "laravel/fortify": "^1.34",
         "laravel/framework": "^13.7",
+        "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "livewire/flux": "^2.13.1",
         "livewire/livewire": "^4.1",

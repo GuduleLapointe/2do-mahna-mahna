@@ -11,13 +11,21 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
+#[Fillable(["name", "email", "password"])]
+#[
+    Hidden([
+        "password",
+        "two_factor_secret",
+        "two_factor_recovery_codes",
+        "remember_token",
+    ]),
+]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable;
+    use HasApiTokens, HasFactory, Notifiable, TwoFactorAuthenticatable;
 
     /**
      * Get the attributes that should be cast.
@@ -27,9 +35,9 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'is_admin' => 'boolean',
+            "email_verified_at" => "datetime",
+            "password" => "hashed",
+            "is_admin" => "boolean",
         ];
     }
 
@@ -39,10 +47,10 @@ class User extends Authenticatable
     public function initials(): string
     {
         return Str::of($this->name)
-            ->explode(' ')
+            ->explode(" ")
             ->take(2)
-            ->map(fn ($word) => Str::substr($word, 0, 1))
-            ->implode('');
+            ->map(fn($word) => Str::substr($word, 0, 1))
+            ->implode("");
     }
 
     /**
