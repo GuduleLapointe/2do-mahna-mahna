@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Parcel Model - Represents a Land parcel in OpenSim
@@ -34,45 +36,46 @@ class Parcel extends Model
     ];
 
     // OpenSim Land Management flags (complete set from OpenSimulator documentation)
-    // Reference: http://opensimulator.org/wiki/Land_(database_table)
-    const LAND_ALLOW_FLY = 1; // 2^0 - Allow avatars to fly (a client-side only restriction)
-    const LAND_ALLOW_OTHER_SCRIPTS = 2; // 2^1 - Allow foreign scripts to run
-    const LAND_FOR_SALE = 4; // 2^2 - This parcel is for sale
-    const LAND_ALLOW_LANDMARK = 8; // 2^3 - Allow avatars to create a landmark on this parcel
-    const LAND_ALLOW_TERRAFORM = 16; // 2^4 - Allows all avatars to edit the terrain on this parcel
-    const LAND_ALLOW_DAMAGE = 32; // 2^5 - Avatars have health and can take damage on this parcel. If set, avatars can be killed and sent home here
-    const LAND_CREATE_OBJECTS = 64; // 2^6 - Foreign avatars can create objects here
-    const LAND_FOR_SALE_OBJECTS = 128; // 2^7 - All objects on this parcel can be purchased
-    const LAND_USE_ACCESS_GROUP = 256; // 2^8 - Access is restricted to a group
-    const LAND_USE_ACCESS_LIST = 512; // 2^9 - Access is restricted to a whitelist
-    const LAND_USE_BAN_LIST = 1024; // 2^10 - Ban blacklist is enabled
-    const LAND_USE_PASS_LIST = 2048; // 2^11 - Unknown
-    const LAND_SHOW_DIRECTORY = 4096; // 2^12 - List this parcel in the search directory
-    const LAND_ALLOW_DEED_TO_GROUP = 8192; // 2^13 - Allow personally owned parcels to be deeded to group
-    const LAND_CONTRIBUTE_WITH_DEED = 16384; // 2^14 - If Deeded, owner contributes required tier to group parcel is deeded to
-    const LAND_SOUND_LOCAL = 32768; // 2^15 - Restrict sounds originating on this parcel to the parcel boundaries
-    const LAND_SELL_PARCEL_OBJECTS = 65536; // 2^16 - Objects on this parcel are sold when the land is purchsaed
-    const LAND_ALLOW_PUBLISH = 131072; // 2^17 - Allow this parcel to be published on the web
-    const LAND_MATURE_PUBLISH = 262144; // 2^18 - The information for this parcel is mature content
-    const LAND_URL_WEB_PAGE = 524288; // 2^19 - The media URL is an HTML page
-    const LAND_URL_RAW_HTML = 1048576; // 2^20 - The media URL is a raw HTML string
-    const LAND_RESTRICT_PUSH_OBJECT = 2097152; // 2^21 - Restrict foreign object pushes
-    const LAND_DENY_ANONYMOUS = 4194304; // 2^22 - Ban all non identified/transacted avatars
-    const LAND_LINDEN_HOME = 8388608; // 2^23 - No comment in documentation or this one!
-    const LAND_ALLOW_GROUP_SCRIPTS = 33554432; // 2^25 - Allow group-owned scripts to run
-    const LAND_CREATE_GROUP_OBJECTS = 67108864; // 2^26 - Allow object creation by group members or group objects
-    const LAND_ALLOW_APRIMITIVE_ENTRY = 134217728; // 2^27 - Allow all objects to enter this parcel
-    const LAND_ALLOW_GROUP_OBJECT_ENTRY = 268435456; // 2^28 - Only allow group and owner objects to enter this parcel
-    const LAND_ALLOW_VOICE_CHAT = 536870912; // 2^29 - Voice Enabled on this parcel
-    const LAND_USE_ESTATE_VOICE_CHAN = 1073741824; // 2^30 - Use Estate Voice channel for Voice on this parcel. This correspond to unchecking "Restrict voice to this parcel" in the viewer.
-    const LAND_DENY_AGE_UNVERIFIED = 2147483648; // 2^31 - Deny Age Unverified Users
+    // Reference:   http://opensimulator.org/wiki/Land_(database_table)
+    //              https://wiki.secondlife.com/wiki/LlGetParcelFlags
+    const PARCEL_FLAG_ALLOW_FLY = 1; // 2^0 - Allow avatars to fly (a client-side only restriction)
+    const PARCEL_FLAG_ALLOW_SCRIPTS = 2; // 2^1 - Allow foreign scripts to run
+    const LAND_FLAG_FOR_SALE = 4; // 2^2 - This parcel is for sale
+    const PARCEL_FLAG_ALLOW_LANDMARK = 8; // 2^3 - Allow avatars to create a landmark on this parcel
+    const PARCEL_FLAG_ALLOW_TERRAFORM = 16; // 2^4 - Allows all avatars to edit the terrain on this parcel
+    const PARCEL_FLAG_ALLOW_DAMAGE = 32; // 2^5 - Avatars have health and can take damage on this parcel. If set, avatars can be killed and sent home here
+    const PARCEL_FLAG_ALLOW_CREATE_OBJECTS = 64; // 2^6 - Foreign avatars can create objects here
+    const LAND_FLAG_FOR_SALE_OBJECTS = 128; // 2^7 - All objects on this parcel can be purchased
+    const PARCEL_FLAG_USE_ACCESS_GROUP = 256; // 2^8 - Access is restricted to a group
+    const PARCEL_FLAG_USE_ACCESS_LIST = 512; // 2^9 - Access is restricted to a whitelist
+    const PARCEL_FLAG_USE_BAN_LIST = 1024; // 2^10 - Ban blacklist is enabled
+    const PARCEL_FLAG_USE_LAND_FLAG_PASS_LIST = 2048; // 2^11 - Unknown
+    const LAND_FLAG_SHOW_DIRECTORY = 4096; // 2^12 - List this parcel in the search directory
+    const LAND_FLAG_ALLOW_DEED_TO_GROUP = 8192; // 2^13 - Allow personally owned parcels to be deeded to group
+    const LAND_FLAG_CONTRIBUTE_WITH_DEED = 16384; // 2^14 - If Deeded, owner contributes required tier to group parcel is deeded to
+    const PARCEL_FLAG_LOCAL_SOUND_ONLY = 32768; // 2^15 - Restrict sounds originating on this parcel to the parcel boundaries
+    const LAND_FLAG_SELL_PARCEL_OBJECTS = 65536; // 2^16 - Objects on this parcel are sold when the land is purchsaed
+    const LAND_FLAG_ALLOW_PUBLISH = 131072; // 2^17 - Allow this parcel to be published on the web
+    const LAND_FLAG_MATURE_PUBLISH = 262144; // 2^18 - The information for this parcel is mature content
+    const LAND_FLAG_URL_WEB_PAGE = 524288; // 2^19 - The media URL is an HTML page
+    const LAND_FLAG_URL_RAW_HTML = 1048576; // 2^20 - The media URL is a raw HTML string
+    const PARCEL_FLAG_RESTRICT_PUSHOBJECT = 2097152; // 2^21 - Restrict foreign object pushes
+    const LAND_FLAG_DENY_ANONYMOUS = 4194304; // 2^22 - Ban all non identified/transacted avatars
+    const LAND_FLAG_LINDEN_HOME = 8388608; // 2^23 - No comment in documentation or this one!
+    const PARCEL_FLAG_ALLOW_GROUP_SCRIPTS = 33554432; // 2^25 - Allow group-owned scripts to run
+    const PARCEL_FLAG_ALLOW_CREATE_GROUP_OBJECTS = 67108864; // 2^26 - Allow object creation by group members or group objects
+    const PARCEL_FLAG_ALLOW_ALL_OBJECT_ENTRY = 134217728; // 2^27 - Allow all objects to enter this parcel
+    const PARCEL_FLAG_ALLOW_GROUP_OBJECT_ENTRY = 268435456; // 2^28 - Only allow group and owner objects to enter this parcel
+    const LAND_FLAG_ALLOW_VOICE_CHAT = 536870912; // 2^29 - Voice Enabled on this parcel
+    const LAND_FLAG_USE_ESTATE_VOICE_CHAN = 1073741824; // 2^30 - Use Estate Voice channel for Voice on this parcel. This correspond to unchecking "Restrict voice to this parcel" in the viewer.
+    const LAND_FLAG_DENY_AGE_UNVERIFIED = 2147483648; // 2^31 - Deny Age Unverified Users
 
     /**
      * Bitwise flag accessor methods
      */
     public function forSale(): bool
     {
-        return $this->flags & self::LAND_FOR_SALE;
+        return $this->flags & Parcel::LAND_FLAG_FOR_SALE;
     }
 
     public function hasPicture(): bool
@@ -84,12 +87,12 @@ class Parcel extends Model
 
     public function allowsBuilding(): bool
     {
-        return $this->flags & self::LAND_ALLOW_CREATE_OBJECTS;
+        return $this->flags & Parcel::PARCEL_FLAG_ALLOW_CREATE_OBJECTS;
     }
 
     public function allowsScripts(): bool
     {
-        return $this->flags & self::LAND_ALLOW_OTHER_SCRIPTS;
+        return $this->flags & Parcel::PARCEL_FLAG_ALLOW_SCRIPTS;
     }
 
     public function isPublic(): bool
@@ -116,9 +119,9 @@ class Parcel extends Model
     /**
      * Gatekeeper URL accessor - delegates to region
      */
-    public function gatekeeper()
+    public function gatekeeper(): string
     {
-        return $this->region()->gatekeeper();
+        return $this->region->gatekeeper();
     }
 
     /**
@@ -138,49 +141,52 @@ class Parcel extends Model
     {
         // PG if neither Mature nor Adult flags are set
         return $this->flags &
-            ~self::LAND_MATURE_PUBLISH &
-            ~self::LAND_DENY_AGE_UNVERIFIED;
+            ~Parcel::LAND_FLAG_MATURE_PUBLISH &
+            ~Parcel::LAND_FLAG_DENY_AGE_UNVERIFIED;
     }
 
     public function isMature(): bool
     {
-        return $this->flags & self::LAND_MATURE_PUBLISH;
+        return $this->flags & Parcel::LAND_FLAG_MATURE_PUBLISH;
     }
 
     public function isAdult(): bool
     {
-        return $this->flags & self::LAND_DENY_AGE_UNVERIFIED;
+        return $this->flags & Parcel::LAND_FLAG_DENY_AGE_UNVERIFIED;
     }
 
     /**
      * Relationships
+     * @return BelongsTo<Region,Parcel>
      */
-    public function region()
+    public function region(): BelongsTo
     {
-        return $this->belongsTo(Region::class, "region_uuid", "uuid");
+        return $this->belongsTo(
+            Region::class,
+            "region_uuid",
+            "uuid",
+        )->withDefault([
+            "name" => __("Unknown Region"),
+        ]);
     }
-
-    public function owner()
-    {
-        return $this->belongsTo(User::class, "owner_uuid", "uuid");
-    }
-
-    public function group()
-    {
-        return $this->belongsTo(Group::class, "group_uuid", "uuid");
-    }
-
-    public function objects()
+    /**
+     * @return HasMany<Object,Parcel>
+     */
+    public function objects(): HasMany
     {
         return $this->hasMany(Object::class, "parcel_uuid", "uuid");
     }
-
-    public function classifieds()
+    /**
+     * @return HasMany<Classified,Parcel>
+     */
+    public function classifieds(): HasMany
     {
         return $this->hasMany(Classified::class, "parcel_uuid", "uuid");
     }
-
-    public function events()
+    /**
+     * @return HasMany<Event,Parcel>
+     */
+    public function events(): HasMany
     {
         return $this->hasMany(Event::class, "parcel_uuid", "uuid");
     }

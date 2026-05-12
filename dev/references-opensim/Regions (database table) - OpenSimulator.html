@@ -1,0 +1,746 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr" dir="ltr">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<meta name="generator" content="MediaWiki 1.19.9" />
+<link rel="alternate" type="application/x-wiki" title="Modifier" href="/index.php?title=Regions_(database_table)&amp;action=edit" />
+<link rel="edit" title="Modifier" href="/index.php?title=Regions_(database_table)&amp;action=edit" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="OpenSimulator (en)" />
+<link rel="EditURI" type="application/rsd+xml" href="http://opensimulator.org/api.php?action=rsd" />
+<link rel="copyright" href="http://creativecommons.org/licenses/by-sa/2.5/" />
+<link rel="alternate" type="application/atom+xml" title="Flux Atom de OpenSimulator" href="/index.php?title=Special:RecentChanges&amp;feed=atom" />		<title>Regions (database table) - OpenSimulator</title>
+		<style type="text/css" media="screen, projection">/*<![CDATA[*/
+			@import "/skins/common/shared.css?303";
+			@import "/skins/osmonobook/main.css?303";
+		/*]]>*/</style>
+		<link rel="stylesheet" type="text/css" media="print" href="/skins/common/commonPrint.css?303" />
+		<!--[if lt IE 5.5000]><style type="text/css">@import "/skins/osmonobook/IE50Fixes.css?303";</style><![endif]-->
+		<!--[if IE 5.5000]><style type="text/css">@import "/skins/osmonobook/IE55Fixes.css?303";</style><![endif]-->
+		<!--[if IE 6]><style type="text/css">@import "/skins/osmonobook/IE60Fixes.css?303";</style><![endif]-->
+		<!--[if IE 7]><style type="text/css">@import "/skins/osmonobook/IE70Fixes.css?303";</style><![endif]-->
+		<!--[if lt IE 7]><script type="text/javascript" src="/skins/common/IEFixes.js?303"></script>
+		<meta http-equiv="imagetoolbar" content="no" /><![endif]-->
+		
+		<script>if(window.mw){
+mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"Regions_(database_table)","wgTitle":"Regions (database table)","wgCurRevisionId":54237,"wgArticleId":837,"wgIsArticle":true,"wgAction":"view","wgUserName":"GuduleLapointe","wgUserGroups":["*","user","autoconfirmed","emailconfirmed"],"wgCategories":["Database"],"wgBreakFrames":false,"wgPageContentLanguage":"en","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgRelevantPageName":"Regions_(database_table)","wgRestrictionEdit":[],"wgRestrictionMove":[],"wgSearchNamespaces":[0]});
+}</script>                
+		<script type="text/javascript" src="/skins/common/wikibits.js?303"><!-- wikibits js --></script>
+		<!-- Head Scripts -->
+<script src="http://opensimulator.org/load.php?debug=false&amp;lang=fr&amp;modules=startup&amp;only=scripts&amp;skin=osmonobook&amp;*"></script>
+<script>if(window.mw){
+mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"Regions_(database_table)","wgTitle":"Regions (database table)","wgCurRevisionId":54237,"wgArticleId":837,"wgIsArticle":true,"wgAction":"view","wgUserName":"GuduleLapointe","wgUserGroups":["*","user","autoconfirmed","emailconfirmed"],"wgCategories":["Database"],"wgBreakFrames":false,"wgPageContentLanguage":"en","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgRelevantPageName":"Regions_(database_table)","wgRestrictionEdit":[],"wgRestrictionMove":[],"wgSearchNamespaces":[0]});
+}</script><script>if(window.mw){
+mw.loader.implement("user.options",function($){mw.user.options.set({"ccmeonemails":0,"cols":80,"date":"default","diffonly":0,"disablemail":0,"disablesuggest":0,"editfont":"default","editondblclick":0,"editsection":1,"editsectiononrightclick":0,"enotifminoredits":0,"enotifrevealaddr":0,"enotifusertalkpages":1,"enotifwatchlistpages":"1","extendwatchlist":0,"externaldiff":0,"externaleditor":0,"fancysig":0,"forceeditsummary":0,"gender":"unknown","hideminor":0,"hidepatrolled":0,"highlightbroken":1,"imagesize":2,"justify":0,"math":1,"minordefault":0,"newpageshidepatrolled":0,"nocache":0,"noconvertlink":0,"norollbackdiff":0,"numberheadings":0,"previewonfirst":0,"previewontop":1,"quickbar":5,"rcdays":7,"rclimit":50,"rememberpassword":"1","rows":25,"searchlimit":20,"showhiddencats":0,"showjumplinks":1,"shownumberswatching":1,"showtoc":1,"showtoolbar":1,"skin":"osmonobook","stubthreshold":0,"thumbsize":2,"underline":2,"uselivepreview":0,"usenewrc":0,"watchcreations":0,"watchdefault":0,
+"watchdeletion":0,"watchlistdays":3,"watchlisthideanons":0,"watchlisthidebots":0,"watchlisthideliu":0,"watchlisthideminor":0,"watchlisthideown":0,"watchlisthidepatrolled":0,"watchmoves":0,"wllimit":250,"variant":"en","language":"fr","searchNs0":true,"searchNs1":false,"searchNs2":false,"searchNs3":false,"searchNs4":false,"searchNs5":false,"searchNs6":false,"searchNs7":false,"searchNs8":false,"searchNs9":false,"searchNs10":false,"searchNs11":false,"searchNs12":false,"searchNs13":false,"searchNs14":false,"searchNs15":false,"nickname":"","timecorrection":"Offset|0","watchlisttoken":"e0259d4e63856b484db0214a49467ce2d215558a"});;},{},{});mw.loader.implement("user.tokens",function($){mw.user.tokens.set({"editToken":"12d8df266f0f8dc4acff7a72558b2f9d+\\","watchToken":"0ba989910c07638aed8ff23211f69194+\\"});;},{},{});
+
+/* cache key: oslwiki-wiki_:resourceloader:filter:minify-js:7:925840d2e5f16865a2c7172b123bbf8c */
+}</script>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.page.startup","mediawiki.legacy.wikibits","mediawiki.legacy.ajax"]);
+}</script>	</head>
+<body  class="mediawiki  ltr ns-0 ns-subject page-Regions_database_table">
+	<div id="globalWrapper">
+		<div id="column-content">
+	<div id="content-wrapper">
+	<div id="p-cactions" class="portlet">
+		<h5>Affichages</h5>
+		<div class="pBody">
+			<ul>
+                                                    <li id="ca-nstab-main" class="selected"><a href="/wiki/Regions_(database_table)"Array>Page</a></li>
+                                                    <li id="ca-talk" class="new"><a href="/index.php?title=Talk:Regions_(database_table)&amp;action=edit&amp;redlink=1"Array>Discussion</a></li>
+                                                    <li id="ca-edit"><a href="/index.php?title=Regions_(database_table)&amp;action=edit"Array>Modifier</a></li>
+                                                    <li id="ca-history"><a href="/index.php?title=Regions_(database_table)&amp;action=history"Array>Historique</a></li>
+                                                    <li id="ca-move"><a href="/wiki/Special:MovePage/Regions_(database_table)"Array>Renommer</a></li>
+                                                    <li id="ca-watch"><a href="/index.php?title=Regions_(database_table)&amp;action=watch&amp;token=28e316fde520c8d3bcde8603aed05e29%2B%5C"Array>Suivre</a></li>
+                          			</ul>
+		</div>
+	</div>
+        <div id="content">
+		<a name="top" id="top"></a>
+				<h1 class="firstHeading">Regions (database table)</h1>
+		<div id="bodyContent">
+			<h3 id="siteSub">De OpenSimulator</h3>
+			<div id="contentSub"></div>
+									<div id="jump-to-nav">Aller à : <a href="#column-one">Navigation</a>, <a href="#searchInput">rechercher</a></div>			<!-- start content -->
+			<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr"><div style="width:750px; margin-left:auto;margin-right:auto;padding:10px;border:0px solid #AAAAAA; height:60px;">
+<div style="width:70px; float:left;"><center><div style="position: relative; width: 32px; height: 32px; overflow: hidden;"><div style="position: absolute; top: 0; left: 0; font-size: 200pt; width: 32px; height: 32px; overflow: hidden; line-height: 32px; z-index: 3;"><a href="/wiki/Main_Page" title="Main Page">&#160;</a></div><div style="position: absolute; top: 0; left: 0; z-index: 2;"><a href="/wiki/File:Home.png" class="image" title="image page"><img alt="image page" src="/images/thumb/9/9a/Home.png/32px-Home.png" width="32" height="32" /></a></div></div></center><center><b><a href="/wiki/Main_Page" title="Main Page">Home</a></b></center></div>
+<div style="width:70px; float:left;"><center><div style="position: relative; width: 32px; height: 32px; overflow: hidden;"><div style="position: absolute; top: 0; left: 0; font-size: 200pt; width: 32px; height: 32px; overflow: hidden; line-height: 32px; z-index: 3;"><a href="/wiki/Download" title="Download">&#160;</a></div><div style="position: absolute; top: 0; left: 0; z-index: 2;"><a href="/wiki/File:Compfile.png" class="image" title="image page"><img alt="image page" src="/images/thumb/f/f1/Compfile.png/32px-Compfile.png" width="32" height="32" /></a></div></div></center><center><b><a href="/wiki/Download" title="Download">Download</a></b></center></div>
+<div style="width:70px; float:left;"><center><div style="position: relative; width: 32px; height: 32px; overflow: hidden;"><div style="position: absolute; top: 0; left: 0; font-size: 200pt; width: 32px; height: 32px; overflow: hidden; line-height: 32px; z-index: 3;"><a href="/wiki/News" title="News">&#160;</a></div><div style="position: absolute; top: 0; left: 0; z-index: 2;"><a href="/wiki/File:News.png" class="image" title="image page"><img alt="image page" src="/images/thumb/0/07/News.png/32px-News.png" width="32" height="32" /></a></div></div></center><center><b><a href="/wiki/News" title="News">News</a></b></center></div>
+<div style="width:70px; float:left;"><center><div style="position: relative; width: 32px; height: 32px; overflow: hidden;"><div style="position: absolute; top: 0; left: 0; font-size: 200pt; width: 32px; height: 32px; overflow: hidden; line-height: 32px; z-index: 3;"><a href="/wiki/Support" title="Support">&#160;</a></div><div style="position: absolute; top: 0; left: 0; z-index: 2;"><a href="/wiki/File:Edu_languages.png" class="image" title="image page"><img alt="image page" src="/images/thumb/d/d7/Edu_languages.png/32px-Edu_languages.png" width="32" height="32" /></a></div></div></center><center><b><a href="/wiki/Support" title="Support">Support</a></b></center></div>
+<div style="width:70px; float:left;"><center><div style="position: relative; width: 32px; height: 32px; overflow: hidden;"><div style="position: absolute; top: 0; left: 0; font-size: 200pt; width: 32px; height: 32px; overflow: hidden; line-height: 32px; z-index: 3;"><a href="/wiki/User_Documentation" title="User Documentation">&#160;</a></div><div style="position: absolute; top: 0; left: 0; z-index: 2;"><a href="/wiki/File:Package_system.png" class="image" title="image page"><img alt="image page" src="/images/thumb/f/fd/Package_system.png/32px-Package_system.png" width="32" height="32" /></a></div></div></center><center><b><a href="/wiki/User_Documentation" title="User Documentation">Admin</a></b></center></div>
+<div style="width:70px; float:left;"><center><div style="position: relative; width: 32px; height: 32px; overflow: hidden;"><div style="position: absolute; top: 0; left: 0; font-size: 200pt; width: 32px; height: 32px; overflow: hidden; line-height: 32px; z-index: 3;"><a href="/wiki/Developer_Documentation" title="Developer Documentation">&#160;</a></div><div style="position: absolute; top: 0; left: 0; z-index: 2;"><a href="/wiki/File:Openterm.png" class="image" title="image page"><img alt="image page" src="/images/thumb/2/23/Openterm.png/32px-Openterm.png" width="32" height="32" /></a></div></div></center><center><b><a href="/wiki/Developer_Documentation" title="Developer Documentation">Dev</a></b></center></div>
+<div style="width:70px; float:left;"><center><div style="position: relative; width: 32px; height: 32px; overflow: hidden;"><div style="position: absolute; top: 0; left: 0; font-size: 200pt; width: 32px; height: 32px; overflow: hidden; line-height: 32px; z-index: 3;"><a href="/wiki/Media" title="Media" class="mw-redirect">&#160;</a></div><div style="position: absolute; top: 0; left: 0; z-index: 2;"><a href="/wiki/File:Media.png" class="image" title="image page"><img alt="image page" src="/images/thumb/3/35/Media.png/32px-Media.png" width="32" height="32" /></a></div></div></center><center><b><a href="/wiki/Media" title="Media" class="mw-redirect">Screen Shots</a></b></center></div>
+<div style="width:70px; float:left;"><center><div style="position: relative; width: 32px; height: 32px; overflow: hidden;"><div style="position: absolute; top: 0; left: 0; font-size: 200pt; width: 32px; height: 32px; overflow: hidden; line-height: 32px; z-index: 3;"><a href="/wiki/Grid_List" title="Grid List">&#160;</a></div><div style="position: absolute; top: 0; left: 0; z-index: 2;"><a href="/wiki/File:Compfile.png" class="image" title="image page"><img alt="image page" src="/images/thumb/f/f1/Compfile.png/32px-Compfile.png" width="32" height="32" /></a></div></div></center><center><b><a href="/wiki/Grid_List" title="Grid List">Grid List</a></b></center></div>
+<div style="width:70px; float:left;"><center><div style="position: relative; width: 32px; height: 32px; overflow: hidden;"><div style="position: absolute; top: 0; left: 0; font-size: 200pt; width: 32px; height: 32px; overflow: hidden; line-height: 32px; z-index: 3;"><a href="/wiki/Bugs" title="Bugs">&#160;</a></div><div style="position: absolute; top: 0; left: 0; z-index: 2;"><a href="/wiki/File:Bug.png" class="image" title="image page"><img alt="image page" src="/images/thumb/7/7d/Bug.png/32px-Bug.png" width="32" height="32" /></a></div></div></center><center><b><a href="/wiki/Bugs" title="Bugs">Bugs</a></b></center></div>
+</div>
+<div class="LanguageLinks" style="margin: 1em 0;">
+<table style="width: 100%; clear: both; border: 1px solid #aaaaaa; border-collapse: collapse; padding: 0.2em; margin: 0; font-size: 85%; margin: 0 1px;">
+<tr valign="center" style="background: #EEF3E2">
+<td style="width: 25px; padding-left: 0.5em;"><a href="/wiki/File:Geographylogo.png" class="image" title="Languages"><img alt="Languages" src="/images/thumb/5/59/Geographylogo.png/25px-Geographylogo.png" width="25" height="25" /></a></td>
+<td style="width: 10px; white-space: nowrap; padding: 4px 1em 0 0.5em; border-right: 1px solid #aaaaaa;"><b>Languages:</b>&#160;</td>
+<td>
+<p><b><a href="/wiki/File:En.png" class="image"><img alt="En.png" src="/images/3/3b/En.png" width="22" height="15" /></a> <strong class="selflink">English</strong></b> <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+<span></span><span></span>
+<span></span><span></span><span></span>
+<span></span><span></span><span></span><span></span><span></span><span></span>
+<span></span>
+<span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+<span></span><span></span><span></span>
+<span></span><span></span><span></span>
+<span></span><span></span><span></span>
+<span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+</p>
+</td>
+</tr>
+</table>
+</div>
+<p><br />
+The <b>regions</b> table contains information concerning all the regions currently connected to the grid.      (back to <a href="/wiki/Database_Documentation" title="Database Documentation" class="mw-redirect">Database Documentation</a>)
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Regions_(database_table)&amp;action=edit&amp;section=1" title="Modifier la section : regions Table Structure">modifier</a>]</span> <span class="mw-headline" id="regions_Table_Structure"> regions Table Structure </span></h2>
+<p>The structure of the regions table is as follows:
+</p><p><br />
+</p>
+<table style="border:1px solid #ccc;">
+
+<tr style="background:#cce;">
+<th> Field
+</th>
+<th> Type
+</th>
+<th> Null
+</th>
+<th> Key
+</th>
+<th> Default
+</th>
+<th> Extra
+</th></tr>
+<tr>
+<td> <b><a href="#uuid">uuid</a></b> </td>
+<td> varchar(36) </td>
+<td> NO </td>
+<td> PRI </td>
+<td> NULL </td>
+<td>  
+</td></tr>
+<tr style="background:#eee;">
+<td> <b><a href="#regionHandle">regionHandle</a></b> </td>
+<td> bigint(20) unsigned </td>
+<td> NO </td>
+<td> MUL </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr>
+<td> <b><a href="#regionName">regionName</a></b> </td>
+<td> varchar(32) </td>
+<td> YES </td>
+<td> MUL </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr style="background:#eee;">
+<td> <b><a href="#regionRecvKey">regionRecvKey</a></b> </td>
+<td> varchar(128) </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr>
+<td> <b><a href="#regionSendKey">regionSendKey</a></b> </td>
+<td> varchar(128) </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr style="background:#eee;">
+<td> <b><a href="#regionSecret">regionSecret</a></b> </td>
+<td> varchar(128) </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr>
+<td> <b><a href="#regionDataURI">regionDataURI</a></b> </td>
+<td> varchar(255) </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr style="background:#eee;">
+<td> <b><a href="#serverIP">serverIP</a></b> </td>
+<td> varchar(64) </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr>
+<td> <b><a href="#serverPort">serverPort</a></b> </td>
+<td> int(10) unsigned </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr style="background:#eee;">
+<td> <b><a href="#serverURI">serverURI</a></b> </td>
+<td> varchar(255) </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr>
+<td> <b><a href="#locX">locX</a></b> </td>
+<td> int(10) unsigned </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr style="background:#eee;">
+<td> <b><a href="#locY">locY</a></b> </td>
+<td> int(10) unsigned </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr>
+<td> <b><a href="#locZ">locZ</a></b> </td>
+<td> int(10) unsigned </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr style="background:#eee;">
+<td> <b><a href="#eastOverrideHandle">eastOverrideHandle</a></b> </td>
+<td> bigint(20) unsigned </td>
+<td> YES </td>
+<td> MUL </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr>
+<td> <b><a href="#westOverrideHandle">westOverrideHandle</a></b> </td>
+<td> bigint(20) unsigned </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr style="background:#eee;">
+<td> <b><a href="#southOverrideHandle">southOverrideHandle</a></b> </td>
+<td> bigint(20) unsigned </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr>
+<td> <b><a href="#northOverrideHandle">northOverrideHandle</a></b> </td>
+<td> bigint(20) unsigned </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr style="background:#eee;">
+<td> <b><a href="#regionAssetURI">regionAssetURI</a></b> </td>
+<td> varchar(255) </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr>
+<td> <b><a href="#regionAssetRecvKey">regionAssetRecvKey</a></b> </td>
+<td> varchar(128) </td>
+<td> YES </td>
+<td> PRI </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr style="background:#eee;">
+<td> <b><a href="#regionAssetSendKey">regionAssetSendKey</a></b> </td>
+<td> varchar(128) </td>
+<td> YES </td>
+<td> PRI </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr>
+<td> <b><a href="#regionUserURI">regionUserURI</a></b> </td>
+<td> varchar(255) </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr style="background:#eee;">
+<td> <b><a href="#regionUserRecvKey">regionUserRecvKey</a></b> </td>
+<td> varchar(128) </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr>
+<td> <b><a href="#regionUserSendKey">regionUserSendKey</a></b> </td>
+<td> varchar(128) </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr style="background:#eee;">
+<td> <b><a href="#regionMapTexture">regionMapTexture</a></b> </td>
+<td> varchar(36) </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr>
+<td> <b><a href="#serverHttpPort">serverHttpPort</a></b> </td>
+<td> int(10) </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr style="background:#eee;">
+<td> <b><a href="#serverRemotingPort">serverRemotingPort</a></b> </td>
+<td> int(10) </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr>
+<td> <b><a href="#owner_uuid">owner_uuid</a></b> </td>
+<td> varchar(36) </td>
+<td> NO </td>
+<td>  </td>
+<td> 00000000-0000-0000-0000-000000000000 </td>
+<td>
+</td></tr>
+<tr style="background:#eee;">
+<td> <b><a href="#originUUID">originUUID</a></b> </td>
+<td> varchar(36) </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+<tr>
+<td> <b><a href="#access">access</a></b> </td>
+<td> int(10) unsigned </td>
+<td> YES </td>
+<td>  </td>
+<td> 1 </td>
+<td>
+</td></tr>
+<tr style="background:#eee;">
+<td> <b><a href="#ScopeID">ScopeID</a></b> </td>
+<td> char(36) </td>
+<td> NO </td>
+<td>  </td>
+<td> 00000000-0000-0000-0000-000000000000 </td>
+<td>
+</td></tr>
+<tr>
+<td> <b><a href="#sizeX">sizeX</a></b> </td>
+<td> int(11) </td>
+<td> NO </td>
+<td>  </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr style="background:#eee;">
+<td> <b><a href="#sizeY">sizeY</a></b> </td>
+<td> int(11) </td>
+<td> NO </td>
+<td>  </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td> <b><a href="#flags">flags</a></b> </td>
+<td> int(11) </td>
+<td> NO </td>
+<td>  </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr style="background:#eee;">
+<td> <b><a href="#last_seen">last_seen</a></b> </td>
+<td> int(11) </td>
+<td> NO </td>
+<td>  </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td> <b><a href="#PrincipalID">PrincipalID</a></b> </td>
+<td> char(36) </td>
+<td> NO </td>
+<td>  </td>
+<td> 00000000-0000-0000-0000-000000000000 </td>
+<td>
+</td></tr>
+<tr style="background:#eee;">
+<td> <b><a href="#Token">Token</a></b> </td>
+<td> varchar(255) </td>
+<td> NO </td>
+<td>  </td>
+<td> None </td>
+<td>
+</td></tr>
+<tr>
+<td> <b><a href="#parcelMapTexture">parcelMapTexture</a></b> </td>
+<td> varchar(36) </td>
+<td> YES </td>
+<td>  </td>
+<td> NULL </td>
+<td>
+</td></tr>
+</table>
+<p><br />
+      (back to <a href="/wiki/Database_Documentation" title="Database Documentation" class="mw-redirect">Database Documentation</a>)
+</p><p><br />
+</p>
+<hr /> 
+<p><br />
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Regions_(database_table)&amp;action=edit&amp;section=2" title="Modifier la section : regions Fields">modifier</a>]</span> <span class="mw-headline" id="regions_Fields"> regions Fields </span></h2>
+<h2><span class="editsection">[<a href="/index.php?title=Regions_(database_table)&amp;action=edit&amp;section=3" title="Modifier la section : regions Fields">modifier</a>]</span> <span class="mw-headline" id="regions_Fields_2"> regions Fields </span></h2>
+<p><b>uuid</b>
+</p>
+<dl><dd>The region's unique identifier
+</dd></dl>
+<p><b>regionHandle</b>
+</p>
+<dl><dd>The absolute address of the origin coordinates, specified in metres, of the region calculated from LocX and LocY as
+</dd><dd>(LocX*256*65536)+(LocY*256).
+</dd></dl>
+<p><b>regionName</b>
+</p>
+<dl><dd>The region's name as it appears on maps - not necesarily unique
+</dd></dl>
+<p><b>regionRecvKey</b>
+</p>
+<dl><dd>The key used by the region server to verify authenticity of communications from other regions
+</dd></dl>
+<p><b>regionSendKey</b>
+</p>
+<dl><dd>The key used by the region server when verifying its identity in communications with other regions 
+</dd></dl>
+<p><b>regionSecret</b>
+</p>
+<dl><dd>more detail req'd
+</dd></dl>
+<p><b>regionDataURI</b>
+</p>
+<dl><dd>more detail req'd
+</dd></dl>
+<p><b>serverIP</b>
+</p>
+<dl><dd>IP address of region server
+</dd></dl>
+<p><b>serverPort</b>
+</p>
+<dl><dd>connection port for a specific region(this can be but need not be the same as http, each region should have its own port)
+</dd></dl>
+<p><b>serverURI</b>
+</p>
+<dl><dd>http representation of serverIP and main http port
+</dd></dl>
+<p><b>locX</b>
+</p>
+<dl><dd>X coordinate of region on the grid in absolute meters locX/256 is equal to coordinate in Regions.ini
+</dd></dl>
+<p><b>locY</b>
+</p>
+<dl><dd>Y coordinate of region on the grid in absolute meters locY/256 is equal to coordinate in Regions.ini
+</dd></dl>
+<p><b>locZ</b>
+</p>
+<dl><dd>Z coordinate of region on the grid *grinz*
+</dd></dl>
+<p><b>eastOverrideHandle</b>
+</p>
+<dl><dd>more detail req'd
+</dd></dl>
+<p><b>westOverrideHandle</b>
+</p>
+<dl><dd>more detail req'd
+</dd></dl>
+<p><b>southOverrideHandle</b>
+</p>
+<dl><dd>more detail req'd
+</dd></dl>
+<p><b>northOverrideHandle</b>
+</p>
+<dl><dd>more detail req'd
+</dd></dl>
+<p><b>regionAssetURI</b>
+</p>
+<dl><dd>The URL and port number of the Asset Server for the grid
+</dd></dl>
+<p><b>regionAssetRecvKey</b>
+</p>
+<dl><dd>Key used to verify the authenticity of communications received from the asset server
+</dd></dl>
+<p><b>regionAssetSendKey</b>
+</p>
+<dl><dd>Key used to verify the authenticity of communications sent to the asset server
+</dd></dl>
+<p><b>regionUserURI</b>
+</p>
+<dl><dd>The URL and port number of the User Server for the grid
+</dd></dl>
+<p><b>regionUserRecvKey</b>
+</p>
+<dl><dd>Key used to verify the authenticity of communications received from the user server
+</dd></dl>
+<p><b>regionUserSendKey</b>
+</p>
+<dl><dd>Key used to verify the authenticity of communications sent to the user server
+</dd></dl>
+<p><b>regionMapTexture</b>
+</p>
+<dl><dd>Texture for the map as displayed in the client minimap
+</dd></dl>
+<p><b>serverHttpPort</b>
+</p>
+<dl><dd>Port the region will answer on for HTTP requests
+</dd></dl>
+<p><b>serverRemotingPort</b>
+</p>
+<dl><dd>more detail req'd
+</dd></dl>
+<p><b>owner_uuid</b>
+</p>
+<dl><dd>UUID of the avatar/account which owns the region
+</dd></dl>
+<p><b>originUUID</b>
+</p>
+<dl><dd>more detail req'd, currently seems to contain the current UUID of the region.
+</dd></dl>
+<p><b>access</b>
+</p>
+<dl><dd>PG=13 Region is set to PG
+</dd><dd>Moderate=21 Region is set to Moderate
+</dd><dd>Adult=42 Region is set to Adult
+</dd></dl>
+<p><b>ScopeID</b>
+</p>
+<dl><dd>more detail req'd
+</dd></dl>
+<p><b>sizeX</b>
+</p>
+<dl><dd>X size of region (in m)
+</dd></dl>
+<p><b>sizeY</b>
+</p>
+<dl><dd>Y size of region (in m)
+</dd></dl>
+<p><b>flags</b>
+</p>
+<dl><dd>DefaultRegion=1 Default region for new avatars. Region is randomly selected if multiple regions have fallback flag set.
+</dd><dd>FallbackRegion=2 Regions we redirect to when the destination is down
+</dd><dd>RegionOnline=4 Set when a region comes online, unset when it unregisters and DeleteOnUnregister is false
+</dd><dd>NoDirectLogin=8 Region unavailable for direct logins (by name)
+</dd><dd>Persistent=16 Don't remove on unregister
+</dd><dd>LockedOut=32 Don't allow registration
+</dd><dd>NoMove=64 Don't allow moving this region
+</dd><dd>Reservation=128 This is an inactive reservation
+</dd><dd>Authenticate=256 Require authentication
+</dd><dd>Hyperlink=512 Record represents a HG link
+</dd><dd>DefaultHGRegion=1024 Record represents a default region for hypergrid teleports only.
+</dd></dl>
+<p><b>last_seen</b>
+</p>
+<dl><dd>more detail req'd
+</dd></dl>
+<p><b>PrincipalID</b>
+</p>
+<dl><dd>more detail req'd
+</dd></dl>
+<p><b>Token</b>
+</p>
+<dl><dd>more detail req'd
+</dd></dl>
+<p><br />
+</p>
+<hr />
+<p>(back to <a href="/wiki/Database_Documentation" title="Database Documentation" class="mw-redirect">Database Documentation</a>)
+</p>
+<!-- 
+NewPP limit report
+Preprocessor node count: 978/1000000
+Post‐expand include size: 15331/2097152 bytes
+Template argument size: 423/2097152 bytes
+Expensive parser function count: 53/100
+-->
+
+<!-- Saved in parser cache with key oslwiki-wiki_:pcache:idhash:837-0!*!0!!*!2!* and timestamp 20260511024854 -->
+</div><div class="printfooter">
+Récupérée de « <a href="http://opensimulator.org/index.php?title=Regions_(database_table)&amp;oldid=54237">http://opensimulator.org/index.php?title=Regions_(database_table)&amp;oldid=54237</a> »</div>
+			<div id="catlinks"><div id='catlinks' class='catlinks'><div id="mw-normal-catlinks" class="mw-normal-catlinks"><a href="/wiki/Special:Categories" title="Special:Categories">Catégorie</a> : <ul><li><a href="/wiki/Category:Database" title="Category:Database">Database</a></li></ul></div></div></div>			<!-- end content -->
+			<div class="visualClear"></div>
+		</div>
+	</div>
+      </div>
+		</div>
+                <div id="osbadge">
+                  <img id="oslogo" src="/skins/osmonobook/images/headerLogo.png">
+                </div>
+		<div id="column-one">
+                  
+	<div class="portlet" id="p-personal">
+		<h5>Outils personnels</h5>
+		<div class="pBody">
+			<ul>
+				<li id="pt-userpage"><a href="/wiki/User:GuduleLapointe"Array class="new">GuduleLapointe</a></li>
+				<li id="pt-mytalk"><a href="/wiki/User_talk:GuduleLapointe"Array class="new">Discussion</a></li>
+				<li id="pt-preferences"><a href="/wiki/Special:Preferences"Array>Préférences</a></li>
+				<li id="pt-watchlist"><a href="/wiki/Special:Watchlist"Array>Liste de suivi</a></li>
+				<li id="pt-mycontris"><a href="/wiki/Special:Contributions/GuduleLapointe"Array>Contributions</a></li>
+				<li id="pt-logout"><a href="/index.php?title=Special:UserLogout&amp;returnto=Regions+%28database+table%29"Array>Déconnexion</a></li>
+			</ul>
+		</div>
+	</div>
+<!--	<div class="portlet" id="p-logo">
+		<a style="background-image: url(/skins/common/images/wiki.png);" href="/wiki/Main_Page"Array></a>
+	</div> -->
+<script type="text/javascript"> if (window.isMSIE55) fixalpha(); </script>
+                <div class='portlet' id='p-General'>
+        <h5>General</h5>
+		<div class='pBody'>
+			<ul>
+				<li id="n-mainpage"><a href="/wiki/Main_Page"Array>Accueil</a></li>
+				<li id="n-News"><a href="/wiki/News"Array>News</a></li>
+			</ul>
+		</div>
+	</div>
+	        <div class='portlet' id='p-For_Administrators'>
+        <h5>For Administrators</h5>
+		<div class='pBody'>
+			<ul>
+				<li id="n-Admin-Home"><a href="/wiki/User_Documentation"Array>Admin Home</a></li>
+				<li id="n-Download"><a href="/wiki/Download"Array>télécharger</a></li>
+				<li id="n-Running"><a href="/wiki/Dependencies"Array>Running</a></li>
+				<li id="n-Configuration"><a href="/wiki/Configuration"Array>Configuration</a></li>
+				<li id="n-Building"><a href="/wiki/Build_Instructions"Array>Building</a></li>
+				<li id="n-FAQ"><a href="/wiki/FAQ"Array>FAQ</a></li>
+				<li id="n-Related-Software"><a href="/wiki/Related_Software"Array>Related Software</a></li>
+				<li id="n-Support"><a href="/wiki/Support"Array>Support</a></li>
+				<li id="n-Report-a-Bug"><a href="http://opensimulator.org/mantis"Array>Report a Bug</a></li>
+			</ul>
+		</div>
+	</div>
+	        <div class='portlet' id='p-For_Developers'>
+        <h5>For Developers</h5>
+		<div class='pBody'>
+			<ul>
+				<li id="n-Dev-Home"><a href="/wiki/Development"Array>Dev Home</a></li>
+				<li id="n-Contributions-Policy"><a href="/wiki/Contributions_Policy"Array>Contributions Policy</a></li>
+				<li id="n-Bug-Tracking"><a href="http://opensimulator.org/mantis"Array>Bug Tracking</a></li>
+			</ul>
+		</div>
+	</div>
+	        <div class='portlet' id='p-For_Creators'>
+        <h5>For Creators</h5>
+		<div class='pBody'>
+			<ul>
+				<li id="n-Content-Creation"><a href="/wiki/Artist_Home"Array>Content Creation</a></li>
+				<li id="n-Scripting"><a href="/wiki/Scripting_Documentation"Array>Scripting</a></li>
+			</ul>
+		</div>
+	</div>
+	        <div class='portlet' id='p-For_Grid_Users'>
+        <h5>For Grid Users</h5>
+		<div class='pBody'>
+			<ul>
+				<li id="n-Connecting"><a href="/wiki/Connecting"Array>Connecting</a></li>
+				<li id="n-Grid-List"><a href="/wiki/Grid_List"Array>Grid List</a></li>
+				<li id="n-Screenshots"><a href="/wiki/Screenshots"Array>Screenshots</a></li>
+			</ul>
+		</div>
+	</div>
+	        <div class='portlet' id='p-Related_Links'>
+        <h5>Related Links</h5>
+		<div class='pBody'>
+			<ul>
+				<li id="n-Related-Software"><a href="/wiki/Related_Software"Array>Related Software</a></li>
+				<li id="n-Black-Duck"><a href="https://www.openhub.net/p/opensimulator"Array>Black Duck</a></li>
+			</ul>
+		</div>
+	</div>
+	        <div class='portlet' id='p-About_This_Wiki'>
+        <h5>About This Wiki</h5>
+		<div class='pBody'>
+			<ul>
+				<li id="n-recentchanges"><a href="/wiki/Special:RecentChanges"Array>Modifications récentes</a></li>
+			</ul>
+		</div>
+	</div>
+		<div id="p-search" class="portlet">
+          <h5><label for="searchInput">Rechercher</label></h5>
+		<div id="searchBody" class="pBody">
+			<form action="/wiki/Special:Search" id="searchform"><div>
+				<input id="searchInput" name="search" type="text"Array value="" />
+				<input type='submit' name="go" class="searchButton" id="searchGoButton"	value="Lire" />&nbsp;
+				<input type='submit' name="fulltext" class="searchButton" id="mw-searchButton" value="Rechercher" />
+			</div></form>
+		</div>
+	</div>
+	<div class="portlet" id="p-tb">
+		<h5>Outils</h5>
+		<div class="pBody">
+			<ul>
+				<li id="t-whatlinkshere"><a href="/wiki/Special:WhatLinksHere/Regions_(database_table)"Array>Pages liées</a></li>
+				<li id="t-recentchangeslinked"><a href="/wiki/Special:RecentChangesLinked/Regions_(database_table)"Array>Suivi des pages liées</a></li>
+<li id="t-specialpages"><a href="/wiki/Special:SpecialPages"Array>Pages spéciales</a></li>
+				<li id="t-print"><a href="/index.php?title=Regions_(database_table)&amp;printable=yes"Array>Version imprimable</a></li>				<li id="t-permalink"><a href="/index.php?title=Regions_(database_table)&amp;oldid=54237"Array>Adresse de cette version</a></li>			</ul>
+		</div>
+	</div>
+		</div><!-- end of the left (by default at least) column -->
+			<div class="visualClear"></div>
+			<div id="footer">
+				<div id="f-poweredbyico"><a href="https://cciedump.spoto.net/"><img src="/skins/common/images/poweredby_mediawiki_88x31.png" height="31" width="88" alt="Powered by spoto dumps review" /></a></div>
+				<div id="f-copyrightico"><a href="http://creativecommons.org/licenses/by-sa/2.5/"><img src="http://i.creativecommons.org/l/by-sa/2.5/88x31.png" alt="Attribution-Share Alike 2.5 " width="88" height="31" /></a></div>
+			<ul id="f-list">
+				<li id="lastmod"> Dernière modification de cette page le 24 avril 2024 à 16:38.<br /></li>
+				<li id="viewcount">Cette page a été consultée 42 537 fois.</li>
+				<li id="copyright"><span lang="en" dir="ltr">Content is available under <a class="external" href="http://creativecommons.org/licenses/by-sa/2.5/">Attribution-Share Alike 2.5 </a> unless otherwise noted.</span></li>
+				<li id="privacy"><a href="/wiki/OpenSimulator:Privacy_policy" title="OpenSimulator:Privacy policy">Politique de confidentialité</a></li>
+				<li id="about"><a href="/wiki/OpenSimulator:About" title="OpenSimulator:About">À propos de OpenSimulator</a></li>
+				<li id="disclaimer"><a href="/wiki/OpenSimulator:General_disclaimer" title="OpenSimulator:General disclaimer">Avertissements</a></li>
+			</ul>
+		</div>
+		
+	<script>if(window.mw){
+mw.loader.load(["mediawiki.user","mediawiki.page.ready","mediawiki.action.watch.ajax","mediawiki.legacy.mwsuggest"], null, true);
+}</script>
+<script src="http://opensimulator.org/load.php?debug=false&amp;lang=fr&amp;modules=site&amp;only=scripts&amp;skin=osmonobook&amp;*"></script>
+</div>
+<!-- Served in 0.097 secs. --><script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-5842937-1");
+pageTracker._trackPageview();
+</script>
+</body></html>
