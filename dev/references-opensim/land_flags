@@ -1,0 +1,31 @@
+AllowFly	1	Allow avatars to fly (a client-side only restriction)
+AllowOtherScripts	2	Allow foreign scripts to run
+ForSale	4	This parcel is for sale
+AllowLandmark	8	Allow avatars to create a landmark on this parcel
+AllowTerraform	16	Allows all avatars to edit the terrain on this parcel
+AllowDamage	32	Avatars have health and can take damage on this parcel. If set, avatars can be killed and sent home here
+CreateObjects	64	Foreign avatars can create objects here
+ForSaleObjects	128	All objects on this parcel can be purchased
+UseAccessGroup	256	Access is restricted to a group
+UseAccessList	512	Access is restricted to a whitelist
+UseBanList	1024	Ban blacklist is enabled
+UsePassList	2048	Unknown
+ShowDirectory	4096	List this parcel in the search directory
+AllowDeedToGroup	8192	Allow personally owned parcels to be deeded to group
+ContributeWithDeed	16384	If Deeded, owner contributes required tier to group parcel is deeded to
+SoundLocal	32768	Restrict sounds originating on this parcel to the parcel boundaries
+SellParcelObjects	65536	Objects on this parcel are sold when the land is purchsaed
+AllowPublish	131072	Allow this parcel to be published on the web
+MaturePublish	262144	The information for this parcel is mature content
+UrlWebPage	524288	The media URL is an HTML page
+UrlRawHtml	1048576	The media URL is a raw HTML string
+RestrictPushObject	2097152	Restrict foreign object pushes
+DenyAnonymous	4194304	Ban all non identified/transacted avatars
+LindenHome	8388608	No comment in documentation or this one!
+AllowGroupScripts	33554432	Allow group-owned scripts to run
+CreateGroupObjects	67108864	Allow object creation by group members or group objects
+AllowAPrimitiveEntry	134217728	Allow all objects to enter this parcel
+AllowGroupObjectEntry	268435456	Only allow group and owner objects to enter this parcel
+AllowVoiceChat	536870912	Voice Enabled on this parcel
+UseEstateVoiceChan	1073741824	Use Estate Voice channel for Voice on this parcel. This correspond to unchecking "Restrict voice to this parcel" in the viewer.
+DenyAgeUnverified	2147483648	Deny Age Unverified Users

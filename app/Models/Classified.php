@@ -9,7 +9,6 @@ class Classified extends Model
     protected $table = "search_classifieds";
     protected $primaryKey = "classifiedUUID";
     public $incrementing = false;
-    public $timestamps = true;
 
     protected $fillable = [
         "creatorUUID",

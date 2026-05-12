@@ -9,7 +9,6 @@ class Event extends Model
     protected $table = "search_events";
     protected $primaryKey = "eventID";
     public $incrementing = true;
-    public $timestamps = true;
 
     protected $fillable = [
         "ownerUUID",

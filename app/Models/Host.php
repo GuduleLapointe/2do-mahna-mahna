@@ -9,7 +9,6 @@ class Host extends Model
     protected $table = "search_hostsregister";
     protected $primaryKey = "hostURI";
     public $incrementing = false;
-    public $timestamps = true;
 
     protected $fillable = [
         "host",

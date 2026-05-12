@@ -1,0 +1,675 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr" dir="ltr">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<meta name="generator" content="MediaWiki 1.19.9" />
+<link rel="alternate" type="application/x-wiki" title="Modifier" href="/index.php?title=Land_(database_table)&amp;action=edit" />
+<link rel="edit" title="Modifier" href="/index.php?title=Land_(database_table)&amp;action=edit" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="OpenSimulator (en)" />
+<link rel="EditURI" type="application/rsd+xml" href="http://opensimulator.org/api.php?action=rsd" />
+<link rel="copyright" href="http://creativecommons.org/licenses/by-sa/2.5/" />
+<link rel="alternate" type="application/atom+xml" title="Flux Atom de OpenSimulator" href="/index.php?title=Special:RecentChanges&amp;feed=atom" />		<title>Land (database table) - OpenSimulator</title>
+		<style type="text/css" media="screen, projection">/*<![CDATA[*/
+			@import "/skins/common/shared.css?303";
+			@import "/skins/osmonobook/main.css?303";
+		/*]]>*/</style>
+		<link rel="stylesheet" type="text/css" media="print" href="/skins/common/commonPrint.css?303" />
+		<!--[if lt IE 5.5000]><style type="text/css">@import "/skins/osmonobook/IE50Fixes.css?303";</style><![endif]-->
+		<!--[if IE 5.5000]><style type="text/css">@import "/skins/osmonobook/IE55Fixes.css?303";</style><![endif]-->
+		<!--[if IE 6]><style type="text/css">@import "/skins/osmonobook/IE60Fixes.css?303";</style><![endif]-->
+		<!--[if IE 7]><style type="text/css">@import "/skins/osmonobook/IE70Fixes.css?303";</style><![endif]-->
+		<!--[if lt IE 7]><script type="text/javascript" src="/skins/common/IEFixes.js?303"></script>
+		<meta http-equiv="imagetoolbar" content="no" /><![endif]-->
+		
+		<script>if(window.mw){
+mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"Land_(database_table)","wgTitle":"Land (database table)","wgCurRevisionId":31037,"wgArticleId":1328,"wgIsArticle":true,"wgAction":"view","wgUserName":"GuduleLapointe","wgUserGroups":["*","user","autoconfirmed","emailconfirmed"],"wgCategories":["Database"],"wgBreakFrames":false,"wgPageContentLanguage":"en","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgRelevantPageName":"Land_(database_table)","wgRestrictionEdit":[],"wgRestrictionMove":[],"wgSearchNamespaces":[0]});
+}</script>                
+		<script type="text/javascript" src="/skins/common/wikibits.js?303"><!-- wikibits js --></script>
+		<!-- Head Scripts -->
+<script src="http://opensimulator.org/load.php?debug=false&amp;lang=fr&amp;modules=startup&amp;only=scripts&amp;skin=osmonobook&amp;*"></script>
+<script>if(window.mw){
+mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"Land_(database_table)","wgTitle":"Land (database table)","wgCurRevisionId":31037,"wgArticleId":1328,"wgIsArticle":true,"wgAction":"view","wgUserName":"GuduleLapointe","wgUserGroups":["*","user","autoconfirmed","emailconfirmed"],"wgCategories":["Database"],"wgBreakFrames":false,"wgPageContentLanguage":"en","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgRelevantPageName":"Land_(database_table)","wgRestrictionEdit":[],"wgRestrictionMove":[],"wgSearchNamespaces":[0]});
+}</script><script>if(window.mw){
+mw.loader.implement("user.options",function($){mw.user.options.set({"ccmeonemails":0,"cols":80,"date":"default","diffonly":0,"disablemail":0,"disablesuggest":0,"editfont":"default","editondblclick":0,"editsection":1,"editsectiononrightclick":0,"enotifminoredits":0,"enotifrevealaddr":0,"enotifusertalkpages":1,"enotifwatchlistpages":"1","extendwatchlist":0,"externaldiff":0,"externaleditor":0,"fancysig":0,"forceeditsummary":0,"gender":"unknown","hideminor":0,"hidepatrolled":0,"highlightbroken":1,"imagesize":2,"justify":0,"math":1,"minordefault":0,"newpageshidepatrolled":0,"nocache":0,"noconvertlink":0,"norollbackdiff":0,"numberheadings":0,"previewonfirst":0,"previewontop":1,"quickbar":5,"rcdays":7,"rclimit":50,"rememberpassword":"1","rows":25,"searchlimit":20,"showhiddencats":0,"showjumplinks":1,"shownumberswatching":1,"showtoc":1,"showtoolbar":1,"skin":"osmonobook","stubthreshold":0,"thumbsize":2,"underline":2,"uselivepreview":0,"usenewrc":0,"watchcreations":0,"watchdefault":0,
+"watchdeletion":0,"watchlistdays":3,"watchlisthideanons":0,"watchlisthidebots":0,"watchlisthideliu":0,"watchlisthideminor":0,"watchlisthideown":0,"watchlisthidepatrolled":0,"watchmoves":0,"wllimit":250,"variant":"en","language":"fr","searchNs0":true,"searchNs1":false,"searchNs2":false,"searchNs3":false,"searchNs4":false,"searchNs5":false,"searchNs6":false,"searchNs7":false,"searchNs8":false,"searchNs9":false,"searchNs10":false,"searchNs11":false,"searchNs12":false,"searchNs13":false,"searchNs14":false,"searchNs15":false,"nickname":"","timecorrection":"Offset|0","watchlisttoken":"e0259d4e63856b484db0214a49467ce2d215558a"});;},{},{});mw.loader.implement("user.tokens",function($){mw.user.tokens.set({"editToken":"7c01e615bb245d3763667e605fca8f7d+\\","watchToken":"172a91c17fc5ce0cff30974149806fb7+\\"});;},{},{});
+
+/* cache key: oslwiki-wiki_:resourceloader:filter:minify-js:7:033e9d23047b1416003d9401b6f148a7 */
+}</script>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.page.startup","mediawiki.legacy.wikibits","mediawiki.legacy.ajax"]);
+}</script>	</head>
+<body  class="mediawiki  ltr ns-0 ns-subject page-Land_database_table">
+	<div id="globalWrapper">
+		<div id="column-content">
+	<div id="content-wrapper">
+	<div id="p-cactions" class="portlet">
+		<h5>Affichages</h5>
+		<div class="pBody">
+			<ul>
+                                                    <li id="ca-nstab-main" class="selected"><a href="/wiki/Land_(database_table)"Array>Page</a></li>
+                                                    <li id="ca-talk"><a href="/wiki/Talk:Land_(database_table)"Array>Discussion</a></li>
+                                                    <li id="ca-edit"><a href="/index.php?title=Land_(database_table)&amp;action=edit"Array>Modifier</a></li>
+                                                    <li id="ca-history"><a href="/index.php?title=Land_(database_table)&amp;action=history"Array>Historique</a></li>
+                                                    <li id="ca-move"><a href="/wiki/Special:MovePage/Land_(database_table)"Array>Renommer</a></li>
+                                                    <li id="ca-watch"><a href="/index.php?title=Land_(database_table)&amp;action=watch&amp;token=8684b17163bac45e2c5fc7ee372545b4%2B%5C"Array>Suivre</a></li>
+                          			</ul>
+		</div>
+	</div>
+        <div id="content">
+		<a name="top" id="top"></a>
+				<h1 class="firstHeading">Land (database table)</h1>
+		<div id="bodyContent">
+			<h3 id="siteSub">De OpenSimulator</h3>
+			<div id="contentSub"></div>
+									<div id="jump-to-nav">Aller à : <a href="#column-one">Navigation</a>, <a href="#searchInput">rechercher</a></div>			<!-- start content -->
+			<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr"><div style="width:750px; margin-left:auto;margin-right:auto;padding:10px;border:0px solid #AAAAAA; height:60px;">
+<div style="width:70px; float:left;"><center><div style="position: relative; width: 32px; height: 32px; overflow: hidden;"><div style="position: absolute; top: 0; left: 0; font-size: 200pt; width: 32px; height: 32px; overflow: hidden; line-height: 32px; z-index: 3;"><a href="/wiki/Main_Page" title="Main Page">&#160;</a></div><div style="position: absolute; top: 0; left: 0; z-index: 2;"><a href="/wiki/File:Home.png" class="image" title="image page"><img alt="image page" src="/images/thumb/9/9a/Home.png/32px-Home.png" width="32" height="32" /></a></div></div></center><center><b><a href="/wiki/Main_Page" title="Main Page">Home</a></b></center></div>
+<div style="width:70px; float:left;"><center><div style="position: relative; width: 32px; height: 32px; overflow: hidden;"><div style="position: absolute; top: 0; left: 0; font-size: 200pt; width: 32px; height: 32px; overflow: hidden; line-height: 32px; z-index: 3;"><a href="/wiki/Download" title="Download">&#160;</a></div><div style="position: absolute; top: 0; left: 0; z-index: 2;"><a href="/wiki/File:Compfile.png" class="image" title="image page"><img alt="image page" src="/images/thumb/f/f1/Compfile.png/32px-Compfile.png" width="32" height="32" /></a></div></div></center><center><b><a href="/wiki/Download" title="Download">Download</a></b></center></div>
+<div style="width:70px; float:left;"><center><div style="position: relative; width: 32px; height: 32px; overflow: hidden;"><div style="position: absolute; top: 0; left: 0; font-size: 200pt; width: 32px; height: 32px; overflow: hidden; line-height: 32px; z-index: 3;"><a href="/wiki/News" title="News">&#160;</a></div><div style="position: absolute; top: 0; left: 0; z-index: 2;"><a href="/wiki/File:News.png" class="image" title="image page"><img alt="image page" src="/images/thumb/0/07/News.png/32px-News.png" width="32" height="32" /></a></div></div></center><center><b><a href="/wiki/News" title="News">News</a></b></center></div>
+<div style="width:70px; float:left;"><center><div style="position: relative; width: 32px; height: 32px; overflow: hidden;"><div style="position: absolute; top: 0; left: 0; font-size: 200pt; width: 32px; height: 32px; overflow: hidden; line-height: 32px; z-index: 3;"><a href="/wiki/Support" title="Support">&#160;</a></div><div style="position: absolute; top: 0; left: 0; z-index: 2;"><a href="/wiki/File:Edu_languages.png" class="image" title="image page"><img alt="image page" src="/images/thumb/d/d7/Edu_languages.png/32px-Edu_languages.png" width="32" height="32" /></a></div></div></center><center><b><a href="/wiki/Support" title="Support">Support</a></b></center></div>
+<div style="width:70px; float:left;"><center><div style="position: relative; width: 32px; height: 32px; overflow: hidden;"><div style="position: absolute; top: 0; left: 0; font-size: 200pt; width: 32px; height: 32px; overflow: hidden; line-height: 32px; z-index: 3;"><a href="/wiki/User_Documentation" title="User Documentation">&#160;</a></div><div style="position: absolute; top: 0; left: 0; z-index: 2;"><a href="/wiki/File:Package_system.png" class="image" title="image page"><img alt="image page" src="/images/thumb/f/fd/Package_system.png/32px-Package_system.png" width="32" height="32" /></a></div></div></center><center><b><a href="/wiki/User_Documentation" title="User Documentation">Admin</a></b></center></div>
+<div style="width:70px; float:left;"><center><div style="position: relative; width: 32px; height: 32px; overflow: hidden;"><div style="position: absolute; top: 0; left: 0; font-size: 200pt; width: 32px; height: 32px; overflow: hidden; line-height: 32px; z-index: 3;"><a href="/wiki/Developer_Documentation" title="Developer Documentation">&#160;</a></div><div style="position: absolute; top: 0; left: 0; z-index: 2;"><a href="/wiki/File:Openterm.png" class="image" title="image page"><img alt="image page" src="/images/thumb/2/23/Openterm.png/32px-Openterm.png" width="32" height="32" /></a></div></div></center><center><b><a href="/wiki/Developer_Documentation" title="Developer Documentation">Dev</a></b></center></div>
+<div style="width:70px; float:left;"><center><div style="position: relative; width: 32px; height: 32px; overflow: hidden;"><div style="position: absolute; top: 0; left: 0; font-size: 200pt; width: 32px; height: 32px; overflow: hidden; line-height: 32px; z-index: 3;"><a href="/wiki/Media" title="Media" class="mw-redirect">&#160;</a></div><div style="position: absolute; top: 0; left: 0; z-index: 2;"><a href="/wiki/File:Media.png" class="image" title="image page"><img alt="image page" src="/images/thumb/3/35/Media.png/32px-Media.png" width="32" height="32" /></a></div></div></center><center><b><a href="/wiki/Media" title="Media" class="mw-redirect">Screen Shots</a></b></center></div>
+<div style="width:70px; float:left;"><center><div style="position: relative; width: 32px; height: 32px; overflow: hidden;"><div style="position: absolute; top: 0; left: 0; font-size: 200pt; width: 32px; height: 32px; overflow: hidden; line-height: 32px; z-index: 3;"><a href="/wiki/Grid_List" title="Grid List">&#160;</a></div><div style="position: absolute; top: 0; left: 0; z-index: 2;"><a href="/wiki/File:Compfile.png" class="image" title="image page"><img alt="image page" src="/images/thumb/f/f1/Compfile.png/32px-Compfile.png" width="32" height="32" /></a></div></div></center><center><b><a href="/wiki/Grid_List" title="Grid List">Grid List</a></b></center></div>
+<div style="width:70px; float:left;"><center><div style="position: relative; width: 32px; height: 32px; overflow: hidden;"><div style="position: absolute; top: 0; left: 0; font-size: 200pt; width: 32px; height: 32px; overflow: hidden; line-height: 32px; z-index: 3;"><a href="/wiki/Bugs" title="Bugs">&#160;</a></div><div style="position: absolute; top: 0; left: 0; z-index: 2;"><a href="/wiki/File:Bug.png" class="image" title="image page"><img alt="image page" src="/images/thumb/7/7d/Bug.png/32px-Bug.png" width="32" height="32" /></a></div></div></center><center><b><a href="/wiki/Bugs" title="Bugs">Bugs</a></b></center></div>
+</div>
+<div class="LanguageLinks" style="margin: 1em 0;">
+<table style="width: 100%; clear: both; border: 1px solid #aaaaaa; border-collapse: collapse; padding: 0.2em; margin: 0; font-size: 85%; margin: 0 1px;">
+<tr valign="center" style="background: #EEF3E2">
+<td style="width: 25px; padding-left: 0.5em;"><a href="/wiki/File:Geographylogo.png" class="image" title="Languages"><img alt="Languages" src="/images/thumb/5/59/Geographylogo.png/25px-Geographylogo.png" width="25" height="25" /></a></td>
+<td style="width: 10px; white-space: nowrap; padding: 4px 1em 0 0.5em; border-right: 1px solid #aaaaaa;"><b>Languages:</b>&#160;</td>
+<td>
+<p><b><a href="/wiki/File:En.png" class="image"><img alt="En.png" src="/images/3/3b/En.png" width="22" height="15" /></a> <strong class="selflink">English</strong></b> <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+<span></span><span></span>
+<span></span><span></span><span></span>
+<span></span><span></span><span></span><span></span><span></span><span></span>
+<span></span>
+<span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+<span></span><span></span><span></span>
+<span></span><span></span><span></span>
+<span></span><span></span><span></span>
+<span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+</p>
+</td>
+</tr>
+</table>
+</div>
+<p><i>&#160;&#160;&#160;&#160;&#160;&#160;(back to <a href="/wiki/Database_Documentation" title="Database Documentation" class="mw-redirect">Database Documentation</a>)</i>
+<br /><br />
+The current structure of the Land table is as follows:<br />
+<br />
+</p>
+<table>
+<tr><td>Field<br /></td><td>Type</td><td>Null</td><td>Key</td><td>Default</td><td>Extra</td></tr>
+<tr><td>&#160;</td></tr>
+<tr><td>UUID</td><td>varchar(255)</td><td>NO</td><td>PRI</td><td></td><td></td></tr>
+<tr><td>RegionUUID</td><td>varchar(255)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>LocalLandID</td><td>int(11)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>Bitmap</td><td>longblob</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>Name</td><td>varchar(255)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>Description</td><td>varchar(255)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>OwnerUUID</td><td>varchar(255)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>IsGroupOwned</td><td>int(11)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>Area</td><td>int(11)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>AuctionID</td><td>int(11)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>Category</td><td>int(11)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>ClaimDate</td><td>int(11)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>ClaimPrice</td><td>int(11)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>GroupUUID</td><td>varchar(255)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>SalePrice</td><td>int(11)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>LandStatus</td><td>int(11)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>LandFlags</td><td>int(11)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>MediaAutoScale</td><td>int(11)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>MediaTextureUUID</td><td>varchar(255)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>MediaURL</td><td>varchar(255)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>MUSICURL</td><td>varchar(255)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>Passhours</td><td>float</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>PassPrice</td><td>int(11)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>SnapshotUUID</td><td>varchar(255)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>UserLocationX</td><td>int(11)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>UserLocationY</td><td>int(11)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>UserLocationZ</td><td>int(11)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>UserLookAtX</td><td>int(11)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>UserLookAtY</td><td>int(11)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>UserLookAtZ</td><td>int(11)</td><td>YES</td><td></td><td></td><td></td></tr>
+<tr><td>AuthBuyerID</td><td>varchar(255)</td><td>NO</td><td>00000000-0000-0000-0000-000000000000</td><td></td><td></td></tr>
+<tr><td>OtherCleanTime</td><td>int(11)</td><td>NO</td><td></td><td></td><td></td></tr>
+<tr><td>Dwell</td><td>int(11)</td><td>NO</td><td></td><td></td><td></td></tr>
+</table>
+<table id="toc" class="toc"><tr><td><div id="toctitle"><h2>Sommaire</h2></div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#UUID"><span class="tocnumber">1</span> <span class="toctext">UUID</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#RegionUUID"><span class="tocnumber">2</span> <span class="toctext">RegionUUID</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#LocalLandID"><span class="tocnumber">3</span> <span class="toctext">LocalLandID</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Bitmap"><span class="tocnumber">4</span> <span class="toctext">Bitmap</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#Name"><span class="tocnumber">5</span> <span class="toctext">Name</span></a></li>
+<li class="toclevel-1 tocsection-6"><a href="#Description"><span class="tocnumber">6</span> <span class="toctext">Description</span></a></li>
+<li class="toclevel-1 tocsection-7"><a href="#OwnerUUID"><span class="tocnumber">7</span> <span class="toctext">OwnerUUID</span></a></li>
+<li class="toclevel-1 tocsection-8"><a href="#IsGroupOwned"><span class="tocnumber">8</span> <span class="toctext">IsGroupOwned</span></a></li>
+<li class="toclevel-1 tocsection-9"><a href="#Area"><span class="tocnumber">9</span> <span class="toctext">Area</span></a></li>
+<li class="toclevel-1 tocsection-10"><a href="#AuctionID"><span class="tocnumber">10</span> <span class="toctext">AuctionID</span></a></li>
+<li class="toclevel-1 tocsection-11"><a href="#Category"><span class="tocnumber">11</span> <span class="toctext">Category</span></a></li>
+<li class="toclevel-1 tocsection-12"><a href="#ClaimDate"><span class="tocnumber">12</span> <span class="toctext">ClaimDate</span></a></li>
+<li class="toclevel-1 tocsection-13"><a href="#ClaimPrice"><span class="tocnumber">13</span> <span class="toctext">ClaimPrice</span></a></li>
+<li class="toclevel-1 tocsection-14"><a href="#GroupUUID"><span class="tocnumber">14</span> <span class="toctext">GroupUUID</span></a></li>
+<li class="toclevel-1 tocsection-15"><a href="#SalePrice"><span class="tocnumber">15</span> <span class="toctext">SalePrice</span></a></li>
+<li class="toclevel-1 tocsection-16"><a href="#LandStatus"><span class="tocnumber">16</span> <span class="toctext">LandStatus</span></a></li>
+<li class="toclevel-1 tocsection-17"><a href="#LandFlags"><span class="tocnumber">17</span> <span class="toctext">LandFlags</span></a></li>
+<li class="toclevel-1 tocsection-18"><a href="#LandingType"><span class="tocnumber">18</span> <span class="toctext">LandingType</span></a></li>
+<li class="toclevel-1 tocsection-19"><a href="#MediaAutoScale"><span class="tocnumber">19</span> <span class="toctext">MediaAutoScale</span></a></li>
+<li class="toclevel-1 tocsection-20"><a href="#MediaTextureUUID"><span class="tocnumber">20</span> <span class="toctext">MediaTextureUUID</span></a></li>
+<li class="toclevel-1 tocsection-21"><a href="#MediaURL"><span class="tocnumber">21</span> <span class="toctext">MediaURL</span></a></li>
+<li class="toclevel-1 tocsection-22"><a href="#MusicURL"><span class="tocnumber">22</span> <span class="toctext">MusicURL</span></a></li>
+<li class="toclevel-1 tocsection-23"><a href="#Passhours"><span class="tocnumber">23</span> <span class="toctext">Passhours</span></a></li>
+<li class="toclevel-1 tocsection-24"><a href="#PassPrice"><span class="tocnumber">24</span> <span class="toctext">PassPrice</span></a></li>
+<li class="toclevel-1 tocsection-25"><a href="#SnapshotUUID"><span class="tocnumber">25</span> <span class="toctext">SnapshotUUID</span></a></li>
+<li class="toclevel-1 tocsection-26"><a href="#UserLocationX"><span class="tocnumber">26</span> <span class="toctext">UserLocationX</span></a></li>
+<li class="toclevel-1 tocsection-27"><a href="#UserLocationY"><span class="tocnumber">27</span> <span class="toctext">UserLocationY</span></a></li>
+<li class="toclevel-1 tocsection-28"><a href="#UserLocationZ"><span class="tocnumber">28</span> <span class="toctext">UserLocationZ</span></a></li>
+<li class="toclevel-1 tocsection-29"><a href="#UserLookAtX"><span class="tocnumber">29</span> <span class="toctext">UserLookAtX</span></a></li>
+<li class="toclevel-1 tocsection-30"><a href="#UserLookAtY"><span class="tocnumber">30</span> <span class="toctext">UserLookAtY</span></a></li>
+<li class="toclevel-1 tocsection-31"><a href="#UserLookAtZ"><span class="tocnumber">31</span> <span class="toctext">UserLookAtZ</span></a></li>
+<li class="toclevel-1 tocsection-32"><a href="#AuthBuyID"><span class="tocnumber">32</span> <span class="toctext">AuthBuyID</span></a></li>
+<li class="toclevel-1 tocsection-33"><a href="#OtherCleanTime"><span class="tocnumber">33</span> <span class="toctext">OtherCleanTime</span></a></li>
+<li class="toclevel-1 tocsection-34"><a href="#Dwell"><span class="tocnumber">34</span> <span class="toctext">Dwell</span></a></li>
+</ul>
+</td></tr></table>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=1" title="Modifier la section : UUID">modifier</a>]</span> <span class="mw-headline" id="UUID"> UUID </span></h2>
+<p>The unique ID of the Land Parcel.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=2" title="Modifier la section : RegionUUID">modifier</a>]</span> <span class="mw-headline" id="RegionUUID"> RegionUUID </span></h2>
+<p>The UUID of the region containing this land parcel.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=3" title="Modifier la section : LocalLandID">modifier</a>]</span> <span class="mw-headline" id="LocalLandID"> LocalLandID </span></h2>
+<p>The number of the parcel.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=4" title="Modifier la section : Bitmap">modifier</a>]</span> <span class="mw-headline" id="Bitmap"> Bitmap </span></h2>
+<p>A block of 512 bytes (4,096 bits) of data with each bit of each byte indicating whether a 4m x 4m piece of a region (the smallest selectable) is in the parcel of land. The block of bytes starts in the bottom left corner of the region, proceeding west-east, south-north. As there are 8 bits in a byte, each byte corresponds to 8 pieces of land in a 256x256 region.
+</p><p>The first bit in the first byte refers to the square piece of land with corners (in region co-ordinates) at:
+</p>
+<ul><li> (0, 0)
+</li><li> (4, 0)
+</li><li> (4, 4)
+</li><li> (0, 4)
+</li></ul>
+<p>The first byte corresponds to a rectangle with corners at:
+</p>
+<ul><li> (0 ,0)
+</li><li> (32,0)
+</li><li> (32,4)
+</li><li> (0, 4)
+</li></ul>
+<p>The second byte corresponds to a rectangle with corners at:
+</p>
+<ul><li> (32, 0)
+</li><li> (64, 0)
+</li><li> (64, 4)
+</li><li> (32, 4)
+</li></ul>
+<p>The ninth byte thus corresponds to a rectangle with corners at:
+</p>
+<ul><li> (0, 4)
+</li><li> (32,4)
+</li><li> (32,8)
+</li><li> (0, 8)
+</li></ul>
+<p>To determine if a piece of land in the region belongs to the parcel, one should perform a bitwise operation on the byte, e.g.
+</p>
+<ol><li> byte &amp; 1
+</li><li> byte &amp; 2
+</li><li> byte &amp; 4
+</li><li> byte &amp; 8
+</li><li> byte &amp; 16
+</li><li> byte &amp; 32
+</li><li> byte &amp; 64
+</li><li> byte &amp; 128
+</li></ol>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=5" title="Modifier la section : Name">modifier</a>]</span> <span class="mw-headline" id="Name"> Name </span></h2>
+<p>The name of this land parcel.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=6" title="Modifier la section : Description">modifier</a>]</span> <span class="mw-headline" id="Description"> Description </span></h2>
+<p>A description of this land parcel.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=7" title="Modifier la section : OwnerUUID">modifier</a>]</span> <span class="mw-headline" id="OwnerUUID"> OwnerUUID </span></h2>
+<p>The UUID of the user who owns this land parcel.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=8" title="Modifier la section : IsGroupOwned">modifier</a>]</span> <span class="mw-headline" id="IsGroupOwned"> IsGroupOwned </span></h2>
+<p>This is set to 1 if the parcel is owned by a group. If it is not group owned it will be 0.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=9" title="Modifier la section : Area">modifier</a>]</span> <span class="mw-headline" id="Area"> Area </span></h2>
+<p>The size of the parcel (in square meters).
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=10" title="Modifier la section : AuctionID">modifier</a>]</span> <span class="mw-headline" id="AuctionID"> AuctionID </span></h2>
+<p>To be identified.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=11" title="Modifier la section : Category">modifier</a>]</span> <span class="mw-headline" id="Category"> Category </span></h2>
+<p>This specifies the category the parcel of land is in when doing a search. A value of 0 indicates no category was set, -1 is any category, and positive numbers indicate a specific category.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=12" title="Modifier la section : ClaimDate">modifier</a>]</span> <span class="mw-headline" id="ClaimDate"> ClaimDate </span></h2>
+<p>The date the parcel of land was claimed by an avatar (ie. the date of sale).
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=13" title="Modifier la section : ClaimPrice">modifier</a>]</span> <span class="mw-headline" id="ClaimPrice"> ClaimPrice </span></h2>
+<p>To be identified.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=14" title="Modifier la section : GroupUUID">modifier</a>]</span> <span class="mw-headline" id="GroupUUID"> GroupUUID </span></h2>
+<p>To be identified when Groups are implemented.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=15" title="Modifier la section : SalePrice">modifier</a>]</span> <span class="mw-headline" id="SalePrice"> SalePrice </span></h2>
+<p>If the land is for sale this is the price asked.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=16" title="Modifier la section : LandStatus">modifier</a>]</span> <span class="mw-headline" id="LandStatus"> LandStatus </span></h2>
+<p><i>From OpenMetaverse.ParcelStatus</i>
+</p>
+<ul><li> -1&#160;: None
+</li><li> 0&#160;: Leased
+</li><li> 1&#160;: LeasePending
+</li><li> 2&#160;: Abandoned
+</li></ul>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=17" title="Modifier la section : LandFlags">modifier</a>]</span> <span class="mw-headline" id="LandFlags"> LandFlags </span></h2>
+<table>
+<caption>OpenMetaverse.ParcelFlags</caption>
+<tr><th>Name</th><th style="text-align: left;">Decimal</th><th style="text-align: left;">Hex</th><th style="text-align: left;">Description</th></tr>
+<tr>
+<th scope="row">None</th>
+<td>0</td>
+<td>0</td>
+<td>No flags set</td>
+</tr>
+<tr>
+<th scope="row">AllowFly</th>
+<td>1</td>
+<td>1</td>
+<td>Allow avatars to fly (a client-side only restriction)</td>
+</tr>
+<tr>
+<th scope="row">AllowOtherScripts</th>
+<td>2</td>
+<td>2</td>
+<td>Allow foreign scripts to run</td>
+</tr>
+<tr>
+<th scope="row">ForSale</th>
+<td>4</td>
+<td>4</td>
+<td>This parcel is for sale</td>
+</tr>
+<tr>
+<th scope="row">AllowLandmark</th>
+<td>8</td>
+<td>8</td>
+<td>Allow avatars to create a landmark on this parcel</td>
+</tr>
+<tr>
+<th scope="row">AllowTerraform</th>
+<td>16</td>
+<td>10</td>
+<td>Allows all avatars to edit the terrain on this parcel</td>
+</tr>
+<tr>
+<th scope="row">AllowDamage</th>
+<td>32</td>
+<td>20</td>
+<td>Avatars have health and can take damage on this parcel.  If set, avatars can be killed and sent home here</td>
+</tr>
+<tr>
+<th scope="row">CreateObjects</th>
+<td>64</td>
+<td>40</td>
+<td>Foreign avatars can create objects here</td>
+</tr>
+<tr>
+<th scope="row">ForSaleObjects</th>
+<td>128</td>
+<td>80</td>
+<td>All objects on this parcel can be purchased</td>
+</tr>
+<tr>
+<th scope="row">UseAccessGroup</th>
+<td>256</td>
+<td>100</td>
+<td>Access is restricted to a group</td>
+</tr>
+<tr>
+<th scope="row">UseAccessList</th>
+<td>512</td>
+<td>200</td>
+<td>Access is restricted to a whitelist</td>
+</tr>
+<tr>
+<th scope="row">UseBanList</th>
+<td>1024</td>
+<td>400</td>
+<td>Ban blacklist is enabled</td>
+</tr>
+<tr>
+<th scope="row">UsePassList</th>
+<td>2048</td>
+<td>800</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<th scope="row">ShowDirectory</th>
+<td>4096</td>
+<td>1000</td>
+<td>List this parcel in the search directory</td>
+</tr>
+<tr>
+<th scope="row">AllowDeedToGroup</th>
+<td>8192</td>
+<td>2000</td>
+<td>Allow personally owned parcels to be deeded to group</td>
+</tr>
+<tr>
+<th scope="row">ContributeWithDeed</th>
+<td>16384</td>
+<td>4000</td>
+<td>If Deeded, owner contributes required tier to group parcel is deeded to</td>
+</tr>
+<tr>
+<th scope="row">SoundLocal</th>
+<td>32768</td>
+<td>8000</td>
+<td>Restrict sounds originating on this parcel to the parcel boundaries</td>
+</tr>
+<tr>
+<th scope="row">SellParcelObjects</th>
+<td>65536</td>
+<td>10000</td>
+<td>Objects on this parcel are sold when the land is purchsaed</td>
+</tr>
+<tr>
+<th scope="row">AllowPublish</th>
+<td>131072</td>
+<td>20000</td>
+<td>Allow this parcel to be published on the web</td>
+</tr>
+<tr>
+<th scope="row">MaturePublish</th>
+<td>262144</td>
+<td>40000</td>
+<td>The information for this parcel is mature content</td>
+</tr>
+<tr>
+<th scope="row">UrlWebPage</th>
+<td>524288</td>
+<td>80000</td>
+<td>The media URL is an HTML page</td>
+</tr>
+<tr>
+<th scope="row">UrlRawHtml</th>
+<td>1048576</td>
+<td>100000</td>
+<td>The media URL is a raw HTML string</td>
+</tr>
+<tr>
+<th scope="row">RestrictPushObject</th>
+<td>2097152</td>
+<td>200000</td>
+<td>Restrict foreign object pushes</td>
+</tr>
+<tr>
+<th scope="row">DenyAnonymous</th>
+<td>4194304</td>
+<td>400000</td>
+<td>Ban all non identified/transacted avatars</td>
+</tr>
+<tr>
+<th scope="row">LindenHome</th>
+<td>8388608</td>
+<td>800000</td>
+<td>No comment in documentation or this one!</td>
+</tr>
+<tr>
+<th scope="row">AllowGroupScripts</th>
+<td>33554432</td>
+<td>2000000</td>
+<td>Allow group-owned scripts to run</td>
+</tr>
+<tr>
+<th scope="row">CreateGroupObjects</th>
+<td>67108864</td>
+<td>4000000</td>
+<td>Allow object creation by group members or group objects</td>
+</tr>
+<tr>
+<th scope="row">AllowAPrimitiveEntry</th>
+<td>134217728</td>
+<td>8000000</td>
+<td>Allow all objects to enter this parcel</td>
+</tr>
+<tr>
+<th scope="row">AllowGroupObjectEntry</th>
+<td>268435456</td>
+<td>10000000</td>
+<td>Only allow group and owner objects to enter this parcel</td>
+</tr>
+<tr>
+<th scope="row">AllowVoiceChat</th>
+<td>536870912</td>
+<td>20000000</td>
+<td>Voice Enabled on this parcel</td>
+</tr>
+<tr>
+<th scope="row">UseEstateVoiceChan</th>
+<td>1073741824</td>
+<td>40000000</td>
+<td>Use Estate Voice channel for Voice on this parcel.  This correspond to unchecking "Restrict voice to this parcel" in the viewer.</td>
+</tr>
+<tr>
+<th scope="row">DenyAgeUnverified</th>
+<td>2147483648</td>
+<td>80000000</td>
+<td>Deny Age Unverified Users</td>
+</tr>
+</table>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=18" title="Modifier la section : LandingType">modifier</a>]</span> <span class="mw-headline" id="LandingType"> LandingType </span></h2>
+<p>The landing point setting for the parcel: 0 is Blocked, 1 is 1anding point set, 2 is for landing allowed anywhere.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=19" title="Modifier la section : MediaAutoScale">modifier</a>]</span> <span class="mw-headline" id="MediaAutoScale"> MediaAutoScale </span></h2>
+<p>A boolean (1 or 0) indicating whether media should be stretched to fit the face of the prim it's displayed on.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=20" title="Modifier la section : MediaTextureUUID">modifier</a>]</span> <span class="mw-headline" id="MediaTextureUUID"> MediaTextureUUID </span></h2>
+<p>The UUID of a texture. Objects using this texture will show a video stream or web page after they click the video play arrow in their viewer.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=21" title="Modifier la section : MediaURL">modifier</a>]</span> <span class="mw-headline" id="MediaURL"> MediaURL </span></h2>
+<p>The URL of the video stream, or media, to be played in this land.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=22" title="Modifier la section : MusicURL">modifier</a>]</span> <span class="mw-headline" id="MusicURL"> MusicURL </span></h2>
+<p>The URL of the Music station to be played in this land.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=23" title="Modifier la section : Passhours">modifier</a>]</span> <span class="mw-headline" id="Passhours"> Passhours </span></h2>
+<p>The length of time that a pass to his parcel is valid.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=24" title="Modifier la section : PassPrice">modifier</a>]</span> <span class="mw-headline" id="PassPrice"> PassPrice </span></h2>
+<p>The cost of a pass to this parcel.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=25" title="Modifier la section : SnapshotUUID">modifier</a>]</span> <span class="mw-headline" id="SnapshotUUID"> SnapshotUUID </span></h2>
+<p>The UUID (key) on the asset table of a picture of this parcel.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=26" title="Modifier la section : UserLocationX">modifier</a>]</span> <span class="mw-headline" id="UserLocationX"> UserLocationX </span></h2>
+<p>The X co-ordinate of the parcel's landing zone (if set).
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=27" title="Modifier la section : UserLocationY">modifier</a>]</span> <span class="mw-headline" id="UserLocationY"> UserLocationY </span></h2>
+<p>The Y co-ordinate of the parcel's landing zone (if set).
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=28" title="Modifier la section : UserLocationZ">modifier</a>]</span> <span class="mw-headline" id="UserLocationZ"> UserLocationZ </span></h2>
+<p>The Z co-ordinate of the parcel's landing zone (if set).
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=29" title="Modifier la section : UserLookAtX">modifier</a>]</span> <span class="mw-headline" id="UserLookAtX"> UserLookAtX </span></h2>
+<p>To be identified.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=30" title="Modifier la section : UserLookAtY">modifier</a>]</span> <span class="mw-headline" id="UserLookAtY"> UserLookAtY </span></h2>
+<p>To be identified.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=31" title="Modifier la section : UserLookAtZ">modifier</a>]</span> <span class="mw-headline" id="UserLookAtZ"> UserLookAtZ </span></h2>
+<p>To be identified.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=32" title="Modifier la section : AuthBuyID">modifier</a>]</span> <span class="mw-headline" id="AuthBuyID"> AuthBuyID </span></h2>
+<p>The UUID of the User authorised to buy this land.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=33" title="Modifier la section : OtherCleanTime">modifier</a>]</span> <span class="mw-headline" id="OtherCleanTime"> OtherCleanTime </span></h2>
+<p>Other residents objects in the parcel will be automatically returned after this many minutes has elapsed. Set to 0 to disable auto-return of objects.
+</p>
+<h2><span class="editsection">[<a href="/index.php?title=Land_(database_table)&amp;action=edit&amp;section=34" title="Modifier la section : Dwell">modifier</a>]</span> <span class="mw-headline" id="Dwell"> Dwell </span></h2>
+<p>To be identified.
+</p>
+<!-- 
+NewPP limit report
+Preprocessor node count: 1141/1000000
+Post‐expand include size: 15001/2097152 bytes
+Template argument size: 423/2097152 bytes
+Expensive parser function count: 53/100
+-->
+
+<!-- Saved in parser cache with key oslwiki-wiki_:pcache:idhash:1328-0!*!0!!fr!2!* and timestamp 20260511135400 -->
+</div><div class="printfooter">
+Récupérée de « <a href="http://opensimulator.org/index.php?title=Land_(database_table)&amp;oldid=31037">http://opensimulator.org/index.php?title=Land_(database_table)&amp;oldid=31037</a> »</div>
+			<div id="catlinks"><div id='catlinks' class='catlinks'><div id="mw-normal-catlinks" class="mw-normal-catlinks"><a href="/wiki/Special:Categories" title="Special:Categories">Catégorie</a> : <ul><li><a href="/wiki/Category:Database" title="Category:Database">Database</a></li></ul></div></div></div>			<!-- end content -->
+			<div class="visualClear"></div>
+		</div>
+	</div>
+      </div>
+		</div>
+                <div id="osbadge">
+                  <img id="oslogo" src="/skins/osmonobook/images/headerLogo.png">
+                </div>
+		<div id="column-one">
+                  
+	<div class="portlet" id="p-personal">
+		<h5>Outils personnels</h5>
+		<div class="pBody">
+			<ul>
+				<li id="pt-userpage"><a href="/wiki/User:GuduleLapointe"Array class="new">GuduleLapointe</a></li>
+				<li id="pt-mytalk"><a href="/wiki/User_talk:GuduleLapointe"Array class="new">Discussion</a></li>
+				<li id="pt-preferences"><a href="/wiki/Special:Preferences"Array>Préférences</a></li>
+				<li id="pt-watchlist"><a href="/wiki/Special:Watchlist"Array>Liste de suivi</a></li>
+				<li id="pt-mycontris"><a href="/wiki/Special:Contributions/GuduleLapointe"Array>Contributions</a></li>
+				<li id="pt-logout"><a href="/index.php?title=Special:UserLogout&amp;returnto=Land+%28database+table%29"Array>Déconnexion</a></li>
+			</ul>
+		</div>
+	</div>
+<!--	<div class="portlet" id="p-logo">
+		<a style="background-image: url(/skins/common/images/wiki.png);" href="/wiki/Main_Page"Array></a>
+	</div> -->
+<script type="text/javascript"> if (window.isMSIE55) fixalpha(); </script>
+                <div class='portlet' id='p-General'>
+        <h5>General</h5>
+		<div class='pBody'>
+			<ul>
+				<li id="n-mainpage"><a href="/wiki/Main_Page"Array>Accueil</a></li>
+				<li id="n-News"><a href="/wiki/News"Array>News</a></li>
+			</ul>
+		</div>
+	</div>
+	        <div class='portlet' id='p-For_Administrators'>
+        <h5>For Administrators</h5>
+		<div class='pBody'>
+			<ul>
+				<li id="n-Admin-Home"><a href="/wiki/User_Documentation"Array>Admin Home</a></li>
+				<li id="n-Download"><a href="/wiki/Download"Array>télécharger</a></li>
+				<li id="n-Running"><a href="/wiki/Dependencies"Array>Running</a></li>
+				<li id="n-Configuration"><a href="/wiki/Configuration"Array>Configuration</a></li>
+				<li id="n-Building"><a href="/wiki/Build_Instructions"Array>Building</a></li>
+				<li id="n-FAQ"><a href="/wiki/FAQ"Array>FAQ</a></li>
+				<li id="n-Related-Software"><a href="/wiki/Related_Software"Array>Related Software</a></li>
+				<li id="n-Support"><a href="/wiki/Support"Array>Support</a></li>
+				<li id="n-Report-a-Bug"><a href="http://opensimulator.org/mantis"Array>Report a Bug</a></li>
+			</ul>
+		</div>
+	</div>
+	        <div class='portlet' id='p-For_Developers'>
+        <h5>For Developers</h5>
+		<div class='pBody'>
+			<ul>
+				<li id="n-Dev-Home"><a href="/wiki/Development"Array>Dev Home</a></li>
+				<li id="n-Contributions-Policy"><a href="/wiki/Contributions_Policy"Array>Contributions Policy</a></li>
+				<li id="n-Bug-Tracking"><a href="http://opensimulator.org/mantis"Array>Bug Tracking</a></li>
+			</ul>
+		</div>
+	</div>
+	        <div class='portlet' id='p-For_Creators'>
+        <h5>For Creators</h5>
+		<div class='pBody'>
+			<ul>
+				<li id="n-Content-Creation"><a href="/wiki/Artist_Home"Array>Content Creation</a></li>
+				<li id="n-Scripting"><a href="/wiki/Scripting_Documentation"Array>Scripting</a></li>
+			</ul>
+		</div>
+	</div>
+	        <div class='portlet' id='p-For_Grid_Users'>
+        <h5>For Grid Users</h5>
+		<div class='pBody'>
+			<ul>
+				<li id="n-Connecting"><a href="/wiki/Connecting"Array>Connecting</a></li>
+				<li id="n-Grid-List"><a href="/wiki/Grid_List"Array>Grid List</a></li>
+				<li id="n-Screenshots"><a href="/wiki/Screenshots"Array>Screenshots</a></li>
+			</ul>
+		</div>
+	</div>
+	        <div class='portlet' id='p-Related_Links'>
+        <h5>Related Links</h5>
+		<div class='pBody'>
+			<ul>
+				<li id="n-Related-Software"><a href="/wiki/Related_Software"Array>Related Software</a></li>
+				<li id="n-Black-Duck"><a href="https://www.openhub.net/p/opensimulator"Array>Black Duck</a></li>
+			</ul>
+		</div>
+	</div>
+	        <div class='portlet' id='p-About_This_Wiki'>
+        <h5>About This Wiki</h5>
+		<div class='pBody'>
+			<ul>
+				<li id="n-recentchanges"><a href="/wiki/Special:RecentChanges"Array>Modifications récentes</a></li>
+			</ul>
+		</div>
+	</div>
+		<div id="p-search" class="portlet">
+          <h5><label for="searchInput">Rechercher</label></h5>
+		<div id="searchBody" class="pBody">
+			<form action="/wiki/Special:Search" id="searchform"><div>
+				<input id="searchInput" name="search" type="text"Array value="" />
+				<input type='submit' name="go" class="searchButton" id="searchGoButton"	value="Lire" />&nbsp;
+				<input type='submit' name="fulltext" class="searchButton" id="mw-searchButton" value="Rechercher" />
+			</div></form>
+		</div>
+	</div>
+	<div class="portlet" id="p-tb">
+		<h5>Outils</h5>
+		<div class="pBody">
+			<ul>
+				<li id="t-whatlinkshere"><a href="/wiki/Special:WhatLinksHere/Land_(database_table)"Array>Pages liées</a></li>
+				<li id="t-recentchangeslinked"><a href="/wiki/Special:RecentChangesLinked/Land_(database_table)"Array>Suivi des pages liées</a></li>
+<li id="t-specialpages"><a href="/wiki/Special:SpecialPages"Array>Pages spéciales</a></li>
+				<li id="t-print"><a href="/index.php?title=Land_(database_table)&amp;printable=yes"Array>Version imprimable</a></li>				<li id="t-permalink"><a href="/index.php?title=Land_(database_table)&amp;oldid=31037"Array>Adresse de cette version</a></li>			</ul>
+		</div>
+	</div>
+		</div><!-- end of the left (by default at least) column -->
+			<div class="visualClear"></div>
+			<div id="footer">
+				<div id="f-poweredbyico"><a href="https://cciedump.spoto.net/"><img src="/skins/common/images/poweredby_mediawiki_88x31.png" height="31" width="88" alt="Powered by spoto dumps review" /></a></div>
+				<div id="f-copyrightico"><a href="http://creativecommons.org/licenses/by-sa/2.5/"><img src="http://i.creativecommons.org/l/by-sa/2.5/88x31.png" alt="Attribution-Share Alike 2.5 " width="88" height="31" /></a></div>
+			<ul id="f-list">
+				<li id="lastmod"> Dernière modification de cette page le 18 octobre 2012 à 20:16.<br /></li>
+				<li id="viewcount">Cette page a été consultée 24 169 fois.</li>
+				<li id="copyright"><span lang="en" dir="ltr">Content is available under <a class="external" href="http://creativecommons.org/licenses/by-sa/2.5/">Attribution-Share Alike 2.5 </a> unless otherwise noted.</span></li>
+				<li id="privacy"><a href="/wiki/OpenSimulator:Privacy_policy" title="OpenSimulator:Privacy policy">Politique de confidentialité</a></li>
+				<li id="about"><a href="/wiki/OpenSimulator:About" title="OpenSimulator:About">À propos de OpenSimulator</a></li>
+				<li id="disclaimer"><a href="/wiki/OpenSimulator:General_disclaimer" title="OpenSimulator:General disclaimer">Avertissements</a></li>
+			</ul>
+		</div>
+		
+	<script>if(window.mw){
+mw.loader.load(["mediawiki.user","mediawiki.page.ready","mediawiki.action.watch.ajax","mediawiki.legacy.mwsuggest"], null, true);
+}</script>
+<script src="http://opensimulator.org/load.php?debug=false&amp;lang=fr&amp;modules=site&amp;only=scripts&amp;skin=osmonobook&amp;*"></script>
+</div>
+<!-- Served in 0.098 secs. --><script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-5842937-1");
+pageTracker._trackPageview();
+</script>
+</body></html>

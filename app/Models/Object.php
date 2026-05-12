@@ -9,7 +9,6 @@ class Object extends Model
     protected $table = "search_objects";
     protected $primaryKey = "objectUUID";
     public $incrementing = false;
-    public $timestamps = true;
 
     protected $fillable = [
         "parcelUUID",
