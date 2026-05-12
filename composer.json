@@ -17,7 +17,8 @@
 		"symfony/browser-kit": "^7.0",
 		"symfony/http-client": "^7.0",
 		"symfony/css-selector": "^7.0",
-		"phpxmlrpc/phpxmlrpc": "^4.11"
+		"phpxmlrpc/phpxmlrpc": "^4.11",
+		"filament/filament": "^3.3"
 	},
 	"autoload": {
 		"classmap": [
