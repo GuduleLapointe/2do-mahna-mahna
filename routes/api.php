@@ -1,8 +1,96 @@
 <?php
 
+use App\Settings\GeneralSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\LegacyAPIController;
 
-Route::get('/user', function (Request $request) {
+$prefix_helpers = "helpers";
+$prefix_currency = "economy";
+
+Route::get("/user", function (Request $request) {
     return $request->user();
-})->middleware('auth:sanctum');
+})->middleware("auth:sanctum");
+
+/**
+ * v3 API (current)
+ */
+Route::prefix("api/v3")->group(function () {
+    // API v3 Events
+    Route::get("/events", [LegacyAPIController::class, "events"])->name(
+        "api.v3.events",
+    );
+
+    Route::get("/events/lsl", [LegacyAPIController::class, "eventsLsl"])->name(
+        "api.v3.events.lsl",
+    );
+
+    Route::get("/events/json", [
+        LegacyAPIController::class,
+        "eventsJson",
+    ])->name("api.v3.events.json");
+
+    Route::get("/events/board.png", [
+        LegacyAPIController::class,
+        "eventsBoard",
+    ])->name("api.v3.events.board");
+});
+
+/**
+ * v2 API (legacy)
+ */
+Route::prefix("api/v2")->group(function () {
+    Route::get("/events", [LegacyAPIController::class, "legacyEvents"])->name(
+        "api.v2.events",
+    );
+});
+
+// Legacy v2 helpers routing
+Route::prefix($prefix_helpers ?? "helpers")->group(function () {
+    // Legacy helper routes
+    Route::get("/events.lsl2", [
+        LegacyAPIController::class,
+        "legacyEvents",
+    ])->name("events.lsl2");
+
+    Route::get("/events.lsl3", [
+        LegacyAPIController::class,
+        "legacyEvents",
+    ])->name("events.lsl3");
+
+    // Fallback
+    Route::get("/events.php", [
+        LegacyAPIController::class,
+        "fallbackEvents",
+    ])->name("events.php");
+
+    // EOL API v1
+    Route::get("/events.lsl", [LegacyAPIController::class, "eolEvents"])->name(
+        "events.lsl",
+    );
+});
+
+/**
+ * Scrup API
+ */
+Route::prefix("api/v3/scrup")->group(function () {
+    Route::get("/get-version", [
+        LegacyAPIController::class,
+        "scrupGetVersion",
+    ])->name("api.v3.scrup.version");
+
+    Route::post("/register/server", [
+        LegacyAPIController::class,
+        "scrupRegisterServer",
+    ])->name("api.v3.scrup.register.server");
+
+    Route::post("/register/script", [
+        LegacyAPIController::class,
+        "scrupRegisterScript",
+    ])->name("api.v3.scrup.register.script");
+
+    Route::post("/register/client", [
+        LegacyAPIController::class,
+        "scrupRegisterClient",
+    ])->name("api.v3.scrup.register.client");
+});

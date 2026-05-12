@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use BackedEnum;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -9,9 +10,13 @@ use Filament\Forms\Components\Toggle;
 
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Pages\PageConfiguration;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\Support\Htmlable;
 
+/**
+ * @extends Page<PageConfiguration>
+ */
 class GeneralSettings extends Page
 {
     protected string $view = "filament.pages.general-settings";
@@ -49,11 +54,14 @@ class GeneralSettings extends Page
         // ]);
     }
 
-    public function save()
+    /**
+     * @return void
+     */
+    public function save(): void
     {
         $data = $this->form->getState();
 
-        app(\App\Settings\GeneralSettings::class)->update($data);
+        app(\App\Settings\GeneralSettings::class)->fill($data)->save();
 
         Notification::make()->title(__("Settings saved"))->success()->send();
     }
@@ -75,8 +83,11 @@ class GeneralSettings extends Page
 
     public static function canAccess(): bool
     {
-        return true; // Keep until fixed,easier to comment/uncomment than retype every time
-        return auth()->user()->isAdmin(); // Still not working
+        // TODO: fix access control
+        return auth()->user()->id === 1; // Keep until fixed, easier to comment/uncomment than retype every time
+        // return auth()->user()->can("manage settings");
+        // return auth()->user()->is_admin; // Still not working
+        // return auth()->user()->isAdmin(); // Still not working, returns false
     }
 
     // public static function canEdit(): bool

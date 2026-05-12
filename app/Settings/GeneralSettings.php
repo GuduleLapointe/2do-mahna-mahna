@@ -2,6 +2,7 @@
 
 namespace App\Settings;
 
+use DateTimeZone;
 use Spatie\LaravelSettings\Settings;
 
 class GeneralSettings extends Settings
@@ -20,6 +21,6 @@ class GeneralSettings extends Settings
 
     public static function group(): string
     {
-        return "Administration";
+        return "general";
     }
 }
