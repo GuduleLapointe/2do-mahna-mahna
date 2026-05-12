@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<ruleset name="2do-aggregator">
+    <description
+	>PHP compatibility check for 2do-aggregator (PHP 8.2+)</description>
+
+    <file>.</file>
+    <exclude-pattern>vendor/</exclude-pattern>
+    <exclude-pattern>tmp/</exclude-pattern>
+    <exclude-pattern>*.min.js</exclude-pattern>
+    <exclude-pattern>*.min.css</exclude-pattern>
+
+    <rule ref="PHPCompatibility" />
+    <config name="testVersion" value="8.2-" />
+
+    <arg value="p" />
+</ruleset>

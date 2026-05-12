@@ -1,0 +1,10 @@
+# Comma-separated list of ical calendars
+#   gridshortname,grid login uri,ical url
+# Lines beginning with "#" or ";" are ignored
+
+osgrid,hg.osgrid.org:80,https://calendar.google.com/calendar/ical/osgrid.org_tr7oqu7guu2jtp8b3qcpsfv2uo%40group.calendar.google.com/public/basic.ics
+speculoosworld,speculoos.world:8002,https://speculoos.world/?mec-ical-feed=1
+perfectlife,grid.perfect-life.ca:8002,https://calendar.google.com/calendar/ical/i3aadh9g4kds7tsissgo81rg1k%40group.calendar.google.com/public/basic.ics
+oceangrid,oceangrid.net:8002,https://calendar.google.com/calendar/ical/htteso105ff96d6soqvnmou934%40group.calendar.google.com/public/basic.ics
+littlefield,lfgrid.com:8002,https://calendar.google.com/calendar/ical/g7mq13isctr1hnq8jsnf885b1k%40group.calendar.google.com/public/basic.ics
+oscc22,cc.opensimulator.org:8002,https://conference.opensimulator.org/?mec-ical-feed=1

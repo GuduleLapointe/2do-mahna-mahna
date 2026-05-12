@@ -1,0 +1,15 @@
+[submodule "helpers"]
+	path = dev/helpers
+	url = https://github.com/GuduleLapointe/flexible_helper_scripts.git
+[submodule "2do-server"]
+	path = dev/2do-server
+	url = https://github.com/GuduleLapointe/2do-server.git
+[submodule "src/bundle/lsl-board"]
+	path = src/bundle/lsl-board
+	url = https://github.com/GuduleLapointe/2do-board
+[submodule "lib/scrup"]
+	path = lib/scrup
+	url = git@github.com:GuduleLapointe/scrup.git
+[submodule "lib/opensim-helpers"]
+	path = lib/opensim-helpers
+	url = https://github.com/GuduleLapointe/opensim-helpers

@@ -1,0 +1,1 @@
+Parsers are not included by the main script, they are called independently, to avoid a parser fatal error to crash the whole process.

@@ -1,0 +1,17 @@
+# Exclusion list
+#
+# The purpose is to exclude recurring internal events, with no general interest
+# or events recurring too often, taking too much place in the calendar.
+#
+# Format the lines as
+#   source  The exact title to exclude
+#   source  A title with (.*) a regular expression
+# (using source slug as in in sources.csv)
+
+exolife         Regions backed up on the stand alone hard drive
+exolife         Monthly Region Back-Up
+perfectlife     Redémarrage des Simulateur et Robust Chez Perfect-Life
+perfectlife     Full restart Chez Perfect-Life
+perfectlife     Backup hebdomadaire
+kalasiddhi      Soloton-Grid Daily Meditations
+kitely          tba in (.*)

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2do Directory - Powered by 2do HYPEvents project</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.33/moment-timezone-with-data.min.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
+
+    <script src="https://cdn.jsdelivr.net/npm/slugify@1.6.3/slugify.min.js"></script>
+
+    <script src="https://kit.fontawesome.com/e6bdb1cdc2.js" crossorigin="anonymous"></script>
+
+    <!-- <link rel="stylesheet" href="styles.css"> -->
+    <link rel="stylesheet" href="styles.min.css">
+
+    <link rel="alternate" type="text/calendar" title="2do Calendar" href="events.ics">
+    <!-- <link rel="alternate" type="application/rss+xml" title="2do RSS Feed" href="rss.xml"> -->
+</head>
+<body>
+    <div id=page-wrapper class="wrapper">
+        <header>
+            <div id="branding" class="branding">
+                <h1 class="pagetitle">
+                    <a href="./">
+                        <img class="logo" src="2do-logo.png" alt="2do Directory" onerror="this.parentNode.replaceChild(document.createTextNode('2do Directory'), this);">
+                    </a>
+                </h1>
+            </div>
+            <nav id="nav-main" class=main>
+                <ul>
+                    <li id="select-timezone">America/Los Angeles</li>
+                    <li class=section data-target="events">Calendar</li>
+                    <li class=section data-target="boards">Example boards</li>
+                    <li class=section data-target="readme">About</li>
+                    <li class=section data-target="faq">FAQ</li>
+                    <li class=section data-target="changelog">Changelog</li>
+                    <li id="sltime-wrapper"><span class=label>Current in-world time</span> <span id="sltime">&nbsp;</span></li>
+                    <!-- <li id="subscribe-links"> -->
+                    <!-- </li> -->
+                    <!-- <li id="select-category">All Categories</li>
+                    <li id="select-tag">All Tags</li> -->
+                </ul>
+            </nav>
+            <nav id="nav-secondary" class="secondary">
+                <a href="events.ics" title="Download the calendar" class="calendar-icon"><i class="fa-regular fa-calendar"></i></a>
+                <!-- add a rss unicode icon liked to rss feed -->
+                <!-- <a href="rss.xml" title="RSS feed" class="rss-icon"><i class="fa-solid fa-square-rss"></i></a> -->
+            </nav>
+        </header>
+        <main id="main">
+            <section id="readme"></section>
+            <section id="events">
+                <div class="wrapper">
+                    <aside id="notices">It should start in a few seconds...</aside>
+                </div>
+                <div id="events-container"></div>
+            </section>
+            <section id="boards"></section>
+            <section id="faq"></section>
+            <section id="changelog"></section>
+        </main>
+        <footer>
+            <p>
+                2do Directory is a shared calendar for <a href=https://opensimulator.org/>OpenSimulator</a> hypergrid events,
+                powered by
+                <a href=https://github.com/GuduleLapointe/2do-aggregator>2do-aggregator</a>,
+                <a href="https://github.com/GuduleLapointe/2do-board">2do-board</a>,
+                and <a href="https://github.com/GuduleLapointe/flexible_helper_scripts">Flexible Helper Scripts</a>.
+                Sponsored by <a href="https://speculoos.world">Speculoos World</a> and <a href="https://w4os.org/">W4OS</a>.
+            </p>
+        </footer>
+    </div>
+    <!-- <script src="script.js"></script> -->
+    <script src="script.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+name: Tests
+
+on:
+  push:
+    branches: [dev, master]
+  pull_request:
+    branches: [dev, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: imagick
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Prepare CI environment
+        run: |
+          cp tests/.env.example tests/.env
+          mkdir -p public/ci-deploy-test
+          echo "$GITHUB_WORKSPACE/public/ci-deploy-test" > config/targets
+
+      - name: Start dev server
+        run: php -S localhost:8000 -t public &
+
+      - name: Wait for dev server
+        run: until curl -s http://localhost:8000/ > /dev/null 2>&1; do sleep 0.2; done
+
+      - name: Run tests
+        run: tests/run-tests.sh

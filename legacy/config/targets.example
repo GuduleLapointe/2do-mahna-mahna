@@ -1,0 +1,4 @@
+# Copy this file as config/targets and adjust with directories to synchronise
+# Directories can be local or remotely accessible via ssh
+/var/www/html/events
+example.org:/var/www/html/events
