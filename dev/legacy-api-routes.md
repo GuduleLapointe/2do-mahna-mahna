@@ -132,4 +132,6 @@ curl http://$APP_URL/api/v3/events/lsl
 
 1. Create LegacyAPIController with exact methods above
 2. Register all routes in routes/api.php
+3. Ensure legacy endpoints are properly routed to legacy app (might trigger errors, but they must come from legacy)
+4. Build legacy (or include legacy build process in Laravel build behaviour)
 3. Test each endpoint matches legacy behavior exactly

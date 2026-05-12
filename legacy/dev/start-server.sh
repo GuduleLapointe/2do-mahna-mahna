@@ -14,7 +14,7 @@ LISTEN_IP=${LISTEN_IP:-0.0.0.0}
 WEBROOT="${WEBROOT:-$BASE_DIR/bundle/standalone}"
 DATA_DIR="${DATA_DIR:-$BASE_DIR/data}"
 
-[ -n "$MAGICK_FONT_PATH" ] && export MAGICK_FONT_PATH
+export MAGICK_FONT_PATH
 
 echo "Starting 2do-aggregator dev server..."
 echo "  Project: $BASE_DIR"
