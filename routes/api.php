@@ -5,17 +5,26 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LegacyAPIController;
 
-$prefix_helpers = "helpers";
-$prefix_currency = "economy";
+$prefix_helpers = settings("helpers.prefix", "default_helpers");
+$prefix_currency = $prefix_helpers ?: "economy";
 
 Route::get("/user", function (Request $request) {
     return $request->user();
 })->middleware("auth:sanctum");
 
+// Route de statut général
+Route::get("/status", function () {
+    return response()->json(["status" => "OK"]);
+});
+
 /**
  * v3 API (current)
  */
 Route::prefix("api/v3")->group(function () {
+    // Route de statut pour le groupe v3
+    Route::get("/status", function () {
+        return response()->json(["status" => "OK", "group" => "v3"]);
+    });
     // API v3 Events
     Route::get("/events", [LegacyAPIController::class, "events"])->name(
         "api.v3.events",
@@ -40,13 +49,21 @@ Route::prefix("api/v3")->group(function () {
  * v2 API (legacy)
  */
 Route::prefix("api/v2")->group(function () {
+    Route::get("/status", function () {
+        return response()->json(["status" => "OK"]);
+    });
+
     Route::get("/events", [LegacyAPIController::class, "legacyEvents"])->name(
         "api.v2.events",
     );
 });
 
 // Legacy v2 helpers routing
-Route::prefix($prefix_helpers ?? "helpers")->group(function () {
+Route::prefix($prefix_helpers ?? "no_helpers")->group(function () {
+    Route::get("/status", function () {
+        return response()->json(["status" => "OK"]);
+    });
+
     // Legacy helper routes
     Route::get("/events.lsl2", [
         LegacyAPIController::class,
@@ -74,6 +91,10 @@ Route::prefix($prefix_helpers ?? "helpers")->group(function () {
  * Scrup API
  */
 Route::prefix("api/v3/scrup")->group(function () {
+    Route::get("/status", function () {
+        return response()->json(["status" => "OK"]);
+    });
+
     Route::get("/get-version", [
         LegacyAPIController::class,
         "scrupGetVersion",
