@@ -8,7 +8,7 @@ use App\Http\Controllers\LegacyAPIController;
 $prefix_helpers = settings("helpers.prefix", "default_helpers");
 $prefix_currency = $prefix_helpers ?: "economy";
 
-Route::get("/user", function (Request $request) {
+Route::get("/api/user", function (Request $request) {
     return $request->user();
 })->middleware("auth:sanctum");
 
