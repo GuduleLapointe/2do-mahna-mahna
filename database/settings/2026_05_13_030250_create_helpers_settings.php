@@ -8,5 +8,9 @@ return new class extends SettingsMigration {
     {
         $defaults = HelpersSettings::defaults();
         $this->migrator->add("helpers.base_helpers", $defaults["base_helpers"]);
+        $this->migrator->add(
+            "helpers.base_currency",
+            $defaults["base_currency"],
+        );
     }
 };

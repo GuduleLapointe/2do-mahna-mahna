@@ -7,6 +7,7 @@ use Spatie\LaravelSettings\Settings;
 class HelpersSettings extends Settings
 {
     public string $base_helpers;
+    public string $base_currency;
 
     public static function group(): string
     {
@@ -20,6 +21,7 @@ class HelpersSettings extends Settings
     {
         return [
             "base_helpers" => "helpers",
+            "base_currency" => "economy",
         ];
     }
 }

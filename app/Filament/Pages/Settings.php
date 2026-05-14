@@ -52,8 +52,13 @@ class Settings extends SettingsPage
                         ->icon(Heroicon::OutlinedCog6Tooth)
                         ->schema([
                             TextInput::make("base_helpers")
-                                ->label(__("Helpers URL base"))
-                                ->inlineLabel(),
+                                ->label(__("Helpers base URL"))
+                                ->inlineLabel()
+                                ->prefix(url("/") . "/"),
+                            TextInput::make("base_currency")
+                                ->label(__("Currency base URL"))
+                                ->inlineLabel()
+                                ->prefix(url("/") . "/"),
                         ]),
                 ]),
             ]);
