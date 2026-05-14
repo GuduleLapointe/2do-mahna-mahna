@@ -28,6 +28,12 @@
                         >
                             Dashboard
                         </a>
+                        <a
+                            href="/admin"
+                            class="inline-block px-5 py-1.5 dark:text-[#EDEDEC] border-[#19140035] hover:border-[#1915014a] border text-[#1b1b18] dark:border-[#3E3E3A] dark:hover:border-[#62605b] rounded-sm text-sm leading-normal"
+                        >
+                            Admin
+                        </a>
                     @else
                         <a
                             href="{{ route('login') }}"
@@ -49,18 +55,7 @@
         </header>
         <div class="flex items-center justify-center w-full transition-opacity opacity-100 duration-750 lg:grow starting:opacity-0">
             <main class="flex max-w-[335px] w-full flex-col-reverse lg:max-w-4xl lg:flex-row">
-                <div class="text-[13px] leading-[20px] flex-1 p-6 pb-12 lg:p-20 bg-white dark:bg-[#161615] dark:text-[#EDEDEC] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d] rounded-es-lg rounded-ee-lg lg:rounded-ss-lg lg:rounded-ee-none">
-                    <h1 class="mb-1 font-medium">Let's get started</h1>
-                    <p class="mb-2 text-[#706f6c] dark:text-[#A1A09A]">There is more to come.</p>
-                    <ul class="flex gap-3 text-sm leading-normal">
-                        <li>
-                            <a href="/dashboaard" target="_blank" class="inline-block dark:bg-[#eeeeec] dark:border-[#eeeeec] dark:text-[#1C1C1A] dark:hover:bg-white dark:hover:border-white hover:bg-black hover:border-black px-5 py-1.5 bg-[#1b1b18] rounded-sm border border-black text-white text-sm leading-normal">
-                                Dashboard
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="relative lg:-ml-px -mb-px lg:mb-0 rounded-t-lg lg:rounded-t-none lg:rounded-r-lg aspect-[364/364] lg:aspect-auto w-full lg:w-[438px] shrink-0 overflow-hidden">
+                <div class="relative m-auto" style="margin:auto">
                     {{-- App logo --}}
                     <img src="{{ asset(config('app.logo-square')) }}" alt="{{ config('app.name') }} Logo">
 
