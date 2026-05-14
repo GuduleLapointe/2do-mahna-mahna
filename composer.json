@@ -84,9 +84,10 @@
             "@lint:check",
             "@php artisan test"
         ],
-        "post-install-cmd": [
-            "composer -d legacy/lib/opensim-helpers install",
-            "composer -d legacy/lib/scrup install",
+        "build": [
+            "@php -d phar.readonly=0 ./legacy/dev/build.php"
+        ],
+        "pre-install-cmd": [
             "composer -d legacy install"
         ],
         "post-autoload-dump": [
