@@ -11,10 +11,14 @@ use BackedEnum;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Select;
+use Filament\Schemas\Components\Flex;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Filament\Support\Exceptions\Halt;
+use Filament\Support\Facades\FilamentView;
 
 class Settings extends SettingsPage
 {
@@ -32,35 +36,104 @@ class Settings extends SettingsPage
         return $schema
             ->extraAttributes(["class" => "settings-form general-settings"])
             ->components([
-                Tabs::make("Settings")->tabs([
-                    Tab::make("General")
-                        ->icon(Heroicon::OutlinedCog6Tooth)
-                        ->schema([
-                            TextInput::make("app_name")
-                                ->label(__("Application Name"))
-                                ->inlineLabel(),
-                            Select::make("timezone")
-                                ->label(__("Timezone"))
-                                ->options($tzOptions)
-                                ->searchable()
-                                ->inlineLabel(),
-                            Toggle::make("site_active")
-                                ->label(__("Site Active"))
-                                ->inlineLabel(),
-                        ]),
-                    Tab::make("Helpers")
-                        ->icon(Heroicon::OutlinedCog6Tooth)
-                        ->schema([
-                            TextInput::make("base_helpers")
-                                ->label(__("Helpers base URL"))
-                                ->inlineLabel()
-                                ->prefix(url("/") . "/"),
-                            TextInput::make("base_currency")
-                                ->label(__("Currency base URL"))
-                                ->inlineLabel()
-                                ->prefix(url("/") . "/"),
-                        ]),
-                ]),
+                Tabs::make("Settings")
+                    ->columnSpanFull()
+                    ->tabs([
+                        Tab::make("Helpers")
+                            ->icon(Heroicon::OutlinedCog6Tooth)
+                            ->schema([
+                                TextInput::make("base_helpers")
+                                    ->label(__("Helpers base URL"))
+                                    ->inlineLabel()
+                                    ->prefix(url("/") . "/"),
+                                TextInput::make("base_currency")
+                                    ->label(__("Currency base URL"))
+                                    ->inlineLabel()
+                                    ->prefix(url("/") . "/"),
+                                Section::make(__("Search Database"))->schema([
+                                    Flex::make([
+                                        Select::make(
+                                            "credentials.search_db.type",
+                                        )
+                                            ->label("Type")
+                                            ->options([
+                                                "default" => "Default",
+                                                "mysql" => "MySQL",
+                                                "postgresql" => "PostgreSQL",
+                                                "sqlite" => "SQLite",
+                                            ])
+                                            ->selectablePlaceholder(false)
+                                            ->required()
+                                            ->reactive(),
+                                        //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
+                                        TextInput::make(
+                                            "credentials.search_db.hostname",
+                                        )
+                                            ->label("Host")
+                                            ->hidden(
+                                                fn($get) => $get(
+                                                    "credentials.search_db.type",
+                                                ) === "default",
+                                            ),
+                                        //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
+                                        TextInput::make(
+                                            "credentials.search_db.port",
+                                        )
+                                            ->label("Port")
+                                            ->numeric()
+                                            ->hidden(
+                                                fn($get) => $get(
+                                                    "credentials.search_db.type",
+                                                ) === "default" ||
+                                                    $get(
+                                                        "credentials.search_db.type",
+                                                    ) === "sqlite",
+                                            ),
+                                        //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
+                                        TextInput::make(
+                                            "credentials.search_db.user",
+                                        )
+                                            ->label("User")
+                                            ->hidden(
+                                                fn($get) => $get(
+                                                    "credentials.search_db.type",
+                                                ) === "default",
+                                            ),
+                                        //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
+                                        TextInput::make(
+                                            "credentials.search_db.password",
+                                        )
+                                            ->label("Password")
+                                            ->password()
+                                            ->hidden(
+                                                fn($get) => $get(
+                                                    "credentials.search_db.type",
+                                                ) === "default",
+                                            ),
+                                        //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
+                                        TextInput::make(
+                                            "credentials.search_db.prefix",
+                                        )->label("Prefix"),
+                                        //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
+                                    ])->columnSpanFull(),
+                                ]),
+                            ]),
+                        Tab::make("General")
+                            ->icon(Heroicon::OutlinedCog6Tooth)
+                            ->schema([
+                                TextInput::make("app_name")
+                                    ->label(__("Application Name"))
+                                    ->inlineLabel(), // inlineLabel here is fine
+                                Select::make("timezone")
+                                    ->label(__("Timezone"))
+                                    ->options($tzOptions)
+                                    ->searchable()
+                                    ->inlineLabel(), // inlineLabel here is fine
+                                Toggle::make("site_active")
+                                    ->label(__("Site Active"))
+                                    ->inlineLabel(), // inlineLabel here is fine
+                            ]),
+                    ]),
             ]);
     }
 

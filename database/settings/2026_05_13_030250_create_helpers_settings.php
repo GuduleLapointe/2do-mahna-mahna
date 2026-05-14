@@ -12,5 +12,6 @@ return new class extends SettingsMigration {
             "helpers.base_currency",
             $defaults["base_currency"],
         );
+        $this->migrator->add("helpers.credentials", $defaults["credentials"]);
     }
 };
