@@ -84,6 +84,10 @@
             "@lint:check",
             "@php artisan test"
         ],
+        "post-install-cmd": [
+            "composer -d legacy install",
+            "composer -d legacy/lib/opensim-helpers install"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi",
@@ -91,7 +95,9 @@
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
-            "@php artisan boost:update --ansi"
+            "@php artisan boost:update --ansi",
+            "composer -d legacy update",
+            "composer -d  legacy/lib/opensim-helpers update"
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
