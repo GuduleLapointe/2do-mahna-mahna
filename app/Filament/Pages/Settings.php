@@ -51,8 +51,8 @@ class Settings extends SettingsPage
                     Tab::make("Helpers")
                         ->icon(Heroicon::OutlinedCog6Tooth)
                         ->schema([
-                            TextInput::make("prefix")
-                                ->label(__("Helpers base url"))
+                            TextInput::make("base_helpers")
+                                ->label(__("Helpers URL base"))
                                 ->inlineLabel(),
                         ]),
                 ]),
@@ -61,57 +61,60 @@ class Settings extends SettingsPage
 
     protected function fillForm(): void
     {
-        $this->callHook('beforeFill');
+        $this->callHook("beforeFill");
 
         $generalSettings = app(GeneralSettings::class);
         $helpersSettings = app(HelpersSettings::class);
 
         $data = $this->mutateFormDataBeforeFill(
-            array_merge($generalSettings->toArray(), $helpersSettings->toArray())
+            array_merge(
+                $generalSettings->toArray(),
+                $helpersSettings->toArray(),
+            ),
         );
 
         $this->form->fill($data);
 
-        $this->callHook('afterFill');
+        $this->callHook("afterFill");
     }
 
     public function save(): void
     {
-        if (! $this->canEdit()) {
+        if (!$this->canEdit()) {
             return;
         }
 
         try {
             $this->beginDatabaseTransaction();
 
-            $this->callHook('beforeValidate');
+            $this->callHook("beforeValidate");
 
             $data = $this->form->getState();
 
-            $this->callHook('afterValidate');
+            $this->callHook("afterValidate");
 
             $data = $this->mutateFormDataBeforeSave($data);
 
-            $this->callHook('beforeSave');
+            $this->callHook("beforeSave");
 
             $generalSettings = app(GeneralSettings::class);
             $helpersSettings = app(HelpersSettings::class);
 
             $generalSettings->fill(
-                array_intersect_key($data, $generalSettings->toArray())
+                array_intersect_key($data, $generalSettings->toArray()),
             );
             $generalSettings->save();
 
             $helpersSettings->fill(
-                array_intersect_key($data, $helpersSettings->toArray())
+                array_intersect_key($data, $helpersSettings->toArray()),
             );
             $helpersSettings->save();
 
-            $this->callHook('afterSave');
+            $this->callHook("afterSave");
         } catch (Halt $exception) {
-            $exception->shouldRollbackDatabaseTransaction() ?
-                $this->rollBackDatabaseTransaction() :
-                $this->commitDatabaseTransaction();
+            $exception->shouldRollbackDatabaseTransaction()
+                ? $this->rollBackDatabaseTransaction()
+                : $this->commitDatabaseTransaction();
 
             return;
         } catch (Throwable $exception) {
@@ -127,7 +130,10 @@ class Settings extends SettingsPage
         $this->getSavedNotification()?->send();
 
         if ($redirectUrl = $this->getRedirectUrl()) {
-            $this->redirect($redirectUrl, navigate: FilamentView::hasSpaMode($redirectUrl));
+            $this->redirect(
+                $redirectUrl,
+                navigate: FilamentView::hasSpaMode($redirectUrl),
+            );
         }
     }
 

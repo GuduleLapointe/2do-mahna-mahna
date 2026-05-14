@@ -6,7 +6,7 @@ use Spatie\LaravelSettings\Settings;
 
 class HelpersSettings extends Settings
 {
-    public string $prefix;
+    public string $base_helpers;
 
     public static function group(): string
     {
@@ -19,7 +19,7 @@ class HelpersSettings extends Settings
     public static function defaults(): array
     {
         return [
-            "prefix" => "helpers",
+            "base_helpers" => "helpers",
         ];
     }
 }

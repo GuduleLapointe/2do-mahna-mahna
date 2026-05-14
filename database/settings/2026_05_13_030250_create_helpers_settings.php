@@ -1,10 +1,12 @@
 <?php
 
 use Spatie\LaravelSettings\Migrations\SettingsMigration;
+use App\Settings\HelpersSettings;
 
 return new class extends SettingsMigration {
     public function up(): void
     {
-        $this->migrator->add("helpers.prefix", "helpers");
+        $defaults = HelpersSettings::defaults();
+        $this->migrator->add("helpers.base_helpers", $defaults["base_helpers"]);
     }
 };
