@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Settings\GeneralSettings;
 use App\Settings\HelpersSettings;
+use App\Settings\DatabaseSettings;
 use Filament\Notifications\Notification;
 use Filament\Pages\SettingsPage;
 
@@ -11,7 +12,9 @@ use BackedEnum;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Select;
+use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Flex;
+use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -23,7 +26,7 @@ use Filament\Support\Facades\FilamentView;
 class Settings extends SettingsPage
 {
     protected static string $settings = GeneralSettings::class;
-    protected static string $helpers = HelpersSettings::class;
+    // protected static string $helpers = HelpersSettings::class;
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCog6Tooth;
 
     public function form(Schema $schema): Schema
@@ -39,8 +42,97 @@ class Settings extends SettingsPage
                 Tabs::make("Settings")
                     ->columnSpanFull()
                     ->tabs([
-                        Tab::make("Helpers")
-                            ->icon(Heroicon::OutlinedCog6Tooth)
+                        Tab::make(__("Databases"))
+                            ->icon("carbon-cics-db2-connection")
+                            ->schema([
+                                Section::make(__("Search Engine"))
+                                    ->collapsible()
+                                    ->description(
+                                        "General search services, single or multi-grid",
+                                    )
+                                    ->schema([
+                                        Flex::make([
+                                            Select::make("search.type")
+                                                ->label(__("Search"))
+                                                ->extraAttributes([
+                                                    "class" =>
+                                                        "settings-database-name",
+                                                ])
+                                                ->options([
+                                                    "default" => __(
+                                                        "Default (app storage)",
+                                                    ),
+                                                    "mysql" => "MySQL",
+                                                    "postgresql" =>
+                                                        "PostgreSQL",
+                                                    "sqlite" => "SQLite",
+                                                ])
+                                                ->selectablePlaceholder(false)
+                                                ->required()
+                                                ->default("default")
+                                                ->grow(false)
+                                                ->reactive(),
+                                            //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
+                                            TextInput::make("search.hostname")
+                                                ->label("Host")
+                                                ->hidden(
+                                                    fn($get) => $get(
+                                                        "search.type",
+                                                    ) === "default",
+                                                ),
+                                            //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
+                                            TextInput::make("search.port")
+                                                ->label("Port")
+                                                ->numeric()
+                                                ->columns(1)
+                                                ->hidden(
+                                                    fn($get) => $get(
+                                                        "search.type",
+                                                    ) === "default" ||
+                                                        $get("search.type") ===
+                                                            "sqlite",
+                                                ),
+                                            //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
+                                            TextInput::make("search.database")
+                                                ->label("Database")
+                                                ->hidden(
+                                                    fn($get) => $get(
+                                                        "search.type",
+                                                    ) === "default",
+                                                ),
+                                            TextInput::make("search.user")
+                                                ->label("User")
+                                                ->hidden(
+                                                    fn($get) => $get(
+                                                        "search.type",
+                                                    ) === "default",
+                                                ),
+                                            //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
+                                            TextInput::make("search.password")
+                                                ->label("Password")
+                                                ->password()
+                                                ->hidden(
+                                                    fn($get) => $get(
+                                                        "search.type",
+                                                    ) === "default",
+                                                ),
+                                            //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
+                                            TextInput::make(
+                                                "search.prefix",
+                                            )->label("Prefix"),
+                                            //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
+                                        ])
+                                            ->columnSpanFull()
+                                            ->from("md"),
+                                    ]),
+                                Section::make(__("OpenSim"))
+                                    ->collapsible()
+                                    ->description(
+                                        "Grid-specific helpers, for Robust grid or standalone OpenSim server",
+                                    ),
+                            ]),
+                        Tab::make(__("Helpers"))
+                            ->icon("carbon-connect")
                             ->schema([
                                 TextInput::make("base_helpers")
                                     ->label(__("Helpers base URL"))
@@ -50,76 +142,9 @@ class Settings extends SettingsPage
                                     ->label(__("Currency base URL"))
                                     ->inlineLabel()
                                     ->prefix(url("/") . "/"),
-                                Section::make(__("Search Database"))->schema([
-                                    Flex::make([
-                                        Select::make(
-                                            "credentials.search_db.type",
-                                        )
-                                            ->label("Type")
-                                            ->options([
-                                                "default" => "Default",
-                                                "mysql" => "MySQL",
-                                                "postgresql" => "PostgreSQL",
-                                                "sqlite" => "SQLite",
-                                            ])
-                                            ->selectablePlaceholder(false)
-                                            ->required()
-                                            ->reactive(),
-                                        //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
-                                        TextInput::make(
-                                            "credentials.search_db.hostname",
-                                        )
-                                            ->label("Host")
-                                            ->hidden(
-                                                fn($get) => $get(
-                                                    "credentials.search_db.type",
-                                                ) === "default",
-                                            ),
-                                        //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
-                                        TextInput::make(
-                                            "credentials.search_db.port",
-                                        )
-                                            ->label("Port")
-                                            ->numeric()
-                                            ->hidden(
-                                                fn($get) => $get(
-                                                    "credentials.search_db.type",
-                                                ) === "default" ||
-                                                    $get(
-                                                        "credentials.search_db.type",
-                                                    ) === "sqlite",
-                                            ),
-                                        //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
-                                        TextInput::make(
-                                            "credentials.search_db.user",
-                                        )
-                                            ->label("User")
-                                            ->hidden(
-                                                fn($get) => $get(
-                                                    "credentials.search_db.type",
-                                                ) === "default",
-                                            ),
-                                        //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
-                                        TextInput::make(
-                                            "credentials.search_db.password",
-                                        )
-                                            ->label("Password")
-                                            ->password()
-                                            ->hidden(
-                                                fn($get) => $get(
-                                                    "credentials.search_db.type",
-                                                ) === "default",
-                                            ),
-                                        //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
-                                        TextInput::make(
-                                            "credentials.search_db.prefix",
-                                        )->label("Prefix"),
-                                        //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
-                                    ])->columnSpanFull(),
-                                ]),
                             ]),
-                        Tab::make("General")
-                            ->icon(Heroicon::OutlinedCog6Tooth)
+                        Tab::make(__("General"))
+                            ->icon("carbon-settings-adjust")
                             ->schema([
                                 TextInput::make("app_name")
                                     ->label(__("Application Name"))
@@ -128,9 +153,6 @@ class Settings extends SettingsPage
                                     ->label(__("Timezone"))
                                     ->options($tzOptions)
                                     ->searchable()
-                                    ->inlineLabel(), // inlineLabel here is fine
-                                Toggle::make("site_active")
-                                    ->label(__("Site Active"))
                                     ->inlineLabel(), // inlineLabel here is fine
                             ]),
                     ]),
@@ -141,13 +163,11 @@ class Settings extends SettingsPage
     {
         $this->callHook("beforeFill");
 
-        $generalSettings = app(GeneralSettings::class);
-        $helpersSettings = app(HelpersSettings::class);
-
         $data = $this->mutateFormDataBeforeFill(
             array_merge(
-                $generalSettings->toArray(),
-                $helpersSettings->toArray(),
+                app(GeneralSettings::class)->toArray(),
+                app(HelpersSettings::class)->toArray(),
+                app(DatabaseSettings::class)->toArray(),
             ),
         );
 
@@ -164,29 +184,24 @@ class Settings extends SettingsPage
 
         try {
             $this->beginDatabaseTransaction();
-
             $this->callHook("beforeValidate");
-
             $data = $this->form->getState();
-
             $this->callHook("afterValidate");
-
             $data = $this->mutateFormDataBeforeSave($data);
-
             $this->callHook("beforeSave");
 
-            $generalSettings = app(GeneralSettings::class);
-            $helpersSettings = app(HelpersSettings::class);
+            $settings_tabs = [
+                app(GeneralSettings::class),
+                app(HelpersSettings::class),
+                app(DatabaseSettings::class),
+            ];
 
-            $generalSettings->fill(
-                array_intersect_key($data, $generalSettings->toArray()),
-            );
-            $generalSettings->save();
-
-            $helpersSettings->fill(
-                array_intersect_key($data, $helpersSettings->toArray()),
-            );
-            $helpersSettings->save();
+            foreach ($settings_tabs as $settings) {
+                $settings->fill(
+                    array_intersect_key($data, $settings->toArray()),
+                );
+                $settings->save();
+            }
 
             $this->callHook("afterSave");
         } catch (Halt $exception) {
