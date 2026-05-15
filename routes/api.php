@@ -5,8 +5,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LegacyAPIController;
 
-$prefix_helpers = settings("helpers.prefix", "default_helpers");
-$prefix_currency = $prefix_helpers ?: "economy";
+$prefix_helpers = settings("helpers.base_helpers", "helpersz");
+$prefix_currency = settings("helpers.base_currency", "currencyz");
 
 Route::get("/api/user", function (Request $request) {
     return $request->user();
