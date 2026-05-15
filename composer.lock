@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "10f802934bb9101da77a7aa6fdfe92fb",
+    "content-hash": "c682d57c68225ef2c0852e8a5682f356",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -588,6 +588,78 @@
                 }
             ],
             "time": "2026-03-20T21:10:52+00:00"
+        },
+        {
+            "name": "codeat3/blade-carbon-icons",
+            "version": "2.39.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/codeat3/blade-carbon-icons.git",
+                "reference": "568bdf5f3d20583bc4d96c4d34bffd0ca9cb55f8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/codeat3/blade-carbon-icons/zipball/568bdf5f3d20583bc4d96c4d34bffd0ca9cb55f8",
+                "reference": "568bdf5f3d20583bc4d96c4d34bffd0ca9cb55f8",
+                "shasum": ""
+            },
+            "require": {
+                "blade-ui-kit/blade-icons": "^1.1",
+                "illuminate/support": "^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",
+                "php": "^7.4|^8.0"
+            },
+            "require-dev": {
+                "codeat3/blade-icon-generation-helpers": "^0.12",
+                "codeat3/phpcs-styles": "^1.0",
+                "orchestra/testbench": "^6.0|^7.0|^8.0|^9.0|^10.0|^11.0",
+                "phpunit/phpunit": "^9.0|^10.5|^11.0|^12.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Codeat3\\BladeCarbonIcons\\BladeCarbonIconsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Codeat3\\BladeCarbonIcons\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Swapnil Sarwe",
+                    "homepage": "https://swapnilsarwe.com"
+                },
+                {
+                    "name": "Dries Vints",
+                    "homepage": "https://driesvints.com"
+                }
+            ],
+            "description": "A package to easily make use of Carbon Icons in your Laravel Blade views.",
+            "homepage": "https://github.com/codeat3/blade-carbon-icons",
+            "keywords": [
+                "blade",
+                "carbon-icons",
+                "icons",
+                "laravel"
+            ],
+            "support": {
+                "issues": "https://github.com/codeat3/blade-carbon-icons/issues",
+                "source": "https://github.com/codeat3/blade-carbon-icons/tree/2.39.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/swapnilsarwe",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-03-21T11:58:55+00:00"
         },
         {
             "name": "danharrin/date-format-converter",
