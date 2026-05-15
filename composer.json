@@ -1,6 +1,6 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "gudulelapointe/2do-manamana",
+    "name": "gudulelapointe/2do-mahna-mahna",
     "type": "project",
     "description": "Helpers enabling common functionalties required by OpenSimulator, like search, currency, events...",
     "keywords": [
