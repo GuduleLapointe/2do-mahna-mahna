@@ -1,4 +1,36 @@
 <?php
+/**
+ * Notes on database. Do not remove.
+ *
+ * Database settings follow core Laravel credentials structure, but limited to
+ * settings that are relevant to external helpers library.
+ *
+ * Robust  supports only mysql or pgsql
+ * OpenSim supports only sqlite, mysql or pgsql
+ * Search, Events, Offline and Currency can align to OpenSim requirement.
+
+    "sqlite" => [
+        "database" => env("{$SLUG}_DB_DATABASE", database_path("{$slug}.sqlite")),
+    ],
+
+    "mysql" => [
+        "driver" => "mysql",
+        "host" => env("{$SLUG}_DB_HOST", "127.0.0.1"),
+        "port" => env("{$SLUG}_DB_PORT", "3306"),
+        "database" => env("{$SLUG}_DB_DATABASE", "{$slug}"),
+        "username" => env("{$SLUG}_DB_USERNAME", "opensim"),
+        "password" => env("{$SLUG}_DB_PASSWORD", ""),
+    ],
+
+    "pgsql" => [
+        "driver" => "pgsql",
+        "host" => env("{$SLUG}_DB_HOST", "127.0.0.1"),
+        "port" => env("{$SLUG}_DB_PORT", "5432"),
+        "database" => env("{$SLUG}_DB_DATABASE", "{$slug}"),
+        "username" => env("{$SLUG}_DB_USERNAME", "opensim"),
+        "password" => env("{$SLUG}_DB_PASSWORD", ""),
+    ],
+ */
 
 namespace App\Filament\Pages;
 
@@ -51,79 +83,14 @@ class Settings extends SettingsPage
                                         "General search services, single or multi-grid",
                                     )
                                     ->schema([
-                                        Flex::make([
-                                            Select::make("search.type")
-                                                ->label(__("Search"))
-                                                ->extraAttributes([
-                                                    "class" =>
-                                                        "settings-database-name",
-                                                ])
-                                                ->options([
-                                                    "default" => __(
-                                                        "Default (app storage)",
-                                                    ),
-                                                    "mysql" => "MySQL",
-                                                    "postgresql" =>
-                                                        "PostgreSQL",
-                                                    "sqlite" => "SQLite",
-                                                ])
-                                                ->selectablePlaceholder(false)
-                                                ->required()
-                                                ->default("default")
-                                                ->grow(false)
-                                                ->reactive(),
-                                            //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
-                                            TextInput::make("search.hostname")
-                                                ->label("Host")
-                                                ->hidden(
-                                                    fn($get) => $get(
-                                                        "search.type",
-                                                    ) === "default",
-                                                ),
-                                            //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
-                                            TextInput::make("search.port")
-                                                ->label("Port")
-                                                ->numeric()
-                                                ->columns(1)
-                                                ->hidden(
-                                                    fn($get) => $get(
-                                                        "search.type",
-                                                    ) === "default" ||
-                                                        $get("search.type") ===
-                                                            "sqlite",
-                                                ),
-                                            //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
-                                            TextInput::make("search.database")
-                                                ->label("Database")
-                                                ->hidden(
-                                                    fn($get) => $get(
-                                                        "search.type",
-                                                    ) === "default",
-                                                ),
-                                            TextInput::make("search.user")
-                                                ->label("User")
-                                                ->hidden(
-                                                    fn($get) => $get(
-                                                        "search.type",
-                                                    ) === "default",
-                                                ),
-                                            //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
-                                            TextInput::make("search.password")
-                                                ->label("Password")
-                                                ->password()
-                                                ->hidden(
-                                                    fn($get) => $get(
-                                                        "search.type",
-                                                    ) === "default",
-                                                ),
-                                            //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
-                                            TextInput::make(
-                                                "search.prefix",
-                                            )->label("Prefix"),
-                                            //  NO ->inlineLabel(), NADA, STOP ADDING THAT EACH TIME
-                                        ])
-                                            ->columnSpanFull()
-                                            ->from("md"),
+                                        $this->makeCredentialsFields(
+                                            "search",
+                                            __("Search"),
+                                        ),
+                                        $this->makeCredentialsFields(
+                                            "events",
+                                            __("Events"),
+                                        ),
                                     ]),
                                 Section::make(__("OpenSim"))
                                     ->collapsible()
@@ -159,6 +126,49 @@ class Settings extends SettingsPage
             ]);
     }
 
+    protected function makeCredentialsFields($slug, $label = "")
+    {
+        $label = $label ?: $slug;
+
+        return Flex::make([
+            Select::make("$slug.type")
+                ->label($label)
+                ->extraAttributes([
+                    "class" => "settings-database-name",
+                ])
+                ->options([
+                    "default" => __("Default (app storage)"),
+                    "mysql" => "MySQL",
+                    "postgresql" => "PostgreSQL",
+                    "sqlite" => "SQLite",
+                ])
+                ->selectablePlaceholder(false)
+                ->required()
+                ->default("default")
+                ->grow(false)
+                ->reactive(),
+            TextInput::make("$slug.hostname")
+                ->label("Host")
+                ->hidden(fn($get) => $get("$slug.type") === "default"),
+            TextInput::make("$slug.port")
+                ->label("Port")
+                ->numeric()
+                ->hidden(fn($get) => $get("$slug.type") === "default"),
+            TextInput::make("$slug.database")
+                ->label("Database")
+                ->hidden(fn($get) => $get("$slug.type") === "default"),
+            TextInput::make("$slug.user")
+                ->label("User")
+                ->hidden(fn($get) => $get("$slug.type") === "default"),
+            TextInput::make("$slug.password")
+                ->label("Password")
+                ->password()
+                ->hidden(fn($get) => $get("$slug.type") === "default"),
+            TextInput::make("$slug.prefix")->label("Prefix"),
+        ])
+            ->columnSpanFull()
+            ->from("md");
+    }
     protected function fillForm(): void
     {
         $this->callHook("beforeFill");
