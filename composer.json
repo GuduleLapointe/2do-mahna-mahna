@@ -85,22 +85,25 @@
             "@php artisan test"
         ],
         "build": [
+            "cp legacy/lib/opensim-helpers/includes/2do-polyfill.php legacy/lib/opensim-helpers/includes/config.php",
             "@php -d phar.readonly=0 ./legacy/dev/build.php"
-        ],
-        "pre-install-cmd": [
-            "composer -d legacy install"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi",
             "@php artisan filament:upgrade"
         ],
+        "pre-install-cmd": [
+            "composer -d legacy install"
+        ],
+        "post-install-cmd": [
+            "composer build"
+        ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
             "@php artisan boost:update --ansi",
-            "composer -d legacy/lib/opensim-helpers update",
-            "composer -d legacy/lib/scrup update",
-            "composer -d legacy update"
+            "composer -d legacy update",
+            "cp legacy/lib/opensim-helpers/includes/2do-polyfill.php legacy/lib/opensim-helpers/includes/config.php"
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""

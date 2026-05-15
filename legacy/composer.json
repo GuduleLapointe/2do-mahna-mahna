@@ -33,7 +33,7 @@
         "phpcompatibility/php-compatibility": "^9.3"
     },
     "pre-install-cmd": [
-        "composer -d lib/opensim-helpers insst",
+        "composer -d lib/opensim-helpers install",
         "composer -d lib/scrup update"
     ],
     "post-install-cmd": [
