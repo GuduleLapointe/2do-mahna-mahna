@@ -7,6 +7,14 @@
 
 This project is the collection of several projects around OpenSimulator Helpers and tools, to allow better centralized management.
 
+## Installation
+
+**Important**: after downloading, cd to the application directory and execute:
+
+```bash
+composer run setup
+```
+
 ## Main objective
 
 Merge several related project into one single project, intended to be used 

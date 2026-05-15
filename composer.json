@@ -85,7 +85,7 @@
             "@php artisan test"
         ],
         "build": [
-            "cp legacy/lib/opensim-helpers/includes/2do-polyfill.php legacy/lib/opensim-helpers/includes/config.php",
+            "@php scripts/post-update.php",
             "@php -d phar.readonly=0 ./legacy/dev/build.php"
         ],
         "post-autoload-dump": [
@@ -103,7 +103,7 @@
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
             "@php artisan boost:update --ansi",
             "composer -d legacy update",
-            "cp legacy/lib/opensim-helpers/includes/2do-polyfill.php legacy/lib/opensim-helpers/includes/config.php"
+            "@php scripts/post-update.php"
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
