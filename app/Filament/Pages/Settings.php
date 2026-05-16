@@ -109,25 +109,25 @@ class Settings extends SettingsPage
                         $this->makeCredentialsFields("search", __("Search")),
                         $this->makeCredentialsFields("events", __("Events")),
                     ]),
-                Section::make(__("OpenSim"))
-                    ->description(
-                        "Robust/OpenSim server databases, for grid helpers",
-                    )
-                    ->icon("carbon-cics-db2-connection")
-                    ->collapsible()
-                    ->columnSpanFull()
-                    ->schema([
-                        $this->makeCredentialsFields("robust", __("Robust")),
-                        $this->makeCredentialsFields("opensim", __("OpenSim")),
-                        $this->makeCredentialsFields(
-                            "offline",
-                            __("Offline Messages"),
-                        ),
-                        $this->makeCredentialsFields(
-                            "currency",
-                            __("Currency"),
-                        ),
-                    ]),
+                // Section::make(__("OpenSim"))
+                //     ->description(
+                //         "Robust/OpenSim server databases, for grid helpers",
+                //     )
+                //     ->icon("carbon-cics-db2-connection")
+                //     ->collapsible()
+                //     ->columnSpanFull()
+                //     ->schema([
+                //         $this->makeCredentialsFields("robust", __("Robust")),
+                //         $this->makeCredentialsFields("opensim", __("OpenSim")),
+                //         $this->makeCredentialsFields(
+                //             "offline",
+                //             __("Offline Messages"),
+                //         ),
+                //         $this->makeCredentialsFields(
+                //             "currency",
+                //             __("Currency"),
+                //         ),
+                //     ]),
             ]);
     }
 
