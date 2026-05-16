@@ -18,8 +18,7 @@ test("users can authenticate using the login screen", function () {
     ]);
 
     $response->assertSessionHasNoErrors();
-    // TODO: restore redirec test, to admin page. Not working for some obscure reason
-    // ->assertRedirect(route("admin", absolute: false));
+    $response->assertRedirect("/admin");
 
     $this->assertAuthenticated();
 });
