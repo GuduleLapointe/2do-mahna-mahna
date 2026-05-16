@@ -71,76 +71,62 @@ class Settings extends SettingsPage
 
         return $schema
             ->extraAttributes(["class" => "settings-form general-settings"])
-            ->components([
-                Tabs::make("Settings")
+            ->schema([
+                Section::make(__("Helpers"))
+                    ->icon("carbon-connect")
+                    ->collapsible()
+                    ->schema([
+                        TextInput::make("base_helpers")
+                            ->label(__("Helpers base URL"))
+                            ->inlineLabel()
+                            ->prefix(url("/") . "/"),
+                        TextInput::make("base_currency")
+                            ->label(__("Currency base URL"))
+                            ->inlineLabel()
+                            ->prefix(url("/") . "/"),
+                    ]),
+                Section::make(__("General"))
+                    ->icon("carbon-settings-adjust")
+                    ->collapsible()
+                    ->schema([
+                        TextInput::make("app_name")
+                            ->label(__("Application Name"))
+                            ->inlineLabel(), // inlineLabel here is fine
+                        Select::make("timezone")
+                            ->label(__("Timezone"))
+                            ->options($tzOptions)
+                            ->searchable()
+                            ->inlineLabel(), // inlineLabel here is fine
+                    ]),
+                Section::make(__("Search Engine"))
+                    ->description(
+                        "General search services, single or multi-grid",
+                    )
+                    ->icon("carbon-cics-db2-connection")
+                    ->collapsible()
                     ->columnSpanFull()
-                    ->tabs([
-                        Tab::make(__("Databases"))
-                            ->icon("carbon-cics-db2-connection")
-                            ->schema([
-                                Section::make(__("Search Engine"))
-                                    ->collapsible()
-                                    ->description(
-                                        "General search services, single or multi-grid",
-                                    )
-                                    ->schema([
-                                        $this->makeCredentialsFields(
-                                            "search",
-                                            __("Search"),
-                                        ),
-                                        $this->makeCredentialsFields(
-                                            "events",
-                                            __("Events"),
-                                        ),
-                                    ]),
-                                // Section::make(__("OpenSim"))
-                                //     ->collapsible()
-                                //     ->description(
-                                //         "Grid-specific helpers, for Robust grid or standalone OpenSim server",
-                                //     )
-                                //     ->schema([
-                                //         $this->makeCredentialsFields(
-                                //             "robust",
-                                //             __("Robust"),
-                                //         ),
-                                //         $this->makeCredentialsFields(
-                                //             "opensim",
-                                //             __("OpenSim"),
-                                //         ),
-                                //         $this->makeCredentialsFields(
-                                //             "offline",
-                                //             __("Offline Messages"),
-                                //         ),
-                                //         $this->makeCredentialsFields(
-                                //             "currency",
-                                //             __("Currency"),
-                                //         ),
-                                //     ]),
-                            ]),
-                        Tab::make(__("Helpers"))
-                            ->icon("carbon-connect")
-                            ->schema([
-                                TextInput::make("base_helpers")
-                                    ->label(__("Helpers base URL"))
-                                    ->inlineLabel()
-                                    ->prefix(url("/") . "/"),
-                                TextInput::make("base_currency")
-                                    ->label(__("Currency base URL"))
-                                    ->inlineLabel()
-                                    ->prefix(url("/") . "/"),
-                            ]),
-                        Tab::make(__("General"))
-                            ->icon("carbon-settings-adjust")
-                            ->schema([
-                                TextInput::make("app_name")
-                                    ->label(__("Application Name"))
-                                    ->inlineLabel(), // inlineLabel here is fine
-                                Select::make("timezone")
-                                    ->label(__("Timezone"))
-                                    ->options($tzOptions)
-                                    ->searchable()
-                                    ->inlineLabel(), // inlineLabel here is fine
-                            ]),
+                    ->schema([
+                        $this->makeCredentialsFields("search", __("Search")),
+                        $this->makeCredentialsFields("events", __("Events")),
+                    ]),
+                Section::make(__("OpenSim"))
+                    ->description(
+                        "Grid-specific helpers, for Robust grid or standalone OpenSim server",
+                    )
+                    ->icon("carbon-cics-db2-connection")
+                    ->collapsible()
+                    ->columnSpanFull()
+                    ->schema([
+                        $this->makeCredentialsFields("robust", __("Robust")),
+                        $this->makeCredentialsFields("opensim", __("OpenSim")),
+                        $this->makeCredentialsFields(
+                            "offline",
+                            __("Offline Messages"),
+                        ),
+                        $this->makeCredentialsFields(
+                            "currency",
+                            __("Currency"),
+                        ),
                     ]),
             ]);
     }
@@ -209,7 +195,8 @@ class Settings extends SettingsPage
                     ->hidden($this->hideFor($slug, ["default", "sqlite"])),
                 TextInput::make("$slug.prefix")
                     ->label("Prefix")
-                    ->grow(false),
+                    ->grow(false)
+                    ->hidden($this->hideFor($slug, [], ["opensim", "robust"])),
             ])
                 ->columnSpanFull()
                 ->from("md"),
@@ -219,11 +206,15 @@ class Settings extends SettingsPage
         ]);
     }
 
-    protected function hideFor(string $slug, array $slugs)
+    protected function hideFor(string $slug, array $types = [], $slugs = [])
     {
-        $slugs[] = "";
-        return fn($get) => in_array($get("$slug.type"), $slugs);
-        // return fn($get) => in_array($get("$slug.type"), $slugs);
+        $types[] = "";
+        $types[] = "robust";
+        $types[] = "opensim";
+        return fn(
+            $get,
+        ) => in_array($get("$slug.type"), $types) || in_array($slug, $slugs);
+        // return fn($get) => in_array($get("$slug.type"), $types);
     }
 
     protected function updateFields($type, $set, $get, $slug)
