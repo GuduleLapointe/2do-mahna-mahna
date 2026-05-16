@@ -168,7 +168,7 @@ class Settings extends SettingsPage
                             $slug,
                         ),
                     ),
-                TextInput::make("$slug.hostname")
+                TextInput::make("$slug.host")
                     ->label("Host")
                     // ->hidden(
                     //     fn($get) => in_array($get("$slug.type"), [
@@ -186,8 +186,8 @@ class Settings extends SettingsPage
                     ->label("Database")
                     ->grow(true)
                     ->hidden($this->hideFor($slug, ["default"])),
-                TextInput::make("$slug.user")
-                    ->label("User")
+                TextInput::make("$slug.username")
+                    ->label("Username")
                     ->hidden($this->hideFor($slug, ["default", "sqlite"])),
                 TextInput::make("$slug.password")
                     ->label("Password")

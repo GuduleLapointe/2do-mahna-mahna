@@ -31,14 +31,20 @@ class DatabaseSettings extends Settings
 
         $connections = config("database.connections");
         $app_default = config("database.default", "sqlite");
-        $defaults = array_merge($connections[$app_default], [
-            "trace" => array_merge(
-                [
-                    "connection" => $app_default,
-                ],
-                $connections,
-            ),
-        ]);
+        $defaults = array_merge(
+            [
+                "type" => "default",
+            ],
+            $connections[$app_default],
+            [
+                "trace" => array_merge(
+                    [
+                        "connection" => $app_default,
+                    ],
+                    $connections,
+                ),
+            ],
+        );
 
         return $defaults;
     }
