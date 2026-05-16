@@ -111,7 +111,7 @@ class Settings extends SettingsPage
                     ]),
                 Section::make(__("OpenSim"))
                     ->description(
-                        "Grid-specific helpers, for Robust grid or standalone OpenSim server",
+                        "Robust/OpenSim server databases, for grid helpers",
                     )
                     ->icon("carbon-cics-db2-connection")
                     ->collapsible()
