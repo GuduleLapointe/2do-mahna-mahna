@@ -12,6 +12,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable(["name", "email", "password"])]
 #[
@@ -24,8 +25,8 @@ use Laravel\Sanctum\HasApiTokens;
 ]
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, TwoFactorAuthenticatable;
+    use HasRoles;
 
     /**
      * Get the attributes that should be cast.
@@ -60,6 +61,6 @@ class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return $this->id === 1 ?? ($this->is_admin ?? false);
+        return $this->hasRole("administrator");
     }
 }
