@@ -41,6 +41,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\SettingsPage;
 
 use BackedEnum;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Select;
@@ -92,11 +93,29 @@ class Settings extends SettingsPage
                                             __("Events"),
                                         ),
                                     ]),
-                                Section::make(__("OpenSim"))
-                                    ->collapsible()
-                                    ->description(
-                                        "Grid-specific helpers, for Robust grid or standalone OpenSim server",
-                                    ),
+                                // Section::make(__("OpenSim"))
+                                //     ->collapsible()
+                                //     ->description(
+                                //         "Grid-specific helpers, for Robust grid or standalone OpenSim server",
+                                //     )
+                                //     ->schema([
+                                //         $this->makeCredentialsFields(
+                                //             "robust",
+                                //             __("Robust"),
+                                //         ),
+                                //         $this->makeCredentialsFields(
+                                //             "opensim",
+                                //             __("OpenSim"),
+                                //         ),
+                                //         $this->makeCredentialsFields(
+                                //             "offline",
+                                //             __("Offline Messages"),
+                                //         ),
+                                //         $this->makeCredentialsFields(
+                                //             "currency",
+                                //             __("Currency"),
+                                //         ),
+                                //     ]),
                             ]),
                         Tab::make(__("Helpers"))
                             ->icon("carbon-connect")
@@ -130,45 +149,123 @@ class Settings extends SettingsPage
     {
         $label = $label ?: $slug;
 
-        return Flex::make([
-            Select::make("$slug.type")
-                ->label($label)
-                ->extraAttributes([
-                    "class" => "settings-database-name",
-                ])
-                ->options([
-                    "default" => __("Default (app storage)"),
-                    "mysql" => "MySQL",
-                    "postgresql" => "PostgreSQL",
-                    "sqlite" => "SQLite",
-                ])
-                ->selectablePlaceholder(false)
-                ->required()
-                ->default("default")
-                ->grow(false)
-                ->reactive(),
-            TextInput::make("$slug.hostname")
-                ->label("Host")
-                ->hidden(fn($get) => $get("$slug.type") === "default"),
-            TextInput::make("$slug.port")
-                ->label("Port")
-                ->numeric()
-                ->hidden(fn($get) => $get("$slug.type") === "default"),
-            TextInput::make("$slug.database")
-                ->label("Database")
-                ->hidden(fn($get) => $get("$slug.type") === "default"),
-            TextInput::make("$slug.user")
-                ->label("User")
-                ->hidden(fn($get) => $get("$slug.type") === "default"),
-            TextInput::make("$slug.password")
-                ->label("Password")
-                ->password()
-                ->hidden(fn($get) => $get("$slug.type") === "default"),
-            TextInput::make("$slug.prefix")->label("Prefix"),
-        ])
-            ->columnSpanFull()
-            ->from("md");
+        $drivers = [
+            "default" => __("Default (app storage)"),
+            "mysql" => "MySQL",
+            "postgresql" => "PostgreSQL",
+            "sqlite" => "SQLite",
+        ];
+        if ($slug !== "robust") {
+            $drivers["robust"] = "-> use Robust";
+        }
+        if ($slug !== "opensim") {
+            $drivers["opensim"] = "-> use OpenSim";
+        }
+        return Group::make([
+            Flex::make([
+                Select::make("$slug.type")
+                    ->label($label)
+                    ->extraAttributes([
+                        "class" => "settings-database-name",
+                    ])
+                    ->options($drivers)
+                    ->selectablePlaceholder(false)
+                    ->required()
+                    ->default("default")
+                    ->grow(false)
+                    ->reactive()
+                    ->afterStateUpdated(
+                        fn($state, $set, $get) => $this->updateFields(
+                            $state,
+                            $set,
+                            $get,
+                            $slug,
+                        ),
+                    ),
+                TextInput::make("$slug.hostname")
+                    ->label("Host")
+                    // ->hidden(
+                    //     fn($get) => in_array($get("$slug.type"), [
+                    //         "default",
+                    //         "sqlite",
+                    //         "",
+                    //     ]),
+                    // )
+                    ->hidden($this->hideFor($slug, ["default", "sqlite"])),
+                TextInput::make("$slug.port")
+                    ->label("Port")
+                    ->numeric()
+                    ->hidden($this->hideFor($slug, ["default", "sqlite"])),
+                TextInput::make("$slug.database")
+                    ->label("Database")
+                    ->grow(true)
+                    ->hidden($this->hideFor($slug, ["default"])),
+                TextInput::make("$slug.user")
+                    ->label("User")
+                    ->hidden($this->hideFor($slug, ["default", "sqlite"])),
+                TextInput::make("$slug.password")
+                    ->label("Password")
+                    ->password()
+                    ->hidden($this->hideFor($slug, ["default", "sqlite"])),
+                TextInput::make("$slug.prefix")
+                    ->label("Prefix")
+                    ->grow(false),
+            ])
+                ->columnSpanFull()
+                ->from("md"),
+            Hidden::make("$slug.trace")->default(
+                fn($get) => $this->buildTrace($get, $slug),
+            ),
+        ]);
     }
+
+    protected function hideFor(string $slug, array $slugs)
+    {
+        $slugs[] = "";
+        return fn($get) => in_array($get("$slug.type"), $slugs);
+        // return fn($get) => in_array($get("$slug.type"), $slugs);
+    }
+
+    protected function updateFields($type, $set, $get, $slug)
+    {
+        $trace = $get("$slug.trace") ?? [];
+        if ($type === "default") {
+            // Charge la config Laravel par défaut
+            $defaultConfig = config("database.default");
+            $set("$slug.hostname", $defaultConfig["host"] ?? null);
+            $set("$slug.port", $defaultConfig["port"] ?? null);
+            $set("$slug.database", $defaultConfig["database"] ?? null);
+            $set("$slug.user", $defaultConfig["username"] ?? null);
+            $set("$slug.password", $defaultConfig["password"] ?? null);
+        } else {
+            // Charge la config depuis trace
+            $config = $trace[$type] ?? [];
+            $set("$slug.hostname", $config["host"] ?? null);
+            $set("$slug.port", $config["port"] ?? null);
+            $set("$slug.database", $config["database"] ?? null);
+            $set("$slug.user", $config["user"] ?? null);
+            $set("$slug.password", $config["password"] ?? null);
+        }
+    }
+
+    protected function buildTrace($get, $slug)
+    {
+        $trace = $get("$slug.trace") ?? [];
+        $currentType = $get("$slug.type");
+
+        // Met à jour la trace avec la config actuelle
+        $trace["connection"] = $currentType;
+        $trace[$currentType] = [
+            "host" => $get("$slug.hostname"),
+            "port" => $get("$slug.port"),
+            "database" => $get("$slug.database"),
+            "user" => $get("$slug.user"),
+            "password" => $get("$slug.password"),
+        ];
+
+        return $trace;
+    }
+
     protected function fillForm(): void
     {
         $this->callHook("beforeFill");

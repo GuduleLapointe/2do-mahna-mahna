@@ -28,6 +28,18 @@ class DatabaseSettings extends Settings
     {
         // Use Laravel config as default, it already contains proper formats for
         // sqlite, mysql and postgresql
-        return config("database.connections");
+
+        $connections = config("database.connections");
+        $app_default = config("database.default", "sqlite");
+        $defaults = array_merge($connections[$app_default], [
+            "trace" => array_merge(
+                [
+                    "connection" => $app_default,
+                ],
+                $connections,
+            ),
+        ]);
+
+        return $defaults;
     }
 }
